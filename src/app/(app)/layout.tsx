@@ -28,6 +28,7 @@ export default async function AppLayout({
             <Link href="/">Home</Link>
             <Link href="/companies">Companies</Link>
             <Link href="/contacts">Contacts</Link>
+            <Link href="/projects">Projects</Link>
           </nav>
           <form
             action={async () => {

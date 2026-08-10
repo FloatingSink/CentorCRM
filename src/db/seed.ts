@@ -6,7 +6,9 @@ config({ path: ".env.local" });
 // above, which would make ./client read DATABASE_URL before it's populated.
 async function main() {
   const { client, db } = await import("./client");
-  const { legalEntity, user } = await import("./schema");
+  const { legalEntity, user, company, companyRole, project } =
+    await import("./schema");
+  const { eq } = await import("drizzle-orm");
 
   // crm-spec.md §5 — our own contracting entities. Registration numbers
   // marked <TBD> in the spec are left null, not guessed (crm-spec.md §11
@@ -63,8 +65,61 @@ async function main() {
     .onConflictDoNothing({ target: user.email })
     .returning({ email: user.email });
 
+  const [admin] = await db
+    .select()
+    .from(user)
+    .where(eq(user.email, "yjialong2000@gmail.com"));
+
+  // crm-spec.md §6.2 — only the one confirmed project is seeded. The four
+  // China projects are marked <TBD: confirm names and machine counts> in the
+  // spec and are skipped entirely, not guessed (CLAUDE.md "do not invent
+  // domain data"). Neither `company` nor `project` has a unique column to
+  // hang onConflictDoNothing off, so this is a manual select-first check.
+  let [crtg] = await db
+    .select()
+    .from(company)
+    .where(eq(company.nameEn, "China Railway Tunnel Group"));
+  let companiesSeeded = 0;
+  if (!crtg) {
+    [crtg] = await db
+      .insert(company)
+      .values({
+        nameEn: "China Railway Tunnel Group",
+        nameZh: null, // not provided in spec — do not invent
+        country: "China", // from the entity's own name in the spec glossary
+        isActive: true,
+        createdBy: admin.id,
+      })
+      .returning();
+    await db
+      .insert(companyRole)
+      .values({ companyId: crtg.id, role: "customer" });
+    companiesSeeded = 1;
+  }
+
+  const [existingProject] = await db
+    .select()
+    .from(project)
+    .where(eq(project.nameEn, "Panama Metro Line 3"));
+  let projectsSeeded = 0;
+  if (!existingProject) {
+    await db.insert(project).values({
+      nameEn: "Panama Metro Line 3",
+      nameZh: null,
+      clientCompanyId: crtg.id,
+      country: "Panama",
+      city: null, // not stated in the spec — do not invent
+      status: "active",
+      ownerUserId: admin.id,
+      isActive: true,
+      createdBy: admin.id,
+    });
+    projectsSeeded = 1;
+  }
+
   console.log(
-    `Seeded ${legalEntities.length}/4 legal entities, ${users.length}/1 users (skipped rows already existed).`,
+    `Seeded ${legalEntities.length}/4 legal entities, ${users.length}/1 users, ` +
+      `${companiesSeeded}/1 companies, ${projectsSeeded}/1 projects (skipped rows already existed).`,
   );
 
   await client.end();

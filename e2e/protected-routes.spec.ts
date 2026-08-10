@@ -10,6 +10,8 @@ for (const path of [
   "/companies/new",
   "/contacts",
   "/contacts/new",
+  "/projects",
+  "/projects/new",
 ]) {
   test(`${path} redirects an unauthenticated visitor to /sign-in`, async ({
     page,
