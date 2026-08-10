@@ -24,6 +24,12 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   session: { strategy: "database" },
   pages: {
     signIn: "/sign-in",
+    // Auth.js handles provider failures (e.g. SMTP send errors) as an
+    // internal redirect, not a thrown error — signIn() never sees it, so it
+    // can't be caught in the server action. Routing the error page back to
+    // /sign-in (with ?error=...) is how the sign-in form actually learns
+    // about it; see the error param handling in sign-in-form.tsx.
+    error: "/sign-in",
   },
   callbacks: {
     // Enforces the soft-delete convention: deactivating a user (is_active =

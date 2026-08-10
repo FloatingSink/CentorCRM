@@ -1,7 +1,5 @@
 "use server";
 
-import { AuthError } from "next-auth";
-
 import { signIn } from "@/lib/auth";
 import { signInSchema } from "@/lib/validation/sign-in";
 
@@ -14,14 +12,10 @@ export async function requestMagicLink(
     return { error: "Enter a valid email address." };
   }
 
-  try {
-    await signIn("nodemailer", { email: parsed.data.email, redirectTo: "/" });
-  } catch (error) {
-    if (error instanceof AuthError) {
-      return { error: "Could not send the sign-in link. Try again." };
-    }
-    throw error;
-  }
+  // Provider failures (e.g. SMTP send errors) don't throw here — Auth.js
+  // handles them internally and redirects to pages.error ("/sign-in?error=…")
+  // instead. See sign-in-form.tsx for where that's actually surfaced.
+  await signIn("nodemailer", { email: parsed.data.email, redirectTo: "/" });
 
   return {};
 }
