@@ -1,0 +1,9 @@
+# Generated — never hand-edited, never reformatted.
+src/db/migrations/
+
+# Generated lockfile.
+pnpm-lock.yaml
+
+# Pre-existing hand-authored docs, not code.
+CLAUDE.md
+specs/
