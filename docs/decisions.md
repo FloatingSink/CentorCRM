@@ -33,3 +33,12 @@ fails to boot. With only one protected route so far, per-page `auth()` checks (s
 cover it without that conflict. Revisit once there are enough protected routes that per-page checks
 get repetitive — the standard fix is a split config (an Edge-safe `auth.config.ts` with no adapter,
 used only for middleware route-gating, separate from the full Node-only `auth.ts`).
+
+## 2026-08-10 — Auth check centralized in a shared `(app)` layout
+
+P1 added 7 authenticated pages (companies, contacts, home) on top of P0's one, so the per-page
+`auth()` redirect check from the previous entry got centralized into `src/app/(app)/layout.tsx`
+instead of duplicated on every page — this is that follow-up. Still not middleware (same Edge/Node
+conflict as before, unchanged); the layout runs in the Node runtime like any other server component.
+The header/nav is also rendered once here rather than per page. `/sign-in` stays outside the route
+group so it isn't gated.

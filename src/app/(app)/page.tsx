@@ -1,7 +1,3 @@
-import { redirect } from "next/navigation";
-
-import { auth, signOut } from "@/lib/auth";
-import { Button } from "@/components/ui/button";
 import {
   Table,
   TableBody,
@@ -13,34 +9,11 @@ import {
 import { getLegalEntities } from "@/server/legal-entities";
 
 export default async function HomePage() {
-  const session = await auth();
-  if (!session?.user) {
-    redirect("/sign-in");
-  }
-
   const legalEntities = await getLegalEntities();
 
   return (
-    <div className="mx-auto max-w-3xl p-8">
-      <header className="mb-8 flex items-center justify-between">
-        <div>
-          <h1 className="text-xl font-semibold">CENTOR CRM</h1>
-          <p className="text-sm text-muted-foreground">
-            {session.user.name} · {session.user.email} · {session.user.role}
-          </p>
-        </div>
-        <form
-          action={async () => {
-            "use server";
-            await signOut({ redirectTo: "/sign-in" });
-          }}
-        >
-          <Button type="submit" variant="outline">
-            Sign out
-          </Button>
-        </form>
-      </header>
-
+    <div>
+      <h2 className="mb-4 text-lg font-semibold">Legal entities</h2>
       <Table>
         <TableHeader>
           <TableRow>

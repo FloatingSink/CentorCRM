@@ -38,8 +38,18 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       return signingInUser.isActive !== false;
     },
     async session({ session, user: sessionUser }) {
-      session.user.role = sessionUser.role;
-      session.user.isActive = sessionUser.isActive;
+      // Built explicitly rather than spreading sessionUser: the adapter
+      // passes the full user row (createdBy, createdAt, ...), and this
+      // session object is served as-is from /api/auth/session.
+      session.user = {
+        id: sessionUser.id,
+        name: sessionUser.name,
+        email: sessionUser.email,
+        image: sessionUser.image,
+        emailVerified: sessionUser.emailVerified,
+        role: sessionUser.role,
+        isActive: sessionUser.isActive,
+      };
       return session;
     },
   },
