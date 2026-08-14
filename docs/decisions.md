@@ -133,3 +133,20 @@ now and likely rework it later, P7 is stubbed to a sidebar nav item and an empty
 next instead, out of the spec's listed order. Revisit P7 for real once the outsourced shipping
 process is confirmed.
 
+## 2026-08-13 — P8 slice 3: search wires up existing per-list inputs, no global search yet
+
+Every list page (Companies, Contacts, Projects, Products, Opportunities, Quotations, Sales
+Orders, Purchase Orders) already shipped with a `<Search>`-icon input next to its status filter —
+styled and placed since those pages were first built, but `disabled` and never wired to anything.
+This slice wires all 8 up, layering a new `matchesQuery` (`src/lib/search-filter.ts`) on top of
+each table's existing `useMemo` status/active filter rather than replacing that pattern.
+
+A global cross-entity search bar was discussed and deliberately not built — spec doesn't call for
+one and nothing else in the app hints at it, so it would have been scope creep. `matchesQuery` is
+factored out as a single shared matcher specifically so that if a global search gets built later,
+it reuses the same matching semantics instead of every entity re-deriving its own. The document
+library's per-entity filter bar (added in the same slice, at Jia Long's request) also reuses it:
+since `document.doc_type` is free text (no closed taxonomy, per the P8 slice 2 decision), its
+segments are derived at render time from whatever `doc_type` values are actually present in that
+entity's own documents, rather than a fixed list like the status filters use.
+

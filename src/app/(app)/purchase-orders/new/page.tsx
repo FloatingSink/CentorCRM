@@ -72,6 +72,7 @@ export default async function NewPurchaseOrderPage({
           id: so.id,
           orderNo: so.orderNo,
         }))}
+        documents={[]}
         defaultHeader={{
           legalEntityId: "",
           supplierCompanyId: null,
@@ -91,6 +92,7 @@ export default async function NewPurchaseOrderPage({
           governingLaw: null,
           arbitrationRules: null,
           contractNo: null,
+          executedDocumentId: null,
           language: "en",
           notes: null,
         }}

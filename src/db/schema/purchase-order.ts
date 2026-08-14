@@ -13,6 +13,7 @@ import {
 
 import { user } from "./auth";
 import { company } from "./company";
+import { document } from "./document";
 import { legalEntity } from "./legal-entity";
 import { orderLanguageEnum } from "./order-language";
 import { orderStatusEnum } from "./order-status";
@@ -76,6 +77,11 @@ export const purchaseOrder = pgTable(
     paymentMethod: text("payment_method"),
     inspectionDays: integer("inspection_days"),
     status: orderStatusEnum("status").notNull().default("draft"),
+    // References the general document library (spec §6.6, P8 slice 2) —
+    // same reasoning as sales_order.executed_document_id.
+    executedDocumentId: uuid("executed_document_id").references(
+      () => document.id,
+    ),
     // Mirrors quotation.language — drives purchase-order PDF export.
     language: orderLanguageEnum("language").notNull().default("en"),
     notes: text("notes"),

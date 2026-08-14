@@ -54,6 +54,7 @@ export function SalesOrderBuilder({
   companies,
   projects,
   products,
+  documents,
   defaultHeader,
   defaultLines,
 }: {
@@ -66,6 +67,7 @@ export function SalesOrderBuilder({
   companies: { id: string; nameEn: string }[];
   projects: { id: string; nameEn: string }[];
   products: { id: string; centorCode: string; nameEn: string }[];
+  documents: { id: string; title: string }[];
   defaultHeader: {
     quotationId: string;
     legalEntityId: string;
@@ -80,6 +82,7 @@ export function SalesOrderBuilder({
     governingLaw: string | null;
     arbitrationRules: string | null;
     contractNo: string | null;
+    executedDocumentId: string | null;
     notes: string | null;
   };
   defaultLines?: {
@@ -119,6 +122,9 @@ export function SalesOrderBuilder({
     defaultHeader.arbitrationRules ?? "",
   );
   const [contractNo, setContractNo] = useState(defaultHeader.contractNo ?? "");
+  const [executedDocumentId, setExecutedDocumentId] = useState(
+    defaultHeader.executedDocumentId ?? "",
+  );
   const [notes, setNotes] = useState(defaultHeader.notes ?? "");
 
   const [lines, setLines] = useState<LineRow[]>(
@@ -146,6 +152,7 @@ export function SalesOrderBuilder({
         governingLaw: governingLaw || null,
         arbitrationRules: arbitrationRules || null,
         contractNo: contractNo || null,
+        executedDocumentId: executedDocumentId || null,
         notes: notes || null,
       },
       lines: lines.map((line) => ({
@@ -279,6 +286,34 @@ export function SalesOrderBuilder({
               />
             </div>
           </div>
+
+          {mode === "edit" ? (
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="executedDocumentId">Executed document</Label>
+              <Select
+                value={executedDocumentId || "none"}
+                onValueChange={(v) =>
+                  setExecutedDocumentId(v === "none" || !v ? "" : v)
+                }
+                items={[
+                  { value: "none", label: "None" },
+                  ...documents.map((d) => ({ value: d.id, label: d.title })),
+                ]}
+              >
+                <SelectTrigger id="executedDocumentId">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">None</SelectItem>
+                  {documents.map((d) => (
+                    <SelectItem key={d.id} value={d.id}>
+                      {d.title}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          ) : null}
 
           <div className="flex flex-col gap-2">
             <Label>Customer</Label>

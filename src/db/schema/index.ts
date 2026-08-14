@@ -9,6 +9,7 @@ export * from "./product-document";
 export * from "./opportunity";
 export * from "./document-sequence";
 export * from "./quotation";
+export * from "./document";
 export * from "./order-status";
 export * from "./order-language";
 export * from "./sales-order";

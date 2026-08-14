@@ -14,6 +14,7 @@ import {
 
 import { user } from "./auth";
 import { company } from "./company";
+import { document } from "./document";
 import { legalEntity } from "./legal-entity";
 import { orderLanguageEnum } from "./order-language";
 import { orderStatusEnum } from "./order-status";
@@ -63,6 +64,13 @@ export const salesOrder = pgTable(
     // Free text, not a closed enum — spec's "e.g. SIAC/HKIAC" isn't exhaustive.
     arbitrationRules: text("arbitration_rules"),
     status: orderStatusEnum("status").notNull().default("draft"),
+    // References the general document library (spec §6.6, P8 slice 2) —
+    // which uploaded document (if any) is the signed/executed contract.
+    // Nullable: not every order has one yet, and no UI sets this column yet
+    // (P8 slice 2 only adds it; a picker is a separate follow-up).
+    executedDocumentId: uuid("executed_document_id").references(
+      () => document.id,
+    ),
     // Mirrors quotation.language — no PDF export for sales orders yet, but
     // added now alongside purchase_order.language so both order types are
     // consistent (docs/decisions.md).

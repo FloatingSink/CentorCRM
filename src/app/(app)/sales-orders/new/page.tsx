@@ -70,6 +70,7 @@ export default async function NewSalesOrderPage({
         companies={companies}
         projects={projects}
         products={products}
+        documents={[]}
         defaultHeader={{
           quotationId: quotation.id,
           legalEntityId: quotation.legalEntityId,
@@ -84,6 +85,7 @@ export default async function NewSalesOrderPage({
           governingLaw: null,
           arbitrationRules: null,
           contractNo: null,
+          executedDocumentId: null,
           notes: null,
         }}
         defaultLines={lines.map((l) => ({
