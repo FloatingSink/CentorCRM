@@ -15,6 +15,10 @@ const eslintConfig = defineConfig([
     "build/**",
     "next-env.d.ts",
     "src/db/migrations/**",
+    // Design-handoff prototype bundle (design_handoff_centor_crm/README.md:
+    // "Ignore the <x-dc> / support.js wrapper — that's the prototyping
+    // harness, not part of the design") — not app source, not ours to lint.
+    "design_handoff_centor_crm/**",
   ]),
 ]);
 

@@ -7,3 +7,6 @@ pnpm-lock.yaml
 # Pre-existing hand-authored docs, not code.
 CLAUDE.md
 specs/
+
+# Design-handoff prototype bundle — not app source (see eslint.config.mjs).
+design_handoff_centor_crm/

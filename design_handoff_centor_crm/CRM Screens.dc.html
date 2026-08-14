@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link rel="stylesheet" href="./nocturne.css">
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
+<style>
+  body { background: var(--color-bg); color: var(--color-text); margin: 0; }
+  a { color: var(--color-accent); }
+  .navlink:hover { background: color-mix(in srgb, var(--color-text) 7%, transparent) !important; }
+  .rowlink:hover { background: color-mix(in srgb, var(--color-text) 4%, transparent) !important; }
+</style>
+</helmet>
+
+<section style="padding:56px 56px 24px;max-width:1520px">
+  <div style="font-size:11px;letter-spacing:0.12em;text-transform:uppercase;color:var(--color-accent);margin-bottom:10px">Centor Global · CRM · direction 1a</div>
+  <h1 style="font-size:44px;margin:0 0 10px">The rest of the flow</h1>
+  <p class="text-muted" style="font-size:16px;max-width:680px;margin:0">Carrying 1a's Nocturne command layout into the next screens — <a href="#accounts">Accounts</a>, <a href="#account">Account detail</a>, and <a href="#deal">Deal detail</a>. Same sidebar, same type and spacing.</p>
+</section>
+
+<section style="display:flex;flex-direction:column;gap:72px;padding:24px 56px 80px;align-items:flex-start">
+
+  <!-- ===== ACCOUNTS LIST ===== -->
+  <div id="accounts">
+    <div style="display:flex;align-items:baseline;gap:16px;margin-bottom:16px">
+      <span style="font-family:var(--font-heading);font-size:12px;font-weight:600;color:var(--color-accent);border:1px solid var(--color-accent);border-radius:999px;padding:2px 11px">Accounts</span>
+      <div class="text-muted" style="font-size:13px">Every contractor account, filterable, with pipeline value at a glance</div>
+    </div>
+    <div class="elev-lg" style="width:1360px;display:flex;background:var(--color-bg);border-radius:var(--radius-lg);overflow:hidden">
+      <aside style="width:236px;flex:none;background:var(--color-surface);padding:22px 16px;display:flex;flex-direction:column;gap:28px">
+        <div style="display:flex;align-items:center;gap:10px;padding:0 8px"><div style="width:26px;height:26px;border-radius:7px;border:1px solid var(--color-accent);display:grid;place-items:center;color:var(--color-accent)"><i class="ph ph-orange-slice" style="font-size:15px"></i></div><span style="font-family:var(--font-heading);font-size:16px">Centor CRM</span></div>
+        <nav style="display:flex;flex-direction:column;gap:3px">
+          <a class="navlink" style="display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:var(--radius-md);font-size:14px;text-decoration:none;color:var(--color-text)"><i class="ph ph-squares-four" style="font-size:18px"></i>Dashboard</a>
+          <a class="navlink" style="display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:var(--radius-md);font-size:14px;text-decoration:none;color:var(--color-accent);background:color-mix(in srgb,var(--color-accent) 12%,transparent)"><i class="ph ph-buildings" style="font-size:18px"></i>Accounts</a>
+          <a class="navlink" style="display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:var(--radius-md);font-size:14px;text-decoration:none;color:var(--color-text)"><i class="ph ph-handshake" style="font-size:18px"></i>Deals</a>
+          <a class="navlink" style="display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:var(--radius-md);font-size:14px;text-decoration:none;color:var(--color-text)"><i class="ph ph-check-square" style="font-size:18px"></i>Tasks</a>
+          <a class="navlink" style="display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:var(--radius-md);font-size:14px;text-decoration:none;color:var(--color-text)"><i class="ph ph-chart-bar" style="font-size:18px"></i>Reports</a>
+          <a class="navlink" style="display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:var(--radius-md);font-size:14px;text-decoration:none;color:var(--color-text)"><i class="ph ph-gear" style="font-size:18px"></i>Settings</a>
+        </nav>
+        <div style="margin-top:auto;display:flex;align-items:center;gap:10px;padding:8px;border-radius:var(--radius-md);background:var(--color-neutral-900)"><div style="width:30px;height:30px;border-radius:50%;background:var(--color-accent-800);color:var(--color-accent-100);display:grid;place-items:center;font-size:12px">AR</div><div style="line-height:1.2"><div style="font-size:13px">Alex Reyes</div><div class="text-muted" style="font-size:11px">Regional lead</div></div></div>
+      </aside>
+      <main style="flex:1;min-width:0;padding:24px 28px 30px;display:flex;flex-direction:column;gap:22px">
+        <header style="display:flex;align-items:center;gap:16px">
+          <div><h2 style="font-size:24px;margin:0">Accounts</h2><div class="text-muted" style="font-size:13px">126 contractors · West region</div></div>
+          <div style="margin-left:auto;display:flex;align-items:center;gap:10px">
+            <div style="display:flex;align-items:center;gap:8px;background:var(--color-surface);border:1px solid var(--color-divider);border-radius:var(--radius-md);padding:8px 12px;min-width:200px;color:var(--color-neutral-500)"><i class="ph ph-magnifying-glass"></i><span style="font-size:13px">Search accounts…</span></div>
+            <a class="btn btn-primary"><i class="ph ph-plus"></i>New account</a>
+          </div>
+        </header>
+        <div style="display:flex;align-items:center;gap:10px">
+          <span class="seg"><label class="seg-opt"><input type="radio" name="af" checked>All</label><label class="seg-opt"><input type="radio" name="af">Mine</label><label class="seg-opt"><input type="radio" name="af">Active</label><label class="seg-opt"><input type="radio" name="af">At risk</label></span>
+          <a class="btn btn-secondary" style="font-size:13px"><i class="ph ph-funnel"></i>Region</a>
+          <a class="btn btn-secondary" style="font-size:13px"><i class="ph ph-sort-ascending"></i>Value</a>
+        </div>
+        <div class="card elev-sm" style="padding:8px 22px 16px">
+          <table class="table">
+            <thead><tr><th>Account</th><th>Owner</th><th>Region</th><th style="text-align:center">Open deals</th><th style="text-align:right">Pipeline value</th><th>Last activity</th><th>Status</th></tr></thead>
+            <tbody>
+              <tr class="rowlink" style="cursor:pointer"><td><div style="display:flex;align-items:center;gap:10px"><div style="width:28px;height:28px;border-radius:7px;background:var(--color-neutral-800);color:var(--color-neutral-200);display:grid;place-items:center;font-size:11px">AD</div>Alpine Distributors</div></td><td>D. Okafor</td><td>West</td><td style="text-align:center">3</td><td style="text-align:right">$120,000</td><td class="text-muted">12m ago</td><td><span class="tag tag-accent">Active</span></td></tr>
+              <tr class="rowlink" style="cursor:pointer"><td><div style="display:flex;align-items:center;gap:10px"><div style="width:28px;height:28px;border-radius:7px;background:var(--color-neutral-800);color:var(--color-neutral-200);display:grid;place-items:center;font-size:11px">MB</div>Meridian Building Supply</div></td><td>You</td><td>Midwest</td><td style="text-align:center">2</td><td style="text-align:right">$86,400</td><td class="text-muted">1h ago</td><td><span class="tag tag-accent">Active</span></td></tr>
+              <tr class="rowlink" style="cursor:pointer"><td><div style="display:flex;align-items:center;gap:10px"><div style="width:28px;height:28px;border-radius:7px;background:var(--color-neutral-800);color:var(--color-neutral-200);display:grid;place-items:center;font-size:11px">SI</div>Summit Interiors</div></td><td>D. Okafor</td><td>West</td><td style="text-align:center">1</td><td style="text-align:right">$67,800</td><td class="text-muted">1d ago</td><td><span class="tag tag-neutral">Nurture</span></td></tr>
+              <tr class="rowlink" style="cursor:pointer"><td><div style="display:flex;align-items:center;gap:10px"><div style="width:28px;height:28px;border-radius:7px;background:var(--color-neutral-800);color:var(--color-neutral-200);display:grid;place-items:center;font-size:11px">HC</div>Harbor Contractors</div></td><td>R. Vance</td><td>Northeast</td><td style="text-align:center">1</td><td style="text-align:right">$52,100</td><td class="text-muted">5h ago</td><td><span class="tag tag-accent">Active</span></td></tr>
+              <tr class="rowlink" style="cursor:pointer"><td><div style="display:flex;align-items:center;gap:10px"><div style="width:28px;height:28px;border-radius:7px;background:var(--color-neutral-800);color:var(--color-neutral-200);display:grid;place-items:center;font-size:11px">CC</div>Cedar &amp; Co.</div></td><td>You</td><td>South</td><td style="text-align:center">1</td><td style="text-align:right">$41,750</td><td class="text-muted">1d ago</td><td><span class="tag tag-neutral">Nurture</span></td></tr>
+              <tr class="rowlink" style="cursor:pointer"><td><div style="display:flex;align-items:center;gap:10px"><div style="width:28px;height:28px;border-radius:7px;background:var(--color-neutral-800);color:var(--color-neutral-200);display:grid;place-items:center;font-size:11px">NG</div>Northgate Supply</div></td><td>R. Vance</td><td>Midwest</td><td style="text-align:center">1</td><td style="text-align:right">$18,900</td><td class="text-muted">2d ago</td><td><span class="tag tag-outline">At risk</span></td></tr>
+              <tr class="rowlink" style="cursor:pointer"><td><div style="display:flex;align-items:center;gap:10px"><div style="width:28px;height:28px;border-radius:7px;background:var(--color-neutral-800);color:var(--color-neutral-200);display:grid;place-items:center;font-size:11px">FI</div>Fjord Interiors</div></td><td>D. Okafor</td><td>West</td><td style="text-align:center">0</td><td style="text-align:right">$63,200</td><td class="text-muted">3d ago</td><td><span class="tag tag-neutral">Customer</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <!-- ===== ACCOUNT DETAIL ===== -->
+  <div id="account">
+    <div style="display:flex;align-items:baseline;gap:16px;margin-bottom:16px">
+      <span style="font-family:var(--font-heading);font-size:12px;font-weight:600;color:var(--color-accent);border:1px solid var(--color-accent);border-radius:999px;padding:2px 11px">Account detail</span>
+      <div class="text-muted" style="font-size:13px">One contractor — contacts, open deals, and the activity trail</div>
+    </div>
+    <div class="elev-lg" style="width:1360px;display:flex;background:var(--color-bg);border-radius:var(--radius-lg);overflow:hidden">
+      <aside style="width:236px;flex:none;background:var(--color-surface);padding:22px 16px;display:flex;flex-direction:column;gap:28px">
+        <div style="display:flex;align-items:center;gap:10px;padding:0 8px"><div style="width:26px;height:26px;border-radius:7px;border:1px solid var(--color-accent);display:grid;place-items:center;color:var(--color-accent)"><i class="ph ph-orange-slice" style="font-size:15px"></i></div><span style="font-family:var(--font-heading);font-size:16px">Centor CRM</span></div>
+        <nav style="display:flex;flex-direction:column;gap:3px">
+          <a class="navlink" style="display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:var(--radius-md);font-size:14px;text-decoration:none;color:var(--color-text)"><i class="ph ph-squares-four" style="font-size:18px"></i>Dashboard</a>
+          <a class="navlink" style="display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:var(--radius-md);font-size:14px;text-decoration:none;color:var(--color-accent);background:color-mix(in srgb,var(--color-accent) 12%,transparent)"><i class="ph ph-buildings" style="font-size:18px"></i>Accounts</a>
+          <a class="navlink" style="display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:var(--radius-md);font-size:14px;text-decoration:none;color:var(--color-text)"><i class="ph ph-handshake" style="font-size:18px"></i>Deals</a>
+          <a class="navlink" style="display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:var(--radius-md);font-size:14px;text-decoration:none;color:var(--color-text)"><i class="ph ph-check-square" style="font-size:18px"></i>Tasks</a>
+          <a class="navlink" style="display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:var(--radius-md);font-size:14px;text-decoration:none;color:var(--color-text)"><i class="ph ph-chart-bar" style="font-size:18px"></i>Reports</a>
+          <a class="navlink" style="display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:var(--radius-md);font-size:14px;text-decoration:none;color:var(--color-text)"><i class="ph ph-gear" style="font-size:18px"></i>Settings</a>
+        </nav>
+      </aside>
+      <main style="flex:1;min-width:0;padding:24px 28px 30px;display:flex;flex-direction:column;gap:22px">
+        <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--color-neutral-500)"><span>Accounts</span><i class="ph ph-caret-right" style="font-size:11px"></i><span style="color:var(--color-text)">Alpine Distributors</span></div>
+        <header style="display:flex;align-items:flex-start;gap:16px">
+          <div style="width:52px;height:52px;border-radius:var(--radius-md);background:var(--color-neutral-800);color:var(--color-neutral-100);display:grid;place-items:center;font-size:18px;font-family:var(--font-heading)">AD</div>
+          <div>
+            <h2 style="font-size:26px;margin:0 0 4px">Alpine Distributors</h2>
+            <div style="display:flex;align-items:center;gap:8px"><span class="tag tag-accent">Active</span><span class="text-muted" style="font-size:13px">West region · Distributor tier 1 · Owner D. Okafor</span></div>
+          </div>
+          <div style="margin-left:auto;display:flex;gap:8px"><a class="btn btn-secondary"><i class="ph ph-note-pencil"></i>Log note</a><a class="btn btn-primary"><i class="ph ph-plus"></i>New deal</a></div>
+        </header>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px">
+          <div class="card elev-sm" style="gap:6px;padding:16px"><div class="text-muted" style="font-size:11px">Open pipeline</div><div style="font-family:var(--font-heading);font-size:22px">$120,000</div></div>
+          <div class="card elev-sm" style="gap:6px;padding:16px"><div class="text-muted" style="font-size:11px">Lifetime value</div><div style="font-family:var(--font-heading);font-size:22px">$486K</div></div>
+          <div class="card elev-sm" style="gap:6px;padding:16px"><div class="text-muted" style="font-size:11px">Open deals</div><div style="font-family:var(--font-heading);font-size:22px">3</div></div>
+          <div class="card elev-sm" style="gap:6px;padding:16px"><div class="text-muted" style="font-size:11px">Last order</div><div style="font-family:var(--font-heading);font-size:22px">14d</div></div>
+        </div>
+        <div style="display:grid;grid-template-columns:1.4fr 1fr;gap:22px;align-items:start">
+          <div style="display:flex;flex-direction:column;gap:22px">
+            <div class="card elev-sm" style="gap:12px;padding:20px">
+              <div style="display:flex;align-items:center"><div class="card-title">Open deals</div><a class="btn btn-ghost" style="margin-left:auto;font-size:13px">View all</a></div>
+              <div class="rowlink" style="display:flex;align-items:center;gap:12px;padding:11px;border:1px solid var(--color-divider);border-radius:var(--radius-md);cursor:pointer"><div style="flex:1"><div style="font-size:14px">Q3 TBM foam supply — Line 4</div><div class="text-muted" style="font-size:12px">Foam Agents · closing Aug 28</div></div><span class="tag tag-neutral">Qualified</span><span style="font-size:14px">$72,000</span></div>
+              <div class="rowlink" style="display:flex;align-items:center;gap:12px;padding:11px;border:1px solid var(--color-divider);border-radius:var(--radius-md);cursor:pointer"><div style="flex:1"><div style="font-size:14px">Main bearing grease — annual</div><div class="text-muted" style="font-size:12px">Sealing Systems · closing Sep 10</div></div><span class="tag tag-outline">Negotiation</span><span style="font-size:14px">$34,000</span></div>
+              <div class="rowlink" style="display:flex;align-items:center;gap:12px;padding:11px;border:1px solid var(--color-divider);border-radius:var(--radius-md);cursor:pointer"><div style="flex:1"><div style="font-size:14px">Tail sealant restock</div><div class="text-muted" style="font-size:12px">Sealing Systems · closing Sep 30</div></div><span class="tag tag-neutral">Lead</span><span style="font-size:14px">$14,000</span></div>
+            </div>
+            <div class="card elev-sm" style="gap:14px;padding:20px">
+              <div class="card-title">Activity</div>
+              <div style="display:flex;flex-direction:column;gap:16px">
+                <div style="display:flex;gap:12px"><i class="ph ph-phone-call" style="color:var(--color-accent);margin-top:2px"></i><div style="font-size:14px"><span class="text-muted">12m ago · </span>D. Okafor logged a call — discussed Line 4 foam volumes<div class="text-muted" style="font-size:12px;margin-top:2px">"Confirmed 60t for Q3, sending revised quote."</div></div></div>
+                <div style="display:flex;gap:12px"><i class="ph ph-envelope-simple" style="color:var(--color-neutral-500);margin-top:2px"></i><div style="font-size:14px"><span class="text-muted">2d ago · </span>Emailed IS-C spec sheet and SDS</div></div>
+                <div style="display:flex;gap:12px"><i class="ph ph-package" style="color:var(--color-neutral-500);margin-top:2px"></i><div style="font-size:14px"><span class="text-muted">14d ago · </span>Order #4471 delivered — 40t foam agent</div></div>
+              </div>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:22px">
+            <div class="card elev-sm" style="gap:14px;padding:20px">
+              <div class="card-title">Contacts</div>
+              <div style="display:flex;align-items:center;gap:11px"><div style="width:34px;height:34px;border-radius:50%;background:var(--color-accent-800);color:var(--color-accent-100);display:grid;place-items:center;font-size:12px">JM</div><div style="flex:1"><div style="font-size:14px">Jian Mah</div><div class="text-muted" style="font-size:12px">Procurement lead · primary</div></div><i class="ph ph-envelope-simple text-muted"></i></div>
+              <div style="display:flex;align-items:center;gap:11px"><div style="width:34px;height:34px;border-radius:50%;background:var(--color-neutral-800);color:var(--color-neutral-200);display:grid;place-items:center;font-size:12px">RP</div><div style="flex:1"><div style="font-size:14px">Rosa Peña</div><div class="text-muted" style="font-size:12px">Site engineer</div></div><i class="ph ph-envelope-simple text-muted"></i></div>
+              <a class="btn btn-ghost" style="font-size:13px;align-self:flex-start"><i class="ph ph-plus"></i>Add contact</a>
+            </div>
+            <div class="card elev-sm" style="gap:10px;padding:20px">
+              <div class="card-title">Details</div>
+              <div style="display:flex;justify-content:space-between;font-size:13px"><span class="text-muted">Industry</span><span>Tunnelling contractor</span></div>
+              <div style="display:flex;justify-content:space-between;font-size:13px"><span class="text-muted">Payment terms</span><span>Net 45</span></div>
+              <div style="display:flex;justify-content:space-between;font-size:13px"><span class="text-muted">Currency</span><span>USD</span></div>
+              <div style="display:flex;justify-content:space-between;font-size:13px"><span class="text-muted">Since</span><span>2021</span></div>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <!-- ===== DEAL DETAIL ===== -->
+  <div id="deal">
+    <div style="display:flex;align-items:baseline;gap:16px;margin-bottom:16px">
+      <span style="font-family:var(--font-heading);font-size:12px;font-weight:600;color:var(--color-accent);border:1px solid var(--color-accent);border-radius:999px;padding:2px 11px">Deal detail</span>
+      <div class="text-muted" style="font-size:13px">A single deal — stage stepper, line items, and the working column</div>
+    </div>
+    <div class="elev-lg" style="width:1360px;display:flex;background:var(--color-bg);border-radius:var(--radius-lg);overflow:hidden">
+      <aside style="width:236px;flex:none;background:var(--color-surface);padding:22px 16px;display:flex;flex-direction:column;gap:28px">
+        <div style="display:flex;align-items:center;gap:10px;padding:0 8px"><div style="width:26px;height:26px;border-radius:7px;border:1px solid var(--color-accent);display:grid;place-items:center;color:var(--color-accent)"><i class="ph ph-orange-slice" style="font-size:15px"></i></div><span style="font-family:var(--font-heading);font-size:16px">Centor CRM</span></div>
+        <nav style="display:flex;flex-direction:column;gap:3px">
+          <a class="navlink" style="display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:var(--radius-md);font-size:14px;text-decoration:none;color:var(--color-text)"><i class="ph ph-squares-four" style="font-size:18px"></i>Dashboard</a>
+          <a class="navlink" style="display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:var(--radius-md);font-size:14px;text-decoration:none;color:var(--color-text)"><i class="ph ph-buildings" style="font-size:18px"></i>Accounts</a>
+          <a class="navlink" style="display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:var(--radius-md);font-size:14px;text-decoration:none;color:var(--color-accent);background:color-mix(in srgb,var(--color-accent) 12%,transparent)"><i class="ph ph-handshake" style="font-size:18px"></i>Deals</a>
+          <a class="navlink" style="display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:var(--radius-md);font-size:14px;text-decoration:none;color:var(--color-text)"><i class="ph ph-check-square" style="font-size:18px"></i>Tasks</a>
+          <a class="navlink" style="display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:var(--radius-md);font-size:14px;text-decoration:none;color:var(--color-text)"><i class="ph ph-chart-bar" style="font-size:18px"></i>Reports</a>
+          <a class="navlink" style="display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:var(--radius-md);font-size:14px;text-decoration:none;color:var(--color-text)"><i class="ph ph-gear" style="font-size:18px"></i>Settings</a>
+        </nav>
+      </aside>
+      <main style="flex:1;min-width:0;padding:24px 28px 30px;display:flex;flex-direction:column;gap:22px">
+        <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--color-neutral-500)"><span>Deals</span><i class="ph ph-caret-right" style="font-size:11px"></i><span>Alpine Distributors</span><i class="ph ph-caret-right" style="font-size:11px"></i><span style="color:var(--color-text)">Q3 TBM foam supply</span></div>
+        <header style="display:flex;align-items:flex-start;gap:16px">
+          <div>
+            <h2 style="font-size:26px;margin:0 0 4px">Q3 TBM foam supply — Line 4</h2>
+            <div class="text-muted" style="font-size:13px">Alpine Distributors · Foam Agents · Owner D. Okafor</div>
+          </div>
+          <div style="margin-left:auto;text-align:right"><div style="font-family:var(--font-heading);font-size:28px">$72,000</div><div class="text-muted" style="font-size:12px">Weighted $43,200 · 60%</div></div>
+        </header>
+        <!-- stage stepper -->
+        <div style="display:flex;align-items:center;gap:0;background:var(--color-surface);border-radius:var(--radius-md);padding:6px">
+          <div style="flex:1;text-align:center;font-size:12px;padding:8px;border-radius:var(--radius-sm);color:var(--color-neutral-500)">Lead</div>
+          <i class="ph ph-caret-right" style="color:var(--color-neutral-700);font-size:11px"></i>
+          <div style="flex:1;text-align:center;font-size:12px;padding:8px;border-radius:var(--radius-sm);color:var(--color-accent);background:color-mix(in srgb,var(--color-accent) 14%,transparent);box-shadow:inset 0 0 0 1px var(--color-accent)">Qualified</div>
+          <i class="ph ph-caret-right" style="color:var(--color-neutral-700);font-size:11px"></i>
+          <div style="flex:1;text-align:center;font-size:12px;padding:8px;border-radius:var(--radius-sm);color:var(--color-neutral-500)">Proposal</div>
+          <i class="ph ph-caret-right" style="color:var(--color-neutral-700);font-size:11px"></i>
+          <div style="flex:1;text-align:center;font-size:12px;padding:8px;border-radius:var(--radius-sm);color:var(--color-neutral-500)">Negotiation</div>
+          <i class="ph ph-caret-right" style="color:var(--color-neutral-700);font-size:11px"></i>
+          <div style="flex:1;text-align:center;font-size:12px;padding:8px;border-radius:var(--radius-sm);color:var(--color-neutral-500)">Won</div>
+        </div>
+        <div style="display:grid;grid-template-columns:1.5fr 1fr;gap:22px;align-items:start">
+          <div style="display:flex;flex-direction:column;gap:22px">
+            <div class="card elev-sm" style="gap:12px;padding:20px">
+              <div class="card-title">Line items</div>
+              <table class="table">
+                <thead><tr><th>Product</th><th style="text-align:center">Qty</th><th style="text-align:right">Unit</th><th style="text-align:right">Total</th></tr></thead>
+                <tbody>
+                  <tr><td>IS-C foam agent (drum)</td><td style="text-align:center">40</td><td style="text-align:right">$1,150</td><td style="text-align:right">$46,000</td></tr>
+                  <tr><td>IS-P foam agent (drum)</td><td style="text-align:center">16</td><td style="text-align:right">$1,250</td><td style="text-align:right">$20,000</td></tr>
+                  <tr><td>On-site commissioning</td><td style="text-align:center">1</td><td style="text-align:right">$6,000</td><td style="text-align:right">$6,000</td></tr>
+                </tbody>
+              </table>
+              <div style="display:flex;justify-content:flex-end;gap:32px;padding-top:6px"><span class="text-muted" style="font-size:13px">Total</span><span style="font-family:var(--font-heading);font-size:17px">$72,000</span></div>
+            </div>
+            <div class="card elev-sm" style="gap:14px;padding:20px">
+              <div class="card-title">Activity</div>
+              <div style="display:flex;flex-direction:column;gap:16px">
+                <div style="display:flex;gap:12px"><i class="ph ph-phone-call" style="color:var(--color-accent);margin-top:2px"></i><div style="font-size:14px"><span class="text-muted">12m ago · </span>Call with Jian Mah — confirmed 60t for Q3</div></div>
+                <div style="display:flex;gap:12px"><i class="ph ph-arrows-clockwise" style="color:var(--color-neutral-500);margin-top:2px"></i><div style="font-size:14px"><span class="text-muted">2d ago · </span>Moved to Qualified by D. Okafor</div></div>
+                <div style="display:flex;gap:12px"><i class="ph ph-file-text" style="color:var(--color-neutral-500);margin-top:2px"></i><div style="font-size:14px"><span class="text-muted">4d ago · </span>Draft quote generated</div></div>
+              </div>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:22px">
+            <div class="card elev-sm" style="gap:10px;padding:20px">
+              <div class="card-title">Details</div>
+              <div style="display:flex;justify-content:space-between;font-size:13px"><span class="text-muted">Close date</span><span>Aug 28</span></div>
+              <div style="display:flex;justify-content:space-between;font-size:13px"><span class="text-muted">Probability</span><span>60%</span></div>
+              <div style="display:flex;justify-content:space-between;font-size:13px"><span class="text-muted">Region</span><span>West</span></div>
+              <div style="display:flex;justify-content:space-between;font-size:13px"><span class="text-muted">Source</span><span>Existing account</span></div>
+            </div>
+            <div class="card elev-sm" style="gap:12px;padding:20px">
+              <div style="display:flex;align-items:center"><div class="card-title">Next steps</div><span class="tag tag-neutral" style="margin-left:auto">2</span></div>
+              <div style="display:flex;gap:11px;padding-bottom:10px;border-bottom:1px solid var(--color-divider)"><i class="ph ph-circle" style="color:var(--color-accent);margin-top:2px"></i><div><div style="font-size:13px">Send revised quote</div><div class="text-muted" style="font-size:11px">Today</div></div></div>
+              <div style="display:flex;gap:11px"><i class="ph ph-circle" style="color:var(--color-neutral-600);margin-top:2px"></i><div><div style="font-size:13px">Schedule commissioning</div><div class="text-muted" style="font-size:11px">After PO</div></div></div>
+            </div>
+            <a class="btn btn-primary btn-block"><i class="ph ph-arrow-right"></i>Advance to Proposal</a>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+</section>
+</x-dc>
+</body>
+</html>
