@@ -292,6 +292,7 @@ export async function createPurchaseOrder(
       .where(eq(legalEntity.id, header.legalEntityId));
 
     const sequence = await getNextSequenceNumber(
+      tx,
       header.legalEntityId,
       DOC_TYPE,
     );
