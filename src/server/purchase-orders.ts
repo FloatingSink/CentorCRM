@@ -81,6 +81,120 @@ export async function getPurchaseOrderForPdf(id: string) {
   return { ...row, lines };
 }
 
+// For the live PDF preview (src/components/pdf-preview-panel.tsx) — same
+// reasoning as getQuotationPdfDataFromDraft in src/server/quotations.ts:
+// resolves legalEntity/supplier (company or legal entity, matching the XOR
+// pair) /each line's product from ids in an *unsaved* draft header+lines,
+// and returns the exact same shape getPurchaseOrderForPdf does so
+// PurchaseOrderDocument needs no changes.
+export async function getPurchaseOrderPdfDataFromDraft(
+  header: PurchaseOrderHeaderInput,
+  lines: (PurchaseOrderLineInput & { unitPriceMinor: number })[],
+  orderNo: string,
+) {
+  const [legalEntityRow] = header.legalEntityId
+    ? await db
+        .select()
+        .from(legalEntity)
+        .where(eq(legalEntity.id, header.legalEntityId))
+    : [];
+  if (!legalEntityRow) return null;
+
+  const supplierCompanyRow = header.supplierCompanyId
+    ? ((
+        await db
+          .select()
+          .from(company)
+          .where(eq(company.id, header.supplierCompanyId))
+      )[0] ?? null)
+    : null;
+  const supplierLegalEntityRow = header.supplierLegalEntityId
+    ? ((
+        await db
+          .select()
+          .from(legalEntity)
+          .where(eq(legalEntity.id, header.supplierLegalEntityId))
+      )[0] ?? null)
+    : null;
+  if (!supplierCompanyRow && !supplierLegalEntityRow) return null;
+
+  const lineProducts: {
+    line: typeof orderLine.$inferSelect;
+    product: typeof product.$inferSelect;
+  }[] = [];
+  for (const [index, line] of lines.entries()) {
+    const [productRow] = await db
+      .select()
+      .from(product)
+      .where(eq(product.id, line.productId));
+    if (!productRow) return null;
+    lineProducts.push({
+      line: {
+        id: `draft-line-${index}`,
+        orderType: "purchase",
+        salesOrderId: null,
+        purchaseOrderId: "draft",
+        lineNo: index + 1,
+        productId: line.productId,
+        descriptionOverride: line.descriptionOverride,
+        quantity: line.quantity,
+        uom: line.uom,
+        unitPrice: line.unitPriceMinor,
+        discountPct: line.discountPct,
+        lineTotal: calculateLineTotal(
+          line.quantity,
+          line.unitPriceMinor,
+          line.discountPct,
+        ),
+        netWeightKg: line.netWeightKg,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        createdBy: null,
+      },
+      product: productRow,
+    });
+  }
+
+  const draftPurchaseOrderRow: typeof purchaseOrder.$inferSelect = {
+    id: "draft",
+    orderNo,
+    contractNo: header.contractNo ?? null,
+    legalEntityId: header.legalEntityId,
+    supplierCompanyId: header.supplierCompanyId ?? null,
+    supplierLegalEntityId: header.supplierLegalEntityId ?? null,
+    projectId: header.projectId,
+    linkedSalesOrderId: header.linkedSalesOrderId ?? null,
+    signedDate: header.signedDate ?? null,
+    deliveryLocation: header.deliveryLocation ?? null,
+    requiredDeliveryDate: header.requiredDeliveryDate ?? null,
+    currency: header.currency,
+    fxRateToSgd: header.fxRateToSgd,
+    incoterm: header.incoterm ?? null,
+    namedPlace: header.namedPlace ?? null,
+    totalValue: sumLineTotals(lines),
+    governingLaw: header.governingLaw ?? null,
+    arbitrationRules: header.arbitrationRules ?? null,
+    deliveryMethod: header.deliveryMethod ?? null,
+    paymentMethod: header.paymentMethod ?? null,
+    inspectionDays: header.inspectionDays ?? null,
+    status: "draft",
+    executedDocumentId: header.executedDocumentId ?? null,
+    language: header.language ?? "en",
+    notes: header.notes ?? null,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    createdBy: null,
+  };
+
+  return {
+    order: draftPurchaseOrderRow,
+    legalEntity: legalEntityRow,
+    supplierCompany: supplierCompanyRow,
+    supplierLegalEntity: supplierLegalEntityRow,
+    lines: lineProducts,
+  };
+}
+
 export async function getPurchaseOrderById(id: string) {
   const [orderRow] = await db
     .select()

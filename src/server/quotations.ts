@@ -86,6 +86,106 @@ export async function getQuotationForPdf(id: string) {
   return { ...row, lines };
 }
 
+// For the live PDF preview (src/components/pdf-preview-panel.tsx) —
+// resolves legalEntity/company/contact/each line's product from ids in an
+// *unsaved* draft header+lines, and returns the exact same shape
+// getQuotationForPdf does so QuotationDocument needs no changes. Deliberately
+// additive rather than a refactor of getQuotationForPdf — that function is
+// already shipped and tested against real saved quotations; this one only
+// needs to satisfy the preview path, and duplicating a few joins is a much
+// smaller risk than changing shared, working code.
+export async function getQuotationPdfDataFromDraft(
+  header: QuotationHeaderInput,
+  lines: (QuotationLineInput & { unitPriceMinor: number })[],
+  quoteNo: string,
+  version: number,
+) {
+  const [legalEntityRow] = header.legalEntityId
+    ? await db
+        .select()
+        .from(legalEntity)
+        .where(eq(legalEntity.id, header.legalEntityId))
+    : [];
+  const [companyRow] = header.customerCompanyId
+    ? await db
+        .select()
+        .from(company)
+        .where(eq(company.id, header.customerCompanyId))
+    : [];
+  if (!legalEntityRow || !companyRow) return null;
+
+  const contactRow = header.contactId
+    ? ((
+        await db.select().from(contact).where(eq(contact.id, header.contactId))
+      )[0] ?? null)
+    : null;
+
+  const lineProducts: {
+    line: typeof quotationLine.$inferSelect;
+    product: typeof product.$inferSelect;
+  }[] = [];
+  for (const [index, line] of lines.entries()) {
+    const [productRow] = await db
+      .select()
+      .from(product)
+      .where(eq(product.id, line.productId));
+    if (!productRow) return null;
+    lineProducts.push({
+      line: {
+        id: `draft-line-${index}`,
+        quotationId: "draft",
+        lineNo: index + 1,
+        productId: line.productId,
+        descriptionOverride: line.descriptionOverride,
+        quantity: line.quantity,
+        uom: line.uom,
+        unitPrice: line.unitPriceMinor,
+        discountPct: line.discountPct,
+        lineTotal: calculateLineTotal(
+          line.quantity,
+          line.unitPriceMinor,
+          line.discountPct,
+        ),
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        createdBy: null,
+      },
+      product: productRow,
+    });
+  }
+
+  const draftQuotationRow: typeof quotation.$inferSelect = {
+    id: "draft",
+    quoteNo,
+    version,
+    opportunityId: header.opportunityId,
+    legalEntityId: header.legalEntityId,
+    customerCompanyId: header.customerCompanyId,
+    contactId: header.contactId ?? null,
+    issueDate: header.issueDate,
+    validUntil: header.validUntil ?? null,
+    currency: header.currency,
+    incoterm: header.incoterm ?? null,
+    namedPlace: header.namedPlace ?? null,
+    paymentTerms: header.paymentTerms ?? null,
+    leadTimeDays: header.leadTimeDays ?? null,
+    language: header.language ?? "en",
+    status: "draft",
+    notes: header.notes ?? null,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    createdBy: null,
+  };
+
+  return {
+    quotation: draftQuotationRow,
+    legalEntity: legalEntityRow,
+    company: companyRow,
+    contact: contactRow,
+    lines: lineProducts,
+  };
+}
+
 async function insertLines(
   tx: Tx,
   quotationId: string,

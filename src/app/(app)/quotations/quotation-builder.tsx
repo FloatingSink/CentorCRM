@@ -6,6 +6,7 @@ import { useState } from "react";
 import {
   createQuotationAction,
   createQuotationVersionAction,
+  previewQuotationPdfAction,
   updateQuotationAction,
   updateQuotationStatusAction,
 } from "./actions";
@@ -15,6 +16,7 @@ import {
   OrderLineEditor,
   type LineRow,
 } from "@/components/order-line-editor";
+import { PdfPreviewPanel } from "@/components/pdf-preview-panel";
 import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -179,6 +181,17 @@ export function QuotationBuilder({
     };
   }
 
+  // quoteNo/version are real when editing an existing quotation, or
+  // placeholders in create mode — never persisted, purely for display in the
+  // ephemeral preview render (see quotationPreviewSchema).
+  function buildPreviewPayload() {
+    return {
+      ...buildPayload(),
+      quoteNo: quoteNo ?? "DRAFT",
+      version: version ?? 1,
+    };
+  }
+
   async function handleSave() {
     setPending(true);
     setError(undefined);
@@ -244,298 +257,309 @@ export function QuotationBuilder({
   }
 
   return (
-    <div className="flex flex-col gap-6">
-      {error ? <p className="text-sm text-destructive">{error}</p> : null}
+    <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_480px]">
+      <div className="flex flex-col gap-6">
+        {error ? <p className="text-sm text-destructive">{error}</p> : null}
 
-      {mode === "edit" ? (
-        <div className="flex flex-wrap items-center gap-3">
-          {STATUSES.map((s) => (
-            <Button
-              key={s}
-              type="button"
-              variant={s === status ? "default" : "outline"}
-              size="sm"
-              disabled={pending || s === status}
-              onClick={() => handleStatusChange(s)}
-              className="capitalize"
-            >
-              {s}
-            </Button>
-          ))}
-          {status === "superseded" ? (
-            <Badge variant="secondary">Superseded</Badge>
-          ) : null}
-        </div>
-      ) : null}
+        {mode === "edit" ? (
+          <div className="flex flex-wrap items-center gap-3">
+            {STATUSES.map((s) => (
+              <Button
+                key={s}
+                type="button"
+                variant={s === status ? "default" : "outline"}
+                size="sm"
+                disabled={pending || s === status}
+                onClick={() => handleStatusChange(s)}
+                className="capitalize"
+              >
+                {s}
+              </Button>
+            ))}
+            {status === "superseded" ? (
+              <Badge variant="secondary">Superseded</Badge>
+            ) : null}
+          </div>
+        ) : null}
 
-      <Card>
-        <CardContent className="flex flex-col gap-4">
-          {mode === "create" ? (
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="opportunityId">Opportunity</Label>
-              <Select
-                value={opportunityId}
-                onValueChange={handleOpportunityChange}
-                items={opportunities.map((o) => ({
-                  value: o.id,
-                  label: `${o.reference} — ${o.title}`,
-                }))}
-              >
-                <SelectTrigger id="opportunityId">
-                  <SelectValue placeholder="Select an opportunity" />
-                </SelectTrigger>
-                <SelectContent>
-                  {opportunities.map((o) => (
-                    <SelectItem key={o.id} value={o.id}>
-                      {o.reference} — {o.title}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          ) : null}
+        <Card>
+          <CardContent className="flex flex-col gap-4">
+            {mode === "create" ? (
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="opportunityId">Opportunity</Label>
+                <Select
+                  value={opportunityId}
+                  onValueChange={handleOpportunityChange}
+                  items={opportunities.map((o) => ({
+                    value: o.id,
+                    label: `${o.reference} — ${o.title}`,
+                  }))}
+                >
+                  <SelectTrigger id="opportunityId">
+                    <SelectValue placeholder="Select an opportunity" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {opportunities.map((o) => (
+                      <SelectItem key={o.id} value={o.id}>
+                        {o.reference} — {o.title}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            ) : null}
 
-          <div className="grid grid-cols-3 gap-4">
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="legalEntityId">Legal entity</Label>
-              <Select
-                value={legalEntityId}
-                onValueChange={(v) => setLegalEntityId(v ?? "")}
-                items={legalEntities.map((le) => ({
-                  value: le.id,
-                  label: `${le.nameEn} (${le.shortCode})`,
-                }))}
-              >
-                <SelectTrigger id="legalEntityId">
-                  <SelectValue placeholder="Select an entity" />
-                </SelectTrigger>
-                <SelectContent>
-                  {legalEntities.map((le) => (
-                    <SelectItem key={le.id} value={le.id}>
-                      {le.nameEn} ({le.shortCode})
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="customerCompanyId">Customer</Label>
-              <Select
-                value={customerCompanyId}
-                onValueChange={(v) => setCustomerCompanyId(v ?? "")}
-                items={companies.map((c) => ({
-                  value: c.id,
-                  label: c.nameEn,
-                }))}
-              >
-                <SelectTrigger id="customerCompanyId">
-                  <SelectValue placeholder="Select a company" />
-                </SelectTrigger>
-                <SelectContent>
-                  {companies.map((c) => (
-                    <SelectItem key={c.id} value={c.id}>
-                      {c.nameEn}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="contactId">Contact</Label>
-              <Select
-                value={contactId || "none"}
-                onValueChange={(v) => setContactId(v === "none" || !v ? "" : v)}
-                items={[
-                  { value: "none", label: "None" },
-                  ...contactsForCompany.map((c) => ({
+            <div className="grid grid-cols-3 gap-4">
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="legalEntityId">Legal entity</Label>
+                <Select
+                  value={legalEntityId}
+                  onValueChange={(v) => setLegalEntityId(v ?? "")}
+                  items={legalEntities.map((le) => ({
+                    value: le.id,
+                    label: `${le.nameEn} (${le.shortCode})`,
+                  }))}
+                >
+                  <SelectTrigger id="legalEntityId">
+                    <SelectValue placeholder="Select an entity" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {legalEntities.map((le) => (
+                      <SelectItem key={le.id} value={le.id}>
+                        {le.nameEn} ({le.shortCode})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="customerCompanyId">Customer</Label>
+                <Select
+                  value={customerCompanyId}
+                  onValueChange={(v) => setCustomerCompanyId(v ?? "")}
+                  items={companies.map((c) => ({
                     value: c.id,
                     label: c.nameEn,
-                  })),
-                ]}
-              >
-                <SelectTrigger id="contactId">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">None</SelectItem>
-                  {contactsForCompany.map((c) => (
-                    <SelectItem key={c.id} value={c.id}>
-                      {c.nameEn}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                  }))}
+                >
+                  <SelectTrigger id="customerCompanyId">
+                    <SelectValue placeholder="Select a company" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {companies.map((c) => (
+                      <SelectItem key={c.id} value={c.id}>
+                        {c.nameEn}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="contactId">Contact</Label>
+                <Select
+                  value={contactId || "none"}
+                  onValueChange={(v) =>
+                    setContactId(v === "none" || !v ? "" : v)
+                  }
+                  items={[
+                    { value: "none", label: "None" },
+                    ...contactsForCompany.map((c) => ({
+                      value: c.id,
+                      label: c.nameEn,
+                    })),
+                  ]}
+                >
+                  <SelectTrigger id="contactId">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">None</SelectItem>
+                    {contactsForCompany.map((c) => (
+                      <SelectItem key={c.id} value={c.id}>
+                        {c.nameEn}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
-          </div>
 
-          <div className="grid grid-cols-4 gap-4">
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="issueDate">Issue date</Label>
-              <Input
-                id="issueDate"
-                type="date"
-                value={issueDate}
-                onChange={(e) => setIssueDate(e.target.value)}
-              />
+            <div className="grid grid-cols-4 gap-4">
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="issueDate">Issue date</Label>
+                <Input
+                  id="issueDate"
+                  type="date"
+                  value={issueDate}
+                  onChange={(e) => setIssueDate(e.target.value)}
+                />
+              </div>
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="validUntil">Valid until</Label>
+                <Input
+                  id="validUntil"
+                  type="date"
+                  value={validUntil}
+                  onChange={(e) => setValidUntil(e.target.value)}
+                />
+              </div>
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="currency">Currency</Label>
+                <Input
+                  id="currency"
+                  maxLength={3}
+                  className="uppercase"
+                  value={currency}
+                  onChange={(e) => setCurrency(e.target.value.toUpperCase())}
+                />
+              </div>
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="language">Language</Label>
+                <Select
+                  value={language}
+                  onValueChange={(v) => setLanguage(v ?? "en")}
+                  items={LANGUAGES}
+                >
+                  <SelectTrigger id="language">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {LANGUAGES.map((l) => (
+                      <SelectItem key={l.value} value={l.value}>
+                        {l.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="validUntil">Valid until</Label>
-              <Input
-                id="validUntil"
-                type="date"
-                value={validUntil}
-                onChange={(e) => setValidUntil(e.target.value)}
-              />
-            </div>
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="currency">Currency</Label>
-              <Input
-                id="currency"
-                maxLength={3}
-                className="uppercase"
-                value={currency}
-                onChange={(e) => setCurrency(e.target.value.toUpperCase())}
-              />
-            </div>
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="language">Language</Label>
-              <Select
-                value={language}
-                onValueChange={(v) => setLanguage(v ?? "en")}
-                items={LANGUAGES}
-              >
-                <SelectTrigger id="language">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {LANGUAGES.map((l) => (
-                    <SelectItem key={l.value} value={l.value}>
-                      {l.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
 
-          <div className="grid grid-cols-4 gap-4">
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="incoterm">Incoterm</Label>
-              <Select
-                value={incoterm || "none"}
-                onValueChange={(v) => setIncoterm(v === "none" || !v ? "" : v)}
-                items={[
-                  { value: "none", label: "Unspecified" },
-                  ...INCOTERMS.map((i) => ({ value: i, label: i })),
-                ]}
-              >
-                <SelectTrigger id="incoterm">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">Unspecified</SelectItem>
-                  {INCOTERMS.map((i) => (
-                    <SelectItem key={i} value={i}>
-                      {i}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            <div className="grid grid-cols-4 gap-4">
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="incoterm">Incoterm</Label>
+                <Select
+                  value={incoterm || "none"}
+                  onValueChange={(v) =>
+                    setIncoterm(v === "none" || !v ? "" : v)
+                  }
+                  items={[
+                    { value: "none", label: "Unspecified" },
+                    ...INCOTERMS.map((i) => ({ value: i, label: i })),
+                  ]}
+                >
+                  <SelectTrigger id="incoterm">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">Unspecified</SelectItem>
+                    {INCOTERMS.map((i) => (
+                      <SelectItem key={i} value={i}>
+                        {i}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="namedPlace">Named place</Label>
+                <Input
+                  id="namedPlace"
+                  value={namedPlace}
+                  onChange={(e) => setNamedPlace(e.target.value)}
+                  disabled={incoterm === "" || incoterm === "EXW"}
+                />
+              </div>
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="paymentTerms">Payment terms</Label>
+                <Input
+                  id="paymentTerms"
+                  value={paymentTerms}
+                  onChange={(e) => setPaymentTerms(e.target.value)}
+                />
+              </div>
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="leadTimeDays">Lead time (days)</Label>
+                <Input
+                  id="leadTimeDays"
+                  type="number"
+                  min={0}
+                  value={leadTimeDays}
+                  onChange={(e) => setLeadTimeDays(e.target.value)}
+                />
+              </div>
             </div>
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="namedPlace">Named place</Label>
-              <Input
-                id="namedPlace"
-                value={namedPlace}
-                onChange={(e) => setNamedPlace(e.target.value)}
-                disabled={incoterm === "" || incoterm === "EXW"}
-              />
-            </div>
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="paymentTerms">Payment terms</Label>
-              <Input
-                id="paymentTerms"
-                value={paymentTerms}
-                onChange={(e) => setPaymentTerms(e.target.value)}
-              />
-            </div>
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="leadTimeDays">Lead time (days)</Label>
-              <Input
-                id="leadTimeDays"
-                type="number"
-                min={0}
-                value={leadTimeDays}
-                onChange={(e) => setLeadTimeDays(e.target.value)}
-              />
-            </div>
-          </div>
 
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="notes">Notes</Label>
-            <Textarea
-              id="notes"
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="notes">Notes</Label>
+              <Textarea
+                id="notes"
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+              />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent>
+            <OrderLineEditor
+              lines={lines}
+              onLinesChange={setLines}
+              currency={currency}
+              products={products}
             />
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
 
-      <Card>
-        <CardContent>
-          <OrderLineEditor
-            lines={lines}
-            onLinesChange={setLines}
-            currency={currency}
-            products={products}
-          />
-        </CardContent>
-      </Card>
-
-      <div className="flex gap-3">
-        <Button type="button" disabled={pending} onClick={handleSave}>
-          {pending
-            ? "Saving…"
-            : mode === "create"
-              ? "Create quotation"
-              : "Save changes"}
-        </Button>
-        {mode === "edit" ? (
-          <Button
-            type="button"
-            variant="outline"
-            disabled={pending}
-            onClick={handleNewVersion}
-          >
-            Save as new version
+        <div className="flex gap-3">
+          <Button type="button" disabled={pending} onClick={handleSave}>
+            {pending
+              ? "Saving…"
+              : mode === "create"
+                ? "Create quotation"
+                : "Save changes"}
           </Button>
-        ) : null}
-        {mode === "edit" ? (
-          <a
-            href={`/quotations/${quotationId}/pdf`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className={buttonVariants({ variant: "ghost" })}
-          >
-            Export PDF
-          </a>
-        ) : null}
-        {mode === "edit" && status === "accepted" ? (
-          <a
-            href={`/sales-orders/new?quotationId=${quotationId}`}
-            className={buttonVariants({ variant: "ghost" })}
-          >
-            Convert to sales order
-          </a>
+          {mode === "edit" ? (
+            <Button
+              type="button"
+              variant="outline"
+              disabled={pending}
+              onClick={handleNewVersion}
+            >
+              Save as new version
+            </Button>
+          ) : null}
+          {mode === "edit" ? (
+            <a
+              href={`/quotations/${quotationId}/pdf`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={buttonVariants({ variant: "ghost" })}
+            >
+              Export PDF
+            </a>
+          ) : null}
+          {mode === "edit" && status === "accepted" ? (
+            <a
+              href={`/sales-orders/new?quotationId=${quotationId}`}
+              className={buttonVariants({ variant: "ghost" })}
+            >
+              Convert to sales order
+            </a>
+          ) : null}
+        </div>
+
+        {mode === "edit" && quoteNo ? (
+          <p className="text-sm text-muted-foreground">
+            {quoteNo} · version {version}
+          </p>
         ) : null}
       </div>
 
-      {mode === "edit" && quoteNo ? (
-        <p className="text-sm text-muted-foreground">
-          {quoteNo} · version {version}
-        </p>
-      ) : null}
+      <PdfPreviewPanel
+        payloadKey={JSON.stringify(buildPreviewPayload())}
+        fetchPreview={() => previewQuotationPdfAction(buildPreviewPayload())}
+      />
     </div>
   );
 }

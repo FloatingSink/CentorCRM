@@ -1,14 +1,19 @@
 "use server";
 
+import { renderToBuffer } from "@react-pdf/renderer";
+
 import { auth } from "@/lib/auth";
 import { parseMoneyToMinorUnits } from "@/lib/money";
+import { QuotationDocument } from "@/lib/pdf/quotation-document";
 import {
   quotationCreateSchema,
+  quotationPreviewSchema,
   type QuotationLineInput,
 } from "@/lib/validation/quotation";
 import {
   createQuotation,
   createQuotationVersion,
+  getQuotationPdfDataFromDraft,
   updateQuotationHeaderAndLines,
   updateQuotationStatus,
 } from "@/server/quotations";
@@ -175,4 +180,43 @@ export async function updateQuotationStatusAction(
 
   await updateQuotationStatus(id, status);
   return {};
+}
+
+// Called on every debounced keystroke by pdf-preview-panel.tsx (via the
+// quotation builder's buildPreviewPayload) — an incomplete/still-being-typed
+// draft is the common case here, not an error, so validation and resolution
+// failures both return `{ incomplete: true }` rather than `{ error }`.
+export async function previewQuotationPdfAction(
+  input: unknown,
+): Promise<{ pdfBase64: string } | { incomplete: true } | { error: string }> {
+  const parsed = quotationPreviewSchema.safeParse(input);
+  if (!parsed.success) {
+    return { incomplete: true };
+  }
+
+  const session = await auth();
+  if (!session?.user) {
+    return { error: "Not signed in" };
+  }
+
+  const linesResult = convertLines(
+    parsed.data.lines,
+    parsed.data.header.currency,
+  );
+  if (!linesResult.success) {
+    return { incomplete: true };
+  }
+
+  const data = await getQuotationPdfDataFromDraft(
+    parsed.data.header,
+    linesResult.data,
+    parsed.data.quoteNo,
+    parsed.data.version,
+  );
+  if (!data) {
+    return { incomplete: true };
+  }
+
+  const buffer = await renderToBuffer(<QuotationDocument data={data} />);
+  return { pdfBase64: buffer.toString("base64") };
 }

@@ -1,13 +1,18 @@
 "use server";
 
+import { renderToBuffer } from "@react-pdf/renderer";
+
 import { auth } from "@/lib/auth";
 import { parseMoneyToMinorUnits } from "@/lib/money";
+import { PurchaseOrderDocument } from "@/lib/pdf/purchase-order-document";
 import {
   purchaseOrderCreateSchema,
+  purchaseOrderPreviewSchema,
   type PurchaseOrderLineInput,
 } from "@/lib/validation/purchase-order";
 import {
   createPurchaseOrder,
+  getPurchaseOrderPdfDataFromDraft,
   updatePurchaseOrderHeaderAndLines,
   updatePurchaseOrderStatus,
 } from "@/server/purchase-orders";
@@ -173,4 +178,42 @@ export async function updatePurchaseOrderStatusAction(
 
   await updatePurchaseOrderStatus(id, status);
   return {};
+}
+
+// Called on every debounced keystroke by pdf-preview-panel.tsx (via the
+// purchase order builder's buildPreviewPayload) — same reasoning as
+// previewQuotationPdfAction in quotations/actions.ts: an incomplete draft is
+// the common case here, not an error.
+export async function previewPurchaseOrderPdfAction(
+  input: unknown,
+): Promise<{ pdfBase64: string } | { incomplete: true } | { error: string }> {
+  const parsed = purchaseOrderPreviewSchema.safeParse(input);
+  if (!parsed.success) {
+    return { incomplete: true };
+  }
+
+  const session = await auth();
+  if (!session?.user) {
+    return { error: "Not signed in" };
+  }
+
+  const linesResult = convertLines(
+    parsed.data.lines,
+    parsed.data.header.currency,
+  );
+  if (!linesResult.success) {
+    return { incomplete: true };
+  }
+
+  const data = await getPurchaseOrderPdfDataFromDraft(
+    parsed.data.header,
+    linesResult.data,
+    parsed.data.orderNo,
+  );
+  if (!data) {
+    return { incomplete: true };
+  }
+
+  const buffer = await renderToBuffer(<PurchaseOrderDocument data={data} />);
+  return { pdfBase64: buffer.toString("base64") };
 }

@@ -52,3 +52,14 @@ export const purchaseOrderCreateSchema = z.object({
     .array(purchaseOrderLineInputSchema)
     .min(1, "At least one line item is required"),
 });
+
+// For the live PDF preview (unsaved draft) — same reasoning as
+// quotationPreviewSchema in ./quotation.ts: orderNo is a real value from
+// the builder's props when editing, or a "DRAFT" placeholder in create
+// mode, never persisted; lines aren't required to be non-empty since an
+// empty-lines draft is a normal mid-typing state, not invalid input.
+export const purchaseOrderPreviewSchema = z.object({
+  header: purchaseOrderHeaderSchema,
+  lines: z.array(purchaseOrderLineInputSchema),
+  orderNo: z.string(),
+});

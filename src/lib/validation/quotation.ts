@@ -42,3 +42,15 @@ export const quotationCreateSchema = z.object({
     .array(quotationLineInputSchema)
     .min(1, "At least one line item is required"),
 });
+
+// For the live PDF preview (unsaved draft) — quoteNo/version are real
+// values from the builder's props when editing, or "DRAFT"/1 placeholders
+// in create mode; never persisted, purely for display in the ephemeral
+// preview render. Not .min(1) on lines — an empty-lines draft is a normal
+// mid-typing state the preview action treats as "incomplete", not invalid.
+export const quotationPreviewSchema = z.object({
+  header: quotationHeaderSchema,
+  lines: z.array(quotationLineInputSchema),
+  quoteNo: z.string(),
+  version: z.number().int().positive(),
+});
