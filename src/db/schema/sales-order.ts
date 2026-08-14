@@ -1,0 +1,117 @@
+import { sql } from "drizzle-orm";
+import {
+  char,
+  check,
+  date,
+  integer,
+  numeric,
+  pgEnum,
+  pgTable,
+  text,
+  timestamp,
+  uuid,
+} from "drizzle-orm/pg-core";
+
+import { user } from "./auth";
+import { company } from "./company";
+import { legalEntity } from "./legal-entity";
+import { orderStatusEnum } from "./order-status";
+import { product } from "./product";
+import { incotermEnum, quotation } from "./quotation";
+import { project } from "./project";
+
+// crm-spec.md §6.4. Deviation from the spec's literal field list — see
+// docs/decisions.md, 2026-08-12: back-to-back chains can have one of our own
+// legal entities as the customer on an internal leg, not just an external
+// company, so customer_legal_entity_id sits alongside customer_company_id
+// (exactly one set, enforced below).
+export const salesOrder = pgTable(
+  "sales_order",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    orderNo: text("order_no").notNull(),
+    contractNo: text("contract_no"),
+    quotationId: uuid("quotation_id")
+      .notNull()
+      .references(() => quotation.id),
+    legalEntityId: uuid("legal_entity_id")
+      .notNull()
+      .references(() => legalEntity.id),
+    customerCompanyId: uuid("customer_company_id").references(() => company.id),
+    customerLegalEntityId: uuid("customer_legal_entity_id").references(
+      () => legalEntity.id,
+    ),
+    projectId: uuid("project_id")
+      .notNull()
+      .references(() => project.id),
+    signedDate: date("signed_date", { mode: "date" }),
+    currency: char("currency", { length: 3 }).notNull(),
+    // crm-spec.md §7 cross-cutting FX rule — snapshot at issue/signed date,
+    // never recomputed from live rates.
+    fxRateToSgd: numeric("fx_rate_to_sgd", {
+      precision: 12,
+      scale: 6,
+    }).notNull(),
+    incoterm: incotermEnum("incoterm"),
+    namedPlace: text("named_place"),
+    // Stored (unlike quotation, which computes its total via SUM on read) —
+    // spec §6.4 lists total_value as an explicit column for sales_order.
+    totalValue: integer("total_value").notNull(),
+    governingLaw: text("governing_law"),
+    // Free text, not a closed enum — spec's "e.g. SIAC/HKIAC" isn't exhaustive.
+    arbitrationRules: text("arbitration_rules"),
+    status: orderStatusEnum("status").notNull().default("draft"),
+    notes: text("notes"),
+    createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { mode: "date" })
+      .notNull()
+      .defaultNow()
+      .$onUpdate(() => new Date()),
+    createdBy: uuid("created_by").references(() => user.id),
+  },
+  (table) => [
+    check(
+      "sales_order_customer_xor",
+      sql`(${table.customerCompanyId} IS NOT NULL) <> (${table.customerLegalEntityId} IS NOT NULL)`,
+    ),
+  ],
+);
+
+// crm-spec.md §6.4 — "shared by both, discriminated by order_type". Uses two
+// nullable FK columns + a CHECK constraint rather than the untyped
+// related_type/related_id polymorphic pattern spec uses for activity/
+// document (§6.6) — see docs/decisions.md, 2026-08-12. purchase_order_id will
+// be added once purchase_order exists (can't reference a table that doesn't
+// exist yet).
+export const orderTypeEnum = pgEnum("order_type", ["sales", "purchase"]);
+
+export const orderLine = pgTable(
+  "order_line",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    orderType: orderTypeEnum("order_type").notNull(),
+    salesOrderId: uuid("sales_order_id").references(() => salesOrder.id),
+    lineNo: integer("line_no").notNull(),
+    productId: uuid("product_id")
+      .notNull()
+      .references(() => product.id),
+    descriptionOverride: text("description_override"),
+    quantity: integer("quantity").notNull(),
+    uom: text("uom"),
+    unitPrice: integer("unit_price").notNull(),
+    discountPct: numeric("discount_pct", { precision: 5, scale: 2 }),
+    lineTotal: integer("line_total").notNull(),
+    createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { mode: "date" })
+      .notNull()
+      .defaultNow()
+      .$onUpdate(() => new Date()),
+    createdBy: uuid("created_by").references(() => user.id),
+  },
+  (table) => [
+    check(
+      "order_line_sales_type_matches",
+      sql`(${table.orderType} = 'sales') = (${table.salesOrderId} IS NOT NULL)`,
+    ),
+  ],
+);

@@ -166,7 +166,15 @@ Stages: `enquiry` → `technical_review` → `quoted` → `negotiation` → `won
 `id`, `order_no`, `contract_no`, `quotation_id`, `legal_entity_id`,
 `customer_company_id`, `project_id`, `signed_date`, `currency`, `incoterm`,
 `named_place`, `total_value`, `governing_law`, `arbitration_rules`
-(e.g. `SIAC` / `HKIAC`), `status`, `executed_document_id`
+(e.g. `SIAC` / `HKIAC`), `status`, `executed_document_id`, `fx_rate_to_sgd`
+(§7's cross-cutting FX rule, made explicit here for this table)
+
+> **Deviation (2026-08-12, confirmed with Jia Long):** back-to-back chains
+> often have one of our *own* legal entities as the customer on an internal
+> leg (§5's own example — INFRA TECH sells to CENTOR Group), not an external
+> `company`. `sales_order` also has a nullable `customer_legal_entity_id`
+> alongside `customer_company_id` — exactly one is set per order. See
+> `docs/decisions.md`.
 
 **`purchase_order`** — what we buy
 Same shape, plus `supplier_company_id` and `linked_sales_order_id` for

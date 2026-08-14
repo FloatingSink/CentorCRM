@@ -69,3 +69,22 @@ user-visible name has an `_en`/`_zh` variant) — react-pdf's built-in fonts hav
 Noto Sans SC is registered via `Font.register()` from a Google Fonts–hosted URL, fetched at render
 time. Revisit with a bundled local font file if the per-render network fetch proves slow or unreliable.
 
+## 2026-08-12 — sales_order: nullable customer_legal_entity_id alongside customer_company_id
+
+Confirmed with Jia Long. Spec §5's own back-to-back example (CRTG → INFRA TECH/TUNNEL TECHNIC →
+CENTOR Group → CHENGTUO → PRC supplier) has internal legs where the "customer" is one of our own
+`legal_entity` rows (e.g. INFRA TECH selling to CENTOR Group), not an external `company`. Spec
+§6.4's literal field list only has `customer_company_id`, which can't represent that. `sales_order`
+gets both columns, nullable, with exactly one required per row (enforced by a CHECK constraint,
+`sales_order_customer_xor`) — real FK integrity on both sides rather than the untyped
+`related_type`/`related_id` polymorphic pattern spec already uses for `activity`/`document` (§6.6),
+since the set of possible parents here is exactly two, not open-ended. Spec §6.4 updated to note
+this. The same reasoning will apply to `purchase_order.supplier_company_id` /
+`supplier_legal_entity_id` in P6 slice 2, and to `order_line`'s dual `sales_order_id`/
+`purchase_order_id` parent columns.
+
+`order_no` reuses `quotation`'s numbering mechanism exactly (`document_sequence`, per-legal-entity,
+never resets) — `src/lib/quote-number.ts`'s date/sequence formatting was extracted into a general
+`src/lib/document-number.ts` so both doc types (and P6 slice 2's purchase orders) share one
+implementation instead of three near-identical copies.
+
