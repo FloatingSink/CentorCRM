@@ -88,3 +88,37 @@ never resets) — `src/lib/quote-number.ts`'s date/sequence formatting was extra
 `src/lib/document-number.ts` so both doc types (and P6 slice 2's purchase orders) share one
 implementation instead of three near-identical copies.
 
+## 2026-08-12 — P6 slice 2: purchase orders, back-to-back linking, margin view
+
+Purchase orders (`purchase_order`) were built following through on the two schema decisions the
+previous entry pre-committed to: `supplier_company_id`/`supplier_legal_entity_id` as a nullable
+pair with a CHECK constraint (`purchase_order_supplier_xor`), same shape as `sales_order`'s
+customer columns; and `order_line.purchase_order_id` added alongside the existing
+`sales_order_id`, with a second CHECK (`order_line_purchase_type_matches`) mirroring the first.
+
+`orderStatusEnum` was pulled out of `sales-order.ts` into its own `src/db/schema/order-status.ts`.
+`purchase_order.linked_sales_order_id` needs to reference `sales_order`, and `order_line`
+(defined in `sales-order.ts`) needs to reference `purchase_order` — those two are fine as a
+circular import between the two schema files since both references live inside deferred
+`.references(() => ...)` closures, but `orderStatusEnum` was being called eagerly
+(`orderStatusEnum("status")`) in both files' table definitions, which a circular import can't
+survive (TDZ error at module load). Splitting it into its own file removes the only eager
+cross-reference.
+
+**Margin view placement**, confirmed with Jia Long: a "linked purchase orders & margin" section
+on the existing sales order detail page, not a new combined "Orders" screen (spec §8's literal
+description). Consistent with how every other entity in this app surfaces its related records
+(companies show contacts, products show documents, projects show machines) rather than
+introducing a new screen pattern for this one case. Spec §8 updated to note the deviation.
+
+**Margin math**: sales value and each linked purchase order's value are converted to SGD via
+their own `fx_rate_to_sgd` before being compared (`convertMinorToSgd`, `src/lib/money.ts`) —
+required because the two legs of a back-to-back chain are frequently in different currencies
+(spec §5's own example chain spans SGD and HKD entities). Uses the same BigInt-based precision
+approach as `parseMoneyToMinorUnits` rather than a float multiply, since `fx_rate_to_sgd` carries
+up to 6 decimal places (`numeric(12,6)`) and this is real money math even though the result is
+display-only and never stored.
+
+A purchase order's `linked_sales_order_id` is nullable and editable after creation — not every
+purchase is tied to one specific sale, and the link isn't asserted as immutable once set.
+

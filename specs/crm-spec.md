@@ -177,8 +177,16 @@ Stages: `enquiry` → `technical_review` → `quoted` → `negotiation` → `won
 > `docs/decisions.md`.
 
 **`purchase_order`** — what we buy
-Same shape, plus `supplier_company_id` and `linked_sales_order_id` for
-back-to-back chains. `linked_sales_order_id` is what makes the margin roll-up work.
+`id`, `order_no`, `contract_no`, `legal_entity_id` (the buying entity),
+`supplier_company_id` / `supplier_legal_entity_id` (nullable pair, exactly one
+set — same inter-entity-leg reasoning as `sales_order`'s customer columns
+above), `project_id`, `linked_sales_order_id` (nullable — set for
+back-to-back chains, is what makes the margin roll-up work), `signed_date`,
+`currency`, `fx_rate_to_sgd`, `incoterm`, `named_place`, `total_value`,
+`governing_law`, `arbitration_rules`, `status`, `notes`. Margin for a
+back-to-back chain is shown on the linked sales order's detail page (both
+sides converted to SGD via their own `fx_rate_to_sgd`), not a separate
+combined screen — see docs/decisions.md, 2026-08-12.
 
 **`order_line`** — shared by both, discriminated by `order_type`
 
@@ -225,7 +233,11 @@ back-to-back chains. `linked_sales_order_id` is what makes the margin roll-up wo
 5. **Products** — list + detail (spec, current TDS/SDS/COC, price history)
 6. **Opportunities** — kanban by stage + table view
 7. **Quotations** — list, builder with line items, PDF export, versioning
-8. **Orders** — sales and purchase, with a back-to-back chain view showing margin
+8. **Orders** — sales and purchase, with a back-to-back chain view showing margin.
+   Built as separate Sales Orders / Purchase Orders list+detail screens (matching
+   how every other entity in this app is built) plus a "linked purchase orders &
+   margin" section on each sales order's detail page, rather than one combined
+   screen — see docs/decisions.md, 2026-08-12.
 9. **Shipments** — list + detail
 10. **Settings** — legal entities, users, currencies, incoterms, numbering
 

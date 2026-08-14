@@ -15,10 +15,12 @@ import {
 import { user } from "./auth";
 import { company } from "./company";
 import { legalEntity } from "./legal-entity";
+import { orderLanguageEnum } from "./order-language";
 import { orderStatusEnum } from "./order-status";
 import { product } from "./product";
 import { incotermEnum, quotation } from "./quotation";
 import { project } from "./project";
+import { purchaseOrder } from "./purchase-order";
 
 // crm-spec.md §6.4. Deviation from the spec's literal field list — see
 // docs/decisions.md, 2026-08-12: back-to-back chains can have one of our own
@@ -61,6 +63,10 @@ export const salesOrder = pgTable(
     // Free text, not a closed enum — spec's "e.g. SIAC/HKIAC" isn't exhaustive.
     arbitrationRules: text("arbitration_rules"),
     status: orderStatusEnum("status").notNull().default("draft"),
+    // Mirrors quotation.language — no PDF export for sales orders yet, but
+    // added now alongside purchase_order.language so both order types are
+    // consistent (docs/decisions.md).
+    language: orderLanguageEnum("language").notNull().default("en"),
     notes: text("notes"),
     createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { mode: "date" })
@@ -80,9 +86,9 @@ export const salesOrder = pgTable(
 // crm-spec.md §6.4 — "shared by both, discriminated by order_type". Uses two
 // nullable FK columns + a CHECK constraint rather than the untyped
 // related_type/related_id polymorphic pattern spec uses for activity/
-// document (§6.6) — see docs/decisions.md, 2026-08-12. purchase_order_id will
-// be added once purchase_order exists (can't reference a table that doesn't
-// exist yet).
+// document (§6.6) — see docs/decisions.md, 2026-08-12. purchase_order_id was
+// added in P6 slice 2 once purchase_order existed (couldn't reference a
+// table that didn't exist yet in slice 1).
 export const orderTypeEnum = pgEnum("order_type", ["sales", "purchase"]);
 
 export const orderLine = pgTable(
@@ -91,6 +97,9 @@ export const orderLine = pgTable(
     id: uuid("id").primaryKey().defaultRandom(),
     orderType: orderTypeEnum("order_type").notNull(),
     salesOrderId: uuid("sales_order_id").references(() => salesOrder.id),
+    purchaseOrderId: uuid("purchase_order_id").references(
+      () => purchaseOrder.id,
+    ),
     lineNo: integer("line_no").notNull(),
     productId: uuid("product_id")
       .notNull()
@@ -101,6 +110,12 @@ export const orderLine = pgTable(
     unitPrice: integer("unit_price").notNull(),
     discountPct: numeric("discount_pct", { precision: 5, scale: 2 }),
     lineTotal: integer("line_total").notNull(),
+    // The real purchase-order template prints a line's total net weight as a
+    // remark (e.g. 52 drums x 250kg = 13,000kg) — stored as the already-
+    // computed total, not a per-unit weight the app multiplies out, since
+    // product.pack_size isn't reliably parseable into a number. Nullable and
+    // left null for sales-order lines (this table is shared by both).
+    netWeightKg: numeric("net_weight_kg", { precision: 10, scale: 3 }),
     createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { mode: "date" })
       .notNull()
@@ -112,6 +127,10 @@ export const orderLine = pgTable(
     check(
       "order_line_sales_type_matches",
       sql`(${table.orderType} = 'sales') = (${table.salesOrderId} IS NOT NULL)`,
+    ),
+    check(
+      "order_line_purchase_type_matches",
+      sql`(${table.orderType} = 'purchase') = (${table.purchaseOrderId} IS NOT NULL)`,
     ),
   ],
 );
