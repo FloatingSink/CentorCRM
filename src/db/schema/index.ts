@@ -13,3 +13,4 @@ export * from "./order-status";
 export * from "./order-language";
 export * from "./sales-order";
 export * from "./purchase-order";
+export * from "./activity";
