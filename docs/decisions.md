@@ -53,3 +53,19 @@ or a Docker VPS). Revisit if the data-residency question (spec §11 — does any
 require Singapore-only storage) rules it out; R2 buckets can be pinned to a jurisdiction but this
 hasn't been checked against that requirement yet.
 
+## 2026-08-12 — PDF generation: @react-pdf/renderer, not headless Chromium
+
+Quotation PDF export (crm-spec.md §6.4/§8) uses `@react-pdf/renderer` (JSX `Document`/`Page`/`View`/
+`Text` components rendered server-side via `renderToBuffer`) instead of `puppeteer-core` +
+`@sparticuz/chromium`, chosen by Jia Long. Same reasoning as the R2-over-Vercel-Blob decision above:
+pure JS, no native binary, works identically on either hosting path still open in spec §9. A headless-
+Chromium approach would have matched spec §9's literal "from HTML templates" wording more closely, but
+would tie a real dependency (a ~50MB serverless-optimized Chromium build) to the Vercel-leaning hosting
+guess — wrong trade if it ends up on a VPS instead. Spec §9 has been updated to name the actual
+approach rather than left to silently diverge from the code.
+
+Quotation PDFs need real Chinese-language support (`quotation.language`, cross-cutting rule: every
+user-visible name has an `_en`/`_zh` variant) — react-pdf's built-in fonts have no CJK glyphs, so
+Noto Sans SC is registered via `Font.register()` from a Google Fonts–hosted URL, fetched at render
+time. Revisit with a bundled local font file if the per-render network fetch proves slow or unreliable.
+

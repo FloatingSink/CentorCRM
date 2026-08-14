@@ -231,7 +231,7 @@ back-to-back chains. `linked_sales_order_id` is what makes the margin roll-up wo
 | UI | Tailwind + shadcn/ui |
 | Auth | Auth.js, email magic link, internal users only |
 | File storage | S3-compatible object storage, private bucket, signed URLs |
-| PDF generation | Server-side, from HTML templates |
+| PDF generation | Server-side, `@react-pdf/renderer` (JSX document templates, not literal HTML — see docs/decisions.md) |
 | Hosting | `<TBD — Vercel + Neon, or Docker on a Singapore VPS>` |
 | Testing | Vitest for domain logic; Playwright for two or three critical flows |
 

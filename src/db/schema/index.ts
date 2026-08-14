@@ -7,3 +7,5 @@ export * from "./machine";
 export * from "./product";
 export * from "./product-document";
 export * from "./opportunity";
+export * from "./document-sequence";
+export * from "./quotation";

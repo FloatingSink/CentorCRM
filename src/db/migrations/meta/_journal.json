@@ -43,6 +43,13 @@
       "when": 1786372224063,
       "tag": "0005_organic_deathstrike",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1786462750092,
+      "tag": "0006_fuzzy_betty_brant",
+      "breakpoints": true
     }
   ]
 }

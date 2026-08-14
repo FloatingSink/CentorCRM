@@ -1,0 +1,217 @@
+import { asc, desc, eq, sql } from "drizzle-orm";
+
+import { db } from "@/db/client";
+import { company } from "@/db/schema/company";
+import { contact } from "@/db/schema/contact";
+import { legalEntity } from "@/db/schema/legal-entity";
+import { opportunity } from "@/db/schema/opportunity";
+import { product } from "@/db/schema/product";
+import {
+  quotation,
+  quotationLine,
+  type quotationStatusEnum,
+} from "@/db/schema/quotation";
+import { calculateLineTotal } from "@/lib/quotation-math";
+import { buildQuoteNumber } from "@/lib/quote-number";
+import type {
+  QuotationHeaderInput,
+  QuotationLineInput,
+} from "@/lib/validation/quotation";
+import { getNextSequenceNumber } from "./document-sequence";
+
+type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
+
+const DOC_TYPE = "quotation";
+
+export function getQuotations() {
+  return db
+    .select({
+      id: quotation.id,
+      quoteNo: quotation.quoteNo,
+      version: quotation.version,
+      status: quotation.status,
+      issueDate: quotation.issueDate,
+      currency: quotation.currency,
+      customerCompanyId: quotation.customerCompanyId,
+      customerCompanyName: company.nameEn,
+      opportunityId: quotation.opportunityId,
+      opportunityTitle: opportunity.title,
+      total: sql<string>`coalesce(sum(${quotationLine.lineTotal}), 0)`.as(
+        "total",
+      ),
+    })
+    .from(quotation)
+    .innerJoin(company, eq(quotation.customerCompanyId, company.id))
+    .innerJoin(opportunity, eq(quotation.opportunityId, opportunity.id))
+    .leftJoin(quotationLine, eq(quotationLine.quotationId, quotation.id))
+    .groupBy(quotation.id, company.nameEn, opportunity.title)
+    .orderBy(desc(quotation.createdAt));
+}
+
+export async function getQuotationById(id: string) {
+  const [quotationRow] = await db
+    .select()
+    .from(quotation)
+    .where(eq(quotation.id, id));
+  if (!quotationRow) return null;
+
+  const lines = await db
+    .select()
+    .from(quotationLine)
+    .where(eq(quotationLine.quotationId, id))
+    .orderBy(asc(quotationLine.lineNo));
+
+  return { quotation: quotationRow, lines };
+}
+
+// Bundles everything the PDF template needs in one place, so
+// quotation-document.tsx does no data access of its own.
+export async function getQuotationForPdf(id: string) {
+  const [row] = await db
+    .select({ quotation, legalEntity, company, contact })
+    .from(quotation)
+    .innerJoin(legalEntity, eq(quotation.legalEntityId, legalEntity.id))
+    .innerJoin(company, eq(quotation.customerCompanyId, company.id))
+    .leftJoin(contact, eq(quotation.contactId, contact.id))
+    .where(eq(quotation.id, id));
+  if (!row) return null;
+
+  const lines = await db
+    .select({ line: quotationLine, product })
+    .from(quotationLine)
+    .innerJoin(product, eq(quotationLine.productId, product.id))
+    .where(eq(quotationLine.quotationId, id))
+    .orderBy(asc(quotationLine.lineNo));
+
+  return { ...row, lines };
+}
+
+async function insertLines(
+  tx: Tx,
+  quotationId: string,
+  lines: (QuotationLineInput & { unitPriceMinor: number })[],
+  createdBy: string,
+) {
+  if (lines.length === 0) return;
+
+  await tx.insert(quotationLine).values(
+    lines.map((line, index) => ({
+      quotationId,
+      lineNo: index + 1,
+      productId: line.productId,
+      descriptionOverride: line.descriptionOverride,
+      quantity: line.quantity,
+      uom: line.uom,
+      unitPrice: line.unitPriceMinor,
+      discountPct: line.discountPct,
+      lineTotal: calculateLineTotal(
+        line.quantity,
+        line.unitPriceMinor,
+        line.discountPct,
+      ),
+      createdBy,
+    })),
+  );
+}
+
+export async function createQuotation(
+  header: QuotationHeaderInput,
+  lines: (QuotationLineInput & { unitPriceMinor: number })[],
+  createdBy: string,
+) {
+  return db.transaction(async (tx) => {
+    const [entity] = await tx
+      .select()
+      .from(legalEntity)
+      .where(eq(legalEntity.id, header.legalEntityId));
+
+    const sequence = await getNextSequenceNumber(
+      header.legalEntityId,
+      DOC_TYPE,
+    );
+    const quoteNo = buildQuoteNumber(
+      entity.shortCode,
+      header.issueDate,
+      sequence,
+    );
+
+    const [created] = await tx
+      .insert(quotation)
+      .values({ ...header, quoteNo, version: 1, status: "draft", createdBy })
+      .returning();
+
+    await insertLines(tx, created.id, lines, createdBy);
+
+    return created;
+  });
+}
+
+export async function updateQuotationHeaderAndLines(
+  id: string,
+  header: QuotationHeaderInput,
+  lines: (QuotationLineInput & { unitPriceMinor: number })[],
+  createdBy: string,
+) {
+  return db.transaction(async (tx) => {
+    const [updated] = await tx
+      .update(quotation)
+      .set(header)
+      .where(eq(quotation.id, id))
+      .returning();
+
+    await tx.delete(quotationLine).where(eq(quotationLine.quotationId, id));
+    await insertLines(tx, id, lines, createdBy);
+
+    return updated;
+  });
+}
+
+// Supersede-on-revise, mirroring server/product-documents.ts's is_current
+// pattern: the old row is never deleted, just flipped to "superseded", and
+// the new row keeps the same quoteNo with version + 1.
+export async function createQuotationVersion(
+  quotationId: string,
+  header: QuotationHeaderInput,
+  lines: (QuotationLineInput & { unitPriceMinor: number })[],
+  createdBy: string,
+) {
+  return db.transaction(async (tx) => {
+    const [current] = await tx
+      .select()
+      .from(quotation)
+      .where(eq(quotation.id, quotationId));
+
+    await tx
+      .update(quotation)
+      .set({ status: "superseded" })
+      .where(eq(quotation.id, quotationId));
+
+    const [created] = await tx
+      .insert(quotation)
+      .values({
+        ...header,
+        quoteNo: current.quoteNo,
+        version: current.version + 1,
+        status: "draft",
+        createdBy,
+      })
+      .returning();
+
+    await insertLines(tx, created.id, lines, createdBy);
+
+    return created;
+  });
+}
+
+export async function updateQuotationStatus(
+  id: string,
+  status: (typeof quotationStatusEnum.enumValues)[number],
+) {
+  const [updated] = await db
+    .update(quotation)
+    .set({ status })
+    .where(eq(quotation.id, id))
+    .returning();
+
+  return updated;
+}
