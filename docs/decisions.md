@@ -42,3 +42,14 @@ instead of duplicated on every page — this is that follow-up. Still not middle
 conflict as before, unchanged); the layout runs in the Node runtime like any other server component.
 The header/nav is also rendered once here rather than per page. `/sign-in` stays outside the route
 group so it isn't gated.
+
+## 2026-08-10 — File storage: Cloudflare R2
+
+Cloudflare R2 is the S3-compatible object store (crm-spec.md §9) for `product_document.file_key`
+and `document.file_key`, chosen by Jia Long over AWS S3, MinIO, and other alternatives. It's accessed
+through the standard S3 API rather than a Cloudflare-specific SDK, so — like the Postgres driver
+decision above — it works unchanged against either hosting path still open in spec §9 (Vercel+Neon
+or a Docker VPS). Revisit if the data-residency question (spec §11 — does any customer contract
+require Singapore-only storage) rules it out; R2 buckets can be pinned to a jurisdiction but this
+hasn't been checked against that requirement yet.
+

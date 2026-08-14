@@ -6,7 +6,7 @@ config({ path: ".env.local" });
 // above, which would make ./client read DATABASE_URL before it's populated.
 async function main() {
   const { client, db } = await import("./client");
-  const { legalEntity, user, company, companyRole, project } =
+  const { legalEntity, user, company, companyRole, project, product } =
     await import("./schema");
   const { eq } = await import("drizzle-orm");
 
@@ -117,9 +117,41 @@ async function main() {
     projectsSeeded = 1;
   }
 
+  // crm-spec.md §6.3 — these 9 codes are given, but category, uom, pack size,
+  // manufacturer and HS code are <TBD: confirm full CENTOR code for each> and
+  // are left null, not guessed (CLAUDE.md "do not invent domain data").
+  const PRODUCT_CODES = [
+    "CTR-TSG-P",
+    "PX2350",
+    "TM-T100",
+    "PA",
+    "EP1",
+    "EP2",
+    "IS-C",
+    "IS-D",
+    "IS-P",
+  ];
+  let productsSeeded = 0;
+  for (const code of PRODUCT_CODES) {
+    const [existing] = await db
+      .select()
+      .from(product)
+      .where(eq(product.centorCode, code));
+    if (existing) continue;
+
+    await db.insert(product).values({
+      centorCode: code,
+      nameEn: code,
+      isActive: true,
+      createdBy: admin.id,
+    });
+    productsSeeded++;
+  }
+
   console.log(
     `Seeded ${legalEntities.length}/4 legal entities, ${users.length}/1 users, ` +
-      `${companiesSeeded}/1 companies, ${projectsSeeded}/1 projects (skipped rows already existed).`,
+      `${companiesSeeded}/1 companies, ${projectsSeeded}/1 projects, ` +
+      `${productsSeeded}/9 products (skipped rows already existed).`,
   );
 
   await client.end();
