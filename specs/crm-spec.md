@@ -252,7 +252,7 @@ combined screen — see docs/decisions.md, 2026-08-12.
 | Auth | Auth.js, email magic link, internal users only |
 | File storage | S3-compatible object storage, private bucket, signed URLs |
 | PDF generation | Server-side, `@react-pdf/renderer` (JSX document templates, not literal HTML — see docs/decisions.md) |
-| Hosting | `<TBD — Vercel + Neon, or Docker on a Singapore VPS>` |
+| Hosting | Vercel + Neon (confirmed 2026-08-14 — see docs/decisions.md) |
 | Testing | Vitest for domain logic; Playwright for two or three critical flows |
 
 Data residency question to settle before Phase 5: does any customer contract

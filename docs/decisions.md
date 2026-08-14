@@ -149,3 +149,13 @@ library's per-entity filter bar (added in the same slice, at Jia Long's request)
 since `document.doc_type` is free text (no closed taxonomy, per the P8 slice 2 decision), its
 segments are derived at render time from whatever `doc_type` values are actually present in that
 entity's own documents, rather than a fixed list like the status filters use.
+
+## 2026-08-14 — Hosting: Vercel + Neon
+
+Confirmed by Jia Long, resolving the `<TBD>` spec §9 carried since P0. Every prior decision that
+hedged against "either hosting path still open" (the Postgres driver choice, R2 over a
+Vercel-specific blob store, `@react-pdf/renderer` over headless Chromium) was already written to
+work unchanged under this outcome, so none of that code needs revisiting. Still open: the data
+residency question (spec §11 — does any customer contract require Singapore-only storage), which
+is independent of this choice and would affect the Neon project region and R2 bucket jurisdiction,
+not the hosting platform itself.
