@@ -270,7 +270,10 @@ next begins.
 - **P4** Opportunities
 - **P5** Quotations + line items + PDF export
 - **P6** Sales orders, purchase orders, back-to-back linking, margin view
-- **P7** Shipments
+- **P7** Shipments — **on hold**: shipping is currently outsourced and the
+  process isn't confirmed yet, so there's no real schema to build against.
+  Stubbed to a nav placeholder only (no `shipment` table) — see
+  docs/decisions.md, 2026-08-12. P8 is being built next instead.
 - **P8** Activities, document library, search
 - **P9** Import of existing spreadsheet data, backups, deploy hardening
 

@@ -122,3 +122,14 @@ display-only and never stored.
 A purchase order's `linked_sales_order_id` is nullable and editable after creation — not every
 purchase is tied to one specific sale, and the link isn't asserted as immutable once set.
 
+## 2026-08-12 — P7 (Shipments) put on hold, P8 built next instead
+
+Shipments are currently outsourced and Jia Long hasn't confirmed the process yet, so there's no
+real `shipment` schema to build against — spec §6.5's field list (`mode`, `container_no`,
+`bl_awb_no`, ports, `etd`/`eta`, etc.) would just be a guess. Rather than build against a guess
+now and likely rework it later, P7 is stubbed to a sidebar nav item and an empty placeholder page
+(`src/app/(app)/shipments/page.tsx`) — no schema, no `shipment` table, `sales_order`/
+`purchase_order` don't reference it. P8 (activities, document library, search) is being built
+next instead, out of the spec's listed order. Revisit P7 for real once the outsourced shipping
+process is confirmed.
+
