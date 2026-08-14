@@ -95,7 +95,9 @@ export function OpportunityForm({
         <form action={formAction} className="flex flex-col gap-4">
           <div className="grid grid-cols-2 gap-4">
             <div className="flex flex-col gap-2">
-              <Label htmlFor="reference">Reference</Label>
+              <Label htmlFor="reference" required>
+                Reference
+              </Label>
               <Input
                 id="reference"
                 name="reference"
@@ -104,7 +106,9 @@ export function OpportunityForm({
               />
             </div>
             <div className="flex flex-col gap-2">
-              <Label htmlFor="title">Title</Label>
+              <Label htmlFor="title" required>
+                Title
+              </Label>
               <Input
                 id="title"
                 name="title"
@@ -116,7 +120,9 @@ export function OpportunityForm({
 
           <div className="grid grid-cols-3 gap-4">
             <div className="flex flex-col gap-2">
-              <Label htmlFor="projectId">Project</Label>
+              <Label htmlFor="projectId" required>
+                Project
+              </Label>
               <Select
                 name="projectId"
                 defaultValue={defaultValues?.projectId}
@@ -135,7 +141,9 @@ export function OpportunityForm({
               </Select>
             </div>
             <div className="flex flex-col gap-2">
-              <Label htmlFor="customerCompanyId">Customer</Label>
+              <Label htmlFor="customerCompanyId" required>
+                Customer
+              </Label>
               <Select
                 name="customerCompanyId"
                 defaultValue={defaultValues?.customerCompanyId}
@@ -154,7 +162,9 @@ export function OpportunityForm({
               </Select>
             </div>
             <div className="flex flex-col gap-2">
-              <Label htmlFor="legalEntityId">Legal entity</Label>
+              <Label htmlFor="legalEntityId" required>
+                Legal entity
+              </Label>
               <Select
                 name="legalEntityId"
                 defaultValue={defaultValues?.legalEntityId}

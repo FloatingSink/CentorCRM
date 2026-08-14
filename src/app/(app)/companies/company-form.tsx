@@ -49,7 +49,9 @@ export function CompanyForm({
         <form action={formAction} className="flex flex-col gap-4">
           <div className="grid grid-cols-2 gap-4">
             <div className="flex flex-col gap-2">
-              <Label htmlFor="nameEn">Name (English)</Label>
+              <Label htmlFor="nameEn" required>
+                Name (English)
+              </Label>
               <Input
                 id="nameEn"
                 name="nameEn"
@@ -69,7 +71,9 @@ export function CompanyForm({
 
           <div className="grid grid-cols-2 gap-4">
             <div className="flex flex-col gap-2">
-              <Label htmlFor="country">Country</Label>
+              <Label htmlFor="country" required>
+                Country
+              </Label>
               <Input
                 id="country"
                 name="country"
@@ -115,7 +119,7 @@ export function CompanyForm({
           </div>
 
           <div className="flex flex-col gap-2">
-            <Label>Roles</Label>
+            <Label required>Roles</Label>
             <div className="flex flex-wrap gap-4">
               {COMPANY_ROLES.map((role) => (
                 <label

@@ -128,7 +128,9 @@ export function ProductDocumentUploadForm({
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <div className="grid grid-cols-2 gap-4">
             <div className="flex flex-col gap-2">
-              <Label htmlFor="docType">Type</Label>
+              <Label htmlFor="docType" required>
+                Type
+              </Label>
               <Select
                 value={docType}
                 onValueChange={(v) => setDocType(v as typeof docType)}
@@ -147,7 +149,9 @@ export function ProductDocumentUploadForm({
               </Select>
             </div>
             <div className="flex flex-col gap-2">
-              <Label htmlFor="language">Language</Label>
+              <Label htmlFor="language" required>
+                Language
+              </Label>
               <Select
                 value={language}
                 onValueChange={(v) => setLanguage(v as typeof language)}
@@ -188,7 +192,9 @@ export function ProductDocumentUploadForm({
           </div>
 
           <div className="flex flex-col gap-2">
-            <Label htmlFor="file">File</Label>
+            <Label htmlFor="file" required>
+              File
+            </Label>
             <Input
               id="file"
               type="file"

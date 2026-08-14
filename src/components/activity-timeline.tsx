@@ -115,7 +115,9 @@ export function ActivityTimeline({
             {error ? <p className="text-sm text-destructive">{error}</p> : null}
             <div className="grid grid-cols-2 gap-4">
               <div className="flex flex-col gap-2">
-                <Label htmlFor="activityType">Type</Label>
+                <Label htmlFor="activityType" required>
+                  Type
+                </Label>
                 <Select
                   value={type}
                   onValueChange={(v) => setType((v as typeof type) ?? "note")}
@@ -134,17 +136,22 @@ export function ActivityTimeline({
                 </Select>
               </div>
               <div className="flex flex-col gap-2">
-                <Label htmlFor="occurredAt">When</Label>
+                <Label htmlFor="occurredAt" required>
+                  When
+                </Label>
                 <Input
                   id="occurredAt"
                   type="datetime-local"
                   value={occurredAt}
                   onChange={(e) => setOccurredAt(e.target.value)}
+                  required
                 />
               </div>
             </div>
             <div className="flex flex-col gap-2">
-              <Label htmlFor="subject">Subject</Label>
+              <Label htmlFor="subject" required>
+                Subject
+              </Label>
               <Input
                 id="subject"
                 value={subject}

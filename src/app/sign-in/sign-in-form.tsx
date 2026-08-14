@@ -57,7 +57,9 @@ export function SignInForm() {
           ) : null}
           <form action={formAction} className="flex flex-col gap-4">
             <div className="flex flex-col gap-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email" required>
+                Email
+              </Label>
               <Input
                 id="email"
                 name="email"

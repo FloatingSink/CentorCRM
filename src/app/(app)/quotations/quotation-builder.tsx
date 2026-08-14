@@ -257,8 +257,8 @@ export function QuotationBuilder({
   }
 
   return (
-    <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_480px]">
-      <div className="flex flex-col gap-6">
+    <div className="grid grid-cols-1 gap-6 2xl:grid-cols-[1fr_480px]">
+      <div className="flex min-w-0 flex-col gap-6">
         {error ? <p className="text-sm text-destructive">{error}</p> : null}
 
         {mode === "edit" ? (
@@ -286,7 +286,9 @@ export function QuotationBuilder({
           <CardContent className="flex flex-col gap-4">
             {mode === "create" ? (
               <div className="flex flex-col gap-2">
-                <Label htmlFor="opportunityId">Opportunity</Label>
+                <Label htmlFor="opportunityId" required>
+                  Opportunity
+                </Label>
                 <Select
                   value={opportunityId}
                   onValueChange={handleOpportunityChange}
@@ -311,7 +313,9 @@ export function QuotationBuilder({
 
             <div className="grid grid-cols-3 gap-4">
               <div className="flex flex-col gap-2">
-                <Label htmlFor="legalEntityId">Legal entity</Label>
+                <Label htmlFor="legalEntityId" required>
+                  Legal entity
+                </Label>
                 <Select
                   value={legalEntityId}
                   onValueChange={(v) => setLegalEntityId(v ?? "")}
@@ -333,7 +337,9 @@ export function QuotationBuilder({
                 </Select>
               </div>
               <div className="flex flex-col gap-2">
-                <Label htmlFor="customerCompanyId">Customer</Label>
+                <Label htmlFor="customerCompanyId" required>
+                  Customer
+                </Label>
                 <Select
                   value={customerCompanyId}
                   onValueChange={(v) => setCustomerCompanyId(v ?? "")}
@@ -386,7 +392,9 @@ export function QuotationBuilder({
 
             <div className="grid grid-cols-4 gap-4">
               <div className="flex flex-col gap-2">
-                <Label htmlFor="issueDate">Issue date</Label>
+                <Label htmlFor="issueDate" required>
+                  Issue date
+                </Label>
                 <Input
                   id="issueDate"
                   type="date"
@@ -404,7 +412,9 @@ export function QuotationBuilder({
                 />
               </div>
               <div className="flex flex-col gap-2">
-                <Label htmlFor="currency">Currency</Label>
+                <Label htmlFor="currency" required>
+                  Currency
+                </Label>
                 <Input
                   id="currency"
                   maxLength={3}

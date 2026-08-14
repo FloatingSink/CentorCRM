@@ -237,7 +237,9 @@ export function SalesOrderBuilder({
         <CardContent className="flex flex-col gap-4">
           <div className="grid grid-cols-3 gap-4">
             <div className="flex flex-col gap-2">
-              <Label htmlFor="legalEntityId">Legal entity</Label>
+              <Label htmlFor="legalEntityId" required>
+                Legal entity
+              </Label>
               <Select
                 value={legalEntityId}
                 onValueChange={(v) => setLegalEntityId(v ?? "")}
@@ -259,7 +261,9 @@ export function SalesOrderBuilder({
               </Select>
             </div>
             <div className="flex flex-col gap-2">
-              <Label htmlFor="projectId">Project</Label>
+              <Label htmlFor="projectId" required>
+                Project
+              </Label>
               <Select
                 value={projectId}
                 onValueChange={(v) => setProjectId(v ?? "")}
@@ -316,7 +320,7 @@ export function SalesOrderBuilder({
           ) : null}
 
           <div className="flex flex-col gap-2">
-            <Label>Customer</Label>
+            <Label required>Customer</Label>
             <Segmented
               value={customerType}
               onValueChange={(v) =>
@@ -379,7 +383,9 @@ export function SalesOrderBuilder({
               />
             </div>
             <div className="flex flex-col gap-2">
-              <Label htmlFor="currency">Currency</Label>
+              <Label htmlFor="currency" required>
+                Currency
+              </Label>
               <Input
                 id="currency"
                 maxLength={3}
@@ -389,7 +395,9 @@ export function SalesOrderBuilder({
               />
             </div>
             <div className="flex flex-col gap-2">
-              <Label htmlFor="fxRateToSgd">FX rate to SGD</Label>
+              <Label htmlFor="fxRateToSgd" required>
+                FX rate to SGD
+              </Label>
               <Input
                 id="fxRateToSgd"
                 inputMode="decimal"

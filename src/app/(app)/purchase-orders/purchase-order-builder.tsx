@@ -279,8 +279,8 @@ export function PurchaseOrderBuilder({
   }
 
   return (
-    <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_480px]">
-      <div className="flex flex-col gap-6">
+    <div className="grid grid-cols-1 gap-6 2xl:grid-cols-[1fr_480px]">
+      <div className="flex min-w-0 flex-col gap-6">
         {error ? <p className="text-sm text-destructive">{error}</p> : null}
 
         {mode === "edit" ? (
@@ -305,7 +305,9 @@ export function PurchaseOrderBuilder({
           <CardContent className="flex flex-col gap-4">
             <div className="grid grid-cols-3 gap-4">
               <div className="flex flex-col gap-2">
-                <Label htmlFor="legalEntityId">Legal entity (buyer)</Label>
+                <Label htmlFor="legalEntityId" required>
+                  Legal entity (buyer)
+                </Label>
                 <Select
                   value={legalEntityId}
                   onValueChange={(v) => setLegalEntityId(v ?? "")}
@@ -327,7 +329,9 @@ export function PurchaseOrderBuilder({
                 </Select>
               </div>
               <div className="flex flex-col gap-2">
-                <Label htmlFor="projectId">Project</Label>
+                <Label htmlFor="projectId" required>
+                  Project
+                </Label>
                 <Select
                   value={projectId}
                   onValueChange={(v) => setProjectId(v ?? "")}
@@ -387,7 +391,7 @@ export function PurchaseOrderBuilder({
             ) : null}
 
             <div className="flex flex-col gap-2">
-              <Label>Supplier</Label>
+              <Label required>Supplier</Label>
               <Segmented
                 value={supplierType}
                 onValueChange={(v) =>
@@ -506,7 +510,9 @@ export function PurchaseOrderBuilder({
                 />
               </div>
               <div className="flex flex-col gap-2">
-                <Label htmlFor="currency">Currency</Label>
+                <Label htmlFor="currency" required>
+                  Currency
+                </Label>
                 <Input
                   id="currency"
                   maxLength={3}
@@ -516,7 +522,9 @@ export function PurchaseOrderBuilder({
                 />
               </div>
               <div className="flex flex-col gap-2">
-                <Label htmlFor="fxRateToSgd">FX rate to SGD</Label>
+                <Label htmlFor="fxRateToSgd" required>
+                  FX rate to SGD
+                </Label>
                 <Input
                   id="fxRateToSgd"
                   inputMode="decimal"

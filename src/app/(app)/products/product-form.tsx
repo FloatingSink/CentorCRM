@@ -76,7 +76,9 @@ export function ProductForm({
         <form action={formAction} className="flex flex-col gap-4">
           <div className="grid grid-cols-2 gap-4">
             <div className="flex flex-col gap-2">
-              <Label htmlFor="centorCode">CENTOR code</Label>
+              <Label htmlFor="centorCode" required>
+                CENTOR code
+              </Label>
               <Input
                 id="centorCode"
                 name="centorCode"
@@ -111,7 +113,9 @@ export function ProductForm({
 
           <div className="grid grid-cols-2 gap-4">
             <div className="flex flex-col gap-2">
-              <Label htmlFor="nameEn">Name (English)</Label>
+              <Label htmlFor="nameEn" required>
+                Name (English)
+              </Label>
               <Input
                 id="nameEn"
                 name="nameEn"

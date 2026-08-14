@@ -149,4 +149,3 @@ library's per-entity filter bar (added in the same slice, at Jia Long's request)
 since `document.doc_type` is free text (no closed taxonomy, per the P8 slice 2 decision), its
 segments are derived at render time from whatever `doc_type` values are actually present in that
 entity's own documents, rather than a fixed list like the status filters use.
-
