@@ -8,7 +8,10 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground hover:bg-primary/80",
+        // Nocturne: the primary button is always outlined, never a solid fill
+        // (design_handoff_centor_crm/nocturne.css .btn-primary).
+        default:
+          "border-primary! text-primary bg-transparent hover:bg-primary/12 active:bg-primary/22",
         outline:
           "border-border bg-background hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50",
         secondary:

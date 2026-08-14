@@ -67,6 +67,12 @@ export function MachineForm({
               <Select
                 name="machineType"
                 defaultValue={defaultValues?.machineType}
+                items={[
+                  { value: "EPB", label: "EPB" },
+                  { value: "slurry", label: "Slurry" },
+                  { value: "TBM_hard_rock", label: "TBM hard rock" },
+                  { value: "other", label: "Other" },
+                ]}
               >
                 <SelectTrigger id="machineType">
                   <SelectValue placeholder="Select a type" />

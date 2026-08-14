@@ -20,7 +20,7 @@ export default async function MachineDetailPage({
 
   return (
     <div>
-      <h2 className="mb-1 text-lg font-semibold">{machine.designation}</h2>
+      <h2 className="mb-1 text-2xl">{machine.designation}</h2>
       <p className="mb-4 text-sm text-muted-foreground">
         <Link href={`/projects/${id}`} className="hover:underline">
           {project.nameEn}

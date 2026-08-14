@@ -64,6 +64,7 @@ export function ContactForm({
             <Select
               name="companyId"
               defaultValue={defaultValues?.companyId ?? defaultCompanyId}
+              items={companies.map((c) => ({ value: c.id, label: c.nameEn }))}
             >
               <SelectTrigger id="companyId">
                 <SelectValue placeholder="Select a company" />
@@ -112,6 +113,10 @@ export function ContactForm({
               <Select
                 name="preferredLanguage"
                 defaultValue={defaultValues?.preferredLanguage ?? "en"}
+                items={[
+                  { value: "en", label: "English" },
+                  { value: "zh", label: "Chinese" },
+                ]}
               >
                 <SelectTrigger id="preferredLanguage">
                   <SelectValue />

@@ -8,7 +8,7 @@ export default async function NewProjectPage() {
 
   return (
     <div>
-      <h2 className="mb-4 text-lg font-semibold">New project</h2>
+      <h2 className="mb-4 text-2xl">New project</h2>
       <ProjectForm
         action={createProjectAction}
         companies={companies}

@@ -89,6 +89,7 @@ export function ProjectForm({
             <Select
               name="clientCompanyId"
               defaultValue={defaultValues?.clientCompanyId}
+              items={companies.map((c) => ({ value: c.id, label: c.nameEn }))}
             >
               <SelectTrigger id="clientCompanyId">
                 <SelectValue placeholder="Select a company" />
@@ -129,6 +130,12 @@ export function ProjectForm({
               <Select
                 name="status"
                 defaultValue={defaultValues?.status ?? "prospect"}
+                items={[
+                  { value: "prospect", label: "Prospect" },
+                  { value: "active", label: "Active" },
+                  { value: "on_hold", label: "On hold" },
+                  { value: "completed", label: "Completed" },
+                ]}
               >
                 <SelectTrigger id="status">
                   <SelectValue />
@@ -146,6 +153,10 @@ export function ProjectForm({
               <Select
                 name="ownerUserId"
                 defaultValue={defaultValues?.ownerUserId ?? "unassigned"}
+                items={[
+                  { value: "unassigned", label: "No owner" },
+                  ...users.map((u) => ({ value: u.id, label: u.name ?? u.id })),
+                ]}
               >
                 <SelectTrigger id="ownerUserId">
                   <SelectValue />

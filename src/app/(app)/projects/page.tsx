@@ -1,65 +1,27 @@
 import Link from "next/link";
 
-import { Badge } from "@/components/ui/badge";
+import { ProjectsTable } from "./projects-table";
 import { buttonVariants } from "@/components/ui/button";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { getProjects } from "@/server/projects";
 
 export default async function ProjectsPage() {
   const projects = await getProjects();
 
   return (
-    <div>
-      <div className="mb-4 flex items-center justify-between">
-        <h2 className="text-lg font-semibold">Projects</h2>
+    <div className="flex flex-col gap-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl">Projects</h2>
+          <p className="text-sm text-muted-foreground">
+            {projects.length} {projects.length === 1 ? "project" : "projects"}
+          </p>
+        </div>
         <Link href="/projects/new" className={buttonVariants()}>
           New project
         </Link>
       </div>
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Name</TableHead>
-            <TableHead>Client</TableHead>
-            <TableHead>Country</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead>Active</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {projects.map((p) => (
-            <TableRow key={p.id}>
-              <TableCell className="font-medium">
-                <Link href={`/projects/${p.id}`} className="hover:underline">
-                  {p.nameEn}
-                </Link>
-              </TableCell>
-              <TableCell>
-                <Link
-                  href={`/companies/${p.clientCompanyId}`}
-                  className="hover:underline"
-                >
-                  {p.clientCompanyName}
-                </Link>
-              </TableCell>
-              <TableCell>{p.country}</TableCell>
-              <TableCell>
-                <Badge variant="secondary" className="capitalize">
-                  {p.status.replace("_", " ")}
-                </Badge>
-              </TableCell>
-              <TableCell>{p.isActive ? "Yes" : "No"}</TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+
+      <ProjectsTable projects={projects} />
     </div>
   );
 }

@@ -12,7 +12,7 @@ export default async function NewContactPage({
 
   return (
     <div>
-      <h2 className="mb-4 text-lg font-semibold">New contact</h2>
+      <h2 className="mb-4 text-2xl">New contact</h2>
       <ContactForm
         action={createContactAction}
         companies={companies}
