@@ -116,11 +116,17 @@ export function OrderLineEditor({
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Product *</TableHead>
+            <TableHead>
+              Product <span className="text-destructive">*</span>
+            </TableHead>
             <TableHead>Description</TableHead>
-            <TableHead>Qty *</TableHead>
+            <TableHead>
+              Qty <span className="text-destructive">*</span>
+            </TableHead>
             <TableHead>UOM</TableHead>
-            <TableHead>Unit price *</TableHead>
+            <TableHead>
+              Unit price <span className="text-destructive">*</span>
+            </TableHead>
             <TableHead>Discount %</TableHead>
             <TableHead>Line total</TableHead>
             <TableHead></TableHead>
