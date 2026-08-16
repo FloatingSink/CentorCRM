@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { formatDateTime } from "./date";
+import { formatDate, formatDateTime } from "./date";
 
 describe("formatDateTime", () => {
   it("renders in Asia/Singapore (UTC+8), not UTC", () => {
@@ -14,5 +14,13 @@ describe("formatDateTime", () => {
   it("keeps the same calendar day when the UTC+8 shift doesn't cross midnight", () => {
     const result = formatDateTime(new Date("2026-08-12T02:00:00Z"));
     expect(result).toContain("12");
+  });
+});
+
+describe("formatDate", () => {
+  it("renders in Asia/Singapore (UTC+8), not UTC", () => {
+    const result = formatDate(new Date("2026-08-12T16:30:00Z"));
+    expect(result).toContain("2026");
+    expect(result).toContain("13");
   });
 });

@@ -15,3 +15,4 @@ export * from "./order-language";
 export * from "./sales-order";
 export * from "./purchase-order";
 export * from "./activity";
+export * from "./dashboard-widget";

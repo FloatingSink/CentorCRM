@@ -127,3 +127,18 @@
     letter-spacing: -0.015em;
   }
 }
+
+/* Dashboard grid item placement (src/app/(app)/dashboard-grid.tsx). Values
+   come in as inline CSS custom properties (per-item, data-driven — can't
+   be static Tailwind classes) but the placement itself only applies at
+   `lg` and up, matching the grid's own `grid-cols-1 lg:grid-cols-3`: below
+   that, items ignore --dg-col/--dg-row/--dg-span and just stack in DOM
+   order like any other single-column list. A real media query here (not a
+   JS breakpoint check) avoids a layout-shift flash on load — the CSS
+   applies during first paint, no client-side measurement needed. */
+@media (width >= 64rem) {
+  .dashboard-grid-item {
+    grid-column: var(--dg-col) / span var(--dg-span, 1);
+    grid-row: var(--dg-row);
+  }
+}

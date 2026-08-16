@@ -226,7 +226,14 @@ combined screen — see docs/decisions.md, 2026-08-12.
 
 ## 8. Screens
 
-1. **Dashboard** — open opportunities by stage, quotes expiring, shipments in transit
+1. **Dashboard** — a customizable widget grid, not a fixed layout (deviation from the
+   original fixed-three-widget description here — confirmed with Jia Long, see
+   docs/decisions.md, 2026-08-15). Each user can add/remove widgets from a fixed
+   catalog, resize (S/M/L) and drag-reorder them, saved per user. Ships with three
+   widgets by default (open opportunities by stage, quotes expiring, shipments in
+   transit — the last a placeholder pending P7) plus four more in the catalog: my
+   open opportunities, purchase orders awaiting confirmation, pipeline value (by
+   currency), recent activity.
 2. **Companies** — list + detail (contacts, projects, orders, activity timeline)
 3. **Contacts** — list + detail
 4. **Projects** — list + detail (machines, opportunities, orders, consumption, docs)
@@ -275,6 +282,10 @@ next begins.
   Stubbed to a nav placeholder only (no `shipment` table) — see
   docs/decisions.md, 2026-08-12. P8 is being built next instead.
 - **P8** Activities, document library, search
+- **P8.5** Dashboard — built out of the original sequence (this phase list never
+  actually scheduled it despite §8 listing it as screen 1; see docs/decisions.md,
+  2026-08-15). Depends on P4 (opportunities), P5 (quotations), P6 (purchase orders),
+  P8 (activities) for its widgets' data.
 - **P9** Import of existing spreadsheet data, backups, deploy hardening
 
 ## 11. Open questions

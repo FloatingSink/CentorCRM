@@ -12,6 +12,17 @@ const DATE_TIME_FORMATTER = new Intl.DateTimeFormat("en-SG", {
   minute: "2-digit",
 });
 
+const DATE_FORMATTER = new Intl.DateTimeFormat("en-SG", {
+  timeZone: "Asia/Singapore",
+  year: "numeric",
+  month: "short",
+  day: "numeric",
+});
+
 export function formatDateTime(date: Date): string {
   return DATE_TIME_FORMATTER.format(date);
+}
+
+export function formatDate(date: Date): string {
+  return DATE_FORMATTER.format(date);
 }

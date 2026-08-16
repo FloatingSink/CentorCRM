@@ -1,56 +1,61 @@
-import { Card, CardContent } from "@/components/ui/card";
+import { DashboardGrid, type DashboardWidgetData } from "./dashboard-grid";
+import { auth } from "@/lib/auth";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { getLegalEntities } from "@/server/legal-entities";
+  getDashboardWidgets,
+  getExpiringQuotations,
+  getMyOpenOpportunities,
+  getOpportunitiesByStage,
+  getPipelineValueByCurrency,
+  getPurchaseOrdersAwaitingConfirmation,
+  getRecentActivity,
+} from "@/server/dashboard";
 
 export default async function HomePage() {
-  const legalEntities = await getLegalEntities();
+  const session = await auth();
+  const userId = session!.user.id;
+
+  const widgets = await getDashboardWidgets(userId);
+  const present = new Set(widgets.map((w) => w.widgetType));
+
+  // Only query for widget types actually on this user's dashboard.
+  const [
+    opportunitiesByStage,
+    expiringQuotations,
+    myOpenOpportunities,
+    purchaseOrdersAwaitingConfirmation,
+    pipelineValue,
+    recentActivity,
+  ] = await Promise.all([
+    present.has("opportunities_by_stage") ? getOpportunitiesByStage() : [],
+    present.has("quotes_expiring") ? getExpiringQuotations() : [],
+    present.has("my_open_opportunities") ? getMyOpenOpportunities(userId) : [],
+    present.has("purchase_orders_awaiting_confirmation")
+      ? getPurchaseOrdersAwaitingConfirmation()
+      : [],
+    present.has("pipeline_value") ? getPipelineValueByCurrency() : [],
+    present.has("recent_activity") ? getRecentActivity() : [],
+  ]);
+
+  const data: DashboardWidgetData = {
+    opportunities_by_stage: opportunitiesByStage,
+    quotes_expiring: expiringQuotations,
+    shipments_placeholder: undefined,
+    my_open_opportunities: myOpenOpportunities,
+    purchase_orders_awaiting_confirmation: purchaseOrdersAwaitingConfirmation,
+    pipeline_value: pipelineValue,
+    recent_activity: recentActivity,
+  };
+
+  // Keys DashboardGrid by the widget list's identity (ids + sizes, order
+  // included since array order is significant) so a remount — not a
+  // useEffect syncing prop -> state — is what picks up a fresh layout
+  // after router.refresh() following any add/remove/resize/reorder/reset.
+  const widgetsKey = widgets.map((w) => `${w.id}:${w.size}`).join(",");
 
   return (
     <div className="flex flex-col gap-6">
-      <div>
-        <h2 className="text-2xl">Legal entities</h2>
-        <p className="text-sm text-muted-foreground">
-          {legalEntities.length} entities
-        </p>
-      </div>
-
-      <Card className="py-4">
-        <CardContent className="px-0">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="pl-4">Short code</TableHead>
-                <TableHead>Name</TableHead>
-                <TableHead>Jurisdiction</TableHead>
-                <TableHead>Currency</TableHead>
-                <TableHead className="pr-4">Active</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {legalEntities.map((entity) => (
-                <TableRow key={entity.id}>
-                  <TableCell className="pl-4 font-medium">
-                    {entity.shortCode}
-                  </TableCell>
-                  <TableCell>{entity.nameEn}</TableCell>
-                  <TableCell>{entity.jurisdiction}</TableCell>
-                  <TableCell>{entity.defaultCurrency}</TableCell>
-                  <TableCell className="pr-4">
-                    {entity.isActive ? "Yes" : "No"}
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+      <h2 className="text-2xl">Dashboard</h2>
+      <DashboardGrid key={widgetsKey} widgets={widgets} data={data} />
     </div>
   );
 }
