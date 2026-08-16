@@ -1,4 +1,5 @@
 import {
+  bigint,
   char,
   date,
   integer,
@@ -94,10 +95,12 @@ export const quotationLine = pgTable("quotation_line", {
   uom: text("uom"),
   // Minor units; currency comes from the parent quotation.currency — one
   // currency per quotation, not per line, so no separate currency column here.
-  unitPrice: integer("unit_price").notNull(),
+  // bigint, not integer: int4's ~$21.47M ceiling (in minor units) is too low
+  // for a metro-scale line (docs/decisions.md, remediation slice 1).
+  unitPrice: bigint("unit_price", { mode: "number" }).notNull(),
   // A rate, not money — NUMERIC is the right type, not integer minor units.
   discountPct: numeric("discount_pct", { precision: 5, scale: 2 }),
-  lineTotal: integer("line_total").notNull(),
+  lineTotal: bigint("line_total", { mode: "number" }).notNull(),
   createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { mode: "date" })
     .notNull()

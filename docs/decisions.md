@@ -333,3 +333,51 @@ a clean clone; no separate manual step or README instruction needed.
 Rejected: hand-writing an explicit local prop type on `RootLayout` (the brief's fallback for if
 typegen weren't available) — not needed here since the dedicated command exists and is already
 installed. No new dependency; `next typegen` is part of the already-installed `next` CLI.
+
+## 2026-08-16 — Remediation Slice 1: money columns widened to `bigint`
+
+Every monetary column was `integer` (int4, ceiling ~$21.47M in minor units for a two-decimal
+currency). `total_value` is a sum and hits that ceiling before any single line does — a metro-scale
+CNY/USD purchase order can exceed it, and Postgres raises an overflow error on insert. Widened to
+`bigint` (`mode: "number"`, so reads/writes stay plain JS `number`, never a string or BigInt at the
+call site): `quotation_line.unit_price`/`line_total`, `order_line.unit_price`/`line_total`,
+`sales_order.total_value`, `purchase_order.total_value`, `opportunity.estimated_value`. Confirmed
+with Jia Long (section 10): bigint headroom is sufficient for every currency in this chain
+(SGD/HKD/CNY/USD), no further re-check needed. `numeric(12,6)` FX rates and `numeric(5,2)`
+percentages are untouched — already the right type, explicit non-goal.
+
+**Verified empirically before writing the migration, not assumed** (live probe against the dev
+Postgres via a session-scoped temp table, nothing persisted): postgres-js returns both `int8` and
+`numeric` driver values as JS strings by default (no custom type parsers in `src/db/client.ts`);
+`drizzle-orm`'s `bigint(name, { mode: "number" })` (`PgBigInt53`) maps that string back to a plain
+`number` via `mapFromDriverValue`, confirmed live for a value above the old int4 ceiling. Since
+`sum(int8)` returns Postgres `numeric`, and postgres-js already returns `numeric` as a string the
+same way it returns `bigint` as a string today, `src/server/quotations.ts`'s existing
+`sql<string>` SUM cast + `Number()` conversion in `quotations-table.tsx` needed no change — same
+shape before and after. `src/lib/money.ts` and `src/lib/quotation-math.ts` do their own BigInt
+arithmetic on plain JS `number`/`string`, entirely independent of the column type — confirmed by
+reading both, no change. `src/lib/dashboard.ts`'s `sumByCurrency` accumulates in JS `number` (safe
+to 2^53) and is never fed a string either — no change.
+
+**First DB-integration test in the suite**: every one of the previous 79 tests is a pure function
+test (`src/lib/*.test.ts`) — nothing touches a real database, matching CLAUDE.md's "domain logic in
+`lib/`, server actions stay thin." Proving the store→read leg genuinely needs Postgres, so
+`src/db/bigint-money.test.ts` was added, clearly named so its nature (and the fact that `pnpm test`
+now needs `DATABASE_URL` for this one file) is obvious. Confirmed with Jia Long before building it —
+the alternative considered was pure parse/format unit tests plus one-off manual verification, but
+that can't actually prove the driver/ORM boundary this slice changes. Builds its fixture chain
+directly against the schema tables inside one `db.transaction`, then calls `tx.rollback()`
+(`TransactionRollbackError`) so nothing persists — not through `src/server/quotations.ts`'s
+`createQuotation`, because that opens its _own_ `db.transaction`, which runs as an independent
+top-level Postgres transaction on postgres-js (no true nesting across separate `db.transaction`
+calls), so it would not roll back together with an outer wrapper. Needed an explicit 20s test
+timeout (`{ timeout: 20000 }`) — well above vitest's 5s default — because a real round trip to Neon
+(connection + six inserts + two selects in one transaction) genuinely takes longer than that.
+
+Manually verified end to end on the real running dev server (throwaway script + Playwright,
+deleted after — same pattern as the dashboard/logo verification earlier this project): created a
+real quotation and a real purchase order (via the actual `createQuotation`/`createPurchaseOrder`
+server functions, against CGPL/CRTG/Panama Metro Line 3 seed data) with a nine-figure line total,
+fetched both PDFs through the authenticated route, and visually confirmed `$71,474,836.47` renders
+correctly with no truncation or garbled digits on both documents. Test fixtures deleted afterward;
+nothing left in the dev database.

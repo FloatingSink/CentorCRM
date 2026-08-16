@@ -1,5 +1,6 @@
 import { sql } from "drizzle-orm";
 import {
+  bigint,
   char,
   check,
   date,
@@ -65,7 +66,9 @@ export const purchaseOrder = pgTable(
     }).notNull(),
     incoterm: incotermEnum("incoterm"),
     namedPlace: text("named_place"),
-    totalValue: integer("total_value").notNull(),
+    // bigint, not integer: int4's ~$21.47M ceiling (in minor units) is too
+    // low for a metro-scale order (docs/decisions.md, remediation slice 1).
+    totalValue: bigint("total_value", { mode: "number" }).notNull(),
     governingLaw: text("governing_law"),
     arbitrationRules: text("arbitration_rules"),
     // 交货方式 / 付款方式 / 验收方式's "within ___ working days" blank — real
