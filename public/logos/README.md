@@ -2,14 +2,17 @@
 
 Drop PNG logos here, one per legal entity, named by short code:
 
-- `CGPL.png` — CENTOR Group Pte. Ltd. (trades as "CENTOR Global")
-- `ITP.png` — INFRA TECH PROFESSIONALS PTE. LTD.
-- `TTE.png` — TUNNEL TECHNIC ENGINEERING PTE. LTD.
-- `CTG.png` — CHENGTUO GROUP LIMITED
+- `CGPL.png` — CENTOR Group Pte. Ltd. (trades as "CENTOR Global"). Wired up:
+  `legal_entity.letterhead_asset` is set to `"CGPL.png"` for this entity
+  (src/db/seed.ts), and quotation-document.tsx / purchase-order-document.tsx
+  render it at the top of the document when set (src/lib/pdf/letterhead.ts).
+- `ITP.png` — INFRA TECH PROFESSIONALS PTE. LTD. Not set yet.
+- `TTE.png` — TUNNEL TECHNIC ENGINEERING PTE. LTD. Not set yet.
+- `CTG.png` — CHENGTUO GROUP LIMITED. Currently the Centor Global logo as a
+  stand-in (confirmed with Jia Long, 2026-08-16), not CHENGTUO's own —
+  `letterhead_asset` intentionally left unset for this entity until a real
+  one replaces it, so nothing renders the stand-in onto an actual document.
 
-If some entities share one CENTOR group logo rather than each having its
-own, just add `CENTOR.png` and say so — nothing currently assumes one file
-per entity.
-
-Not wired up to anything yet (`legal_entity.letterhead_asset` exists in the
-schema but no code reads it) — this folder is just staging for that.
+These are a different asset from `public/centor-logo.png` (the CRM app's
+own sidebar logo, a gradient lockup) — that one is app-wide branding, not
+tied to any legal entity, and deliberately not reused here.

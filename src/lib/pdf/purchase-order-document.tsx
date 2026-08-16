@@ -1,6 +1,7 @@
 import {
   Document,
   Font,
+  Image,
   Page,
   StyleSheet,
   Text,
@@ -11,6 +12,7 @@ import { rmbAmountToCapitalWords } from "@/lib/chinese-numerals";
 import { formatMoney } from "@/lib/money";
 import type { getPurchaseOrderForPdf } from "@/server/purchase-orders";
 import { label } from "./labels";
+import { letterheadImagePath } from "./letterhead";
 
 // Same registration as quotation-document.tsx — react-pdf's built-in fonts
 // have no CJK glyphs. Font registries are per-module-graph (see
@@ -43,6 +45,8 @@ const styles = StyleSheet.create({
     color: "#111",
   },
   row: { flexDirection: "row", justifyContent: "space-between" },
+  // Same source/reasoning as quotation-document.tsx's letterhead style.
+  letterhead: { height: 28, marginBottom: 6 },
   title: { fontSize: 18, marginBottom: 4 },
   muted: { color: "#555" },
   section: { marginTop: 16 },
@@ -191,11 +195,21 @@ export function PurchaseOrderDocument({ data }: { data: PurchaseOrderData }) {
         ? [inspectionZh, inspectionEn]
         : [inspectionEn];
 
+  // legalEntity is the buyer — the one of our own entities issuing this
+  // order — so its letterhead is what belongs here, never the supplier's.
+  const letterhead = letterheadImagePath(legalEntity.letterheadAsset);
+
   return (
     <Document title={order.orderNo} language={language === "zh" ? "zh" : "en"}>
       <Page size="A4" style={styles.page}>
         <View style={styles.row}>
           <View>
+            {letterhead ? (
+              // react-pdf's Image is a PDF primitive, not an HTML <img> —
+              // it has no alt prop; jsx-a11y can't tell the two apart.
+              // eslint-disable-next-line jsx-a11y/alt-text
+              <Image src={letterhead} style={styles.letterhead} />
+            ) : null}
             <Text style={styles.title}>
               {pickName(legalEntity.nameEn, legalEntity.nameZh, language)}
             </Text>

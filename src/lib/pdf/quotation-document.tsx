@@ -1,6 +1,7 @@
 import {
   Document,
   Font,
+  Image,
   Page,
   StyleSheet,
   Text,
@@ -10,6 +11,7 @@ import {
 import { formatMoney } from "@/lib/money";
 import type { getQuotationForPdf } from "@/server/quotations";
 import { label } from "./labels";
+import { letterheadImagePath } from "./letterhead";
 
 // react-pdf's built-in fonts have no CJK glyphs — registered once at module
 // scope, only actually fetched by react-pdf when a Chinese glyph is used
@@ -32,6 +34,9 @@ const styles = StyleSheet.create({
     color: "#111",
   },
   row: { flexDirection: "row", justifyContent: "space-between" },
+  // 826x224 source (public/logos/README.md) — height fixed, width auto so
+  // react-pdf preserves the real aspect ratio instead of stretching it.
+  letterhead: { height: 28, marginBottom: 6 },
   title: { fontSize: 18, marginBottom: 4 },
   muted: { color: "#555" },
   section: { marginTop: 16 },
@@ -80,6 +85,7 @@ export function QuotationDocument({ data }: { data: QuotationData }) {
   const { quotation, legalEntity, company, contact, lines } = data;
   const language = quotation.language;
   const L = (key: Parameters<typeof label>[0]) => label(key, language);
+  const letterhead = letterheadImagePath(legalEntity.letterheadAsset);
 
   return (
     <Document
@@ -89,6 +95,12 @@ export function QuotationDocument({ data }: { data: QuotationData }) {
       <Page size="A4" style={styles.page}>
         <View style={styles.row}>
           <View>
+            {letterhead ? (
+              // react-pdf's Image is a PDF primitive, not an HTML <img> —
+              // it has no alt prop; jsx-a11y can't tell the two apart.
+              // eslint-disable-next-line jsx-a11y/alt-text
+              <Image src={letterhead} style={styles.letterhead} />
+            ) : null}
             <Text style={styles.title}>
               {pickName(legalEntity.nameEn, legalEntity.nameZh, language)}
             </Text>

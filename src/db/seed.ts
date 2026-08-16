@@ -23,6 +23,9 @@ async function main() {
         jurisdiction: "Singapore",
         registrationNo: "201923681C",
         defaultCurrency: "SGD",
+        // public/logos/CGPL.png — see public/logos/README.md's convention.
+        // The other three entities stay unset until their own logos land.
+        letterheadAsset: "CGPL.png",
       },
       {
         nameEn: "INFRA TECH PROFESSIONALS PTE. LTD.",
