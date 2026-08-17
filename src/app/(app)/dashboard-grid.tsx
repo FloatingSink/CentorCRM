@@ -23,6 +23,7 @@ import {
 } from "./dashboard-actions";
 import { AddWidgetDialog } from "./dashboard-widgets/add-widget-dialog";
 import { MyOpenOpportunitiesWidget } from "./dashboard-widgets/my-open-opportunities-widget";
+import { MyTasksWidget } from "./dashboard-widgets/my-tasks-widget";
 import { OpportunitiesByStageWidget } from "./dashboard-widgets/opportunities-by-stage-widget";
 import { PipelineValueWidget } from "./dashboard-widgets/pipeline-value-widget";
 import { PurchaseOrdersAwaitingConfirmationWidget } from "./dashboard-widgets/purchase-orders-widget";
@@ -55,6 +56,7 @@ import type {
   getPurchaseOrdersAwaitingConfirmation,
   getRecentActivity,
 } from "@/server/dashboard";
+import type { getMyTasks } from "@/server/tasks";
 
 // Data for every widget type a user could have, keyed the same way — the
 // caller only needs to populate the entries for widget types actually
@@ -69,6 +71,7 @@ export type DashboardWidgetData = {
   >;
   pipeline_value: Awaited<ReturnType<typeof getPipelineValueByCurrency>>;
   recent_activity: Awaited<ReturnType<typeof getRecentActivity>>;
+  my_tasks: Awaited<ReturnType<typeof getMyTasks>>;
 };
 
 // `position` is a grid slot index (see src/lib/dashboard.ts), not a list
@@ -104,6 +107,8 @@ function renderWidget(
       return <PipelineValueWidget rows={data.pipeline_value} />;
     case "recent_activity":
       return <RecentActivityWidget rows={data.recent_activity} />;
+    case "my_tasks":
+      return <MyTasksWidget rows={data.my_tasks} />;
   }
 }
 

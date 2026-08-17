@@ -223,6 +223,14 @@ combined screen — see docs/decisions.md, 2026-08-12.
 **`user`**
 `id`, `name`, `email`, `role` (`admin` | `member` — see §2), `is_active`
 
+**`task`** — assign a colleague to something, added 2026-08-17, not in the original phased plan
+(see docs/decisions.md)
+`id`, `title`, `description`, `assignee_user_id`, `status` (`open` | `done`), `due_date`, and an
+optional polymorphic link (`related_type`, `related_id`) to company / contact / project /
+opportunity / order — nullable pair, unlike `activity`/`document`'s always-required version:
+a task can stand alone. First slice only ever writes both null; a later slice ties a task to a
+specific record via the same embedded-on-the-record-detail-page pattern `activity` already uses.
+
 ## 7. Cross-cutting rules
 
 - **Money**: store as integer minor units + ISO 4217 `currency` code. Never floats.
@@ -244,9 +252,9 @@ combined screen — see docs/decisions.md, 2026-08-12.
    docs/decisions.md, 2026-08-15). Each user can add/remove widgets from a fixed
    catalog, resize (S/M/L) and drag-reorder them, saved per user. Ships with three
    widgets by default (open opportunities by stage, quotes expiring, shipments in
-   transit — the last a placeholder pending P7) plus four more in the catalog: my
+   transit — the last a placeholder pending P7) plus five more in the catalog: my
    open opportunities, purchase orders awaiting confirmation, pipeline value (by
-   currency), recent activity.
+   currency), recent activity, my tasks.
 2. **Companies** — list + detail (contacts, projects, orders, activity timeline)
 3. **Contacts** — list + detail
 4. **Projects** — list + detail (machines, opportunities, orders, consumption, docs)
@@ -260,6 +268,10 @@ combined screen — see docs/decisions.md, 2026-08-12.
    screen — see docs/decisions.md, 2026-08-12.
 9. **Shipments** — list + detail
 10. **Settings** — legal entities, users, currencies, incoterms, numbering
+11. **Tasks** — not in the original screen list, added 2026-08-17 (see docs/decisions.md).
+    "My Tasks": open tasks assigned to you, with a nav badge showing the open count and a
+    dashboard widget. First slice is freestanding tasks only — no record-tied "Tasks" section
+    embedded on other screens yet.
 
 **Known deferred limitation**: every list screen above currently selects the whole table and
 filters/searches client-side (`useMemo`). Fine under ~20 users and hundreds of rows per table;

@@ -21,6 +21,7 @@ export const dashboardWidgetTypeEnum = pgEnum("dashboard_widget_type", [
   "purchase_orders_awaiting_confirmation",
   "pipeline_value",
   "recent_activity",
+  "my_tasks",
 ]);
 
 // Column span on the dashboard's 3-column grid — not free-form pixel

@@ -9,6 +9,7 @@ import {
   getPurchaseOrdersAwaitingConfirmation,
   getRecentActivity,
 } from "@/server/dashboard";
+import { getMyTasks } from "@/server/tasks";
 
 export default async function HomePage() {
   const session = await auth();
@@ -25,6 +26,7 @@ export default async function HomePage() {
     purchaseOrdersAwaitingConfirmation,
     pipelineValue,
     recentActivity,
+    myTasks,
   ] = await Promise.all([
     present.has("opportunities_by_stage") ? getOpportunitiesByStage() : [],
     present.has("quotes_expiring") ? getExpiringQuotations() : [],
@@ -34,6 +36,7 @@ export default async function HomePage() {
       : [],
     present.has("pipeline_value") ? getPipelineValueByCurrency() : [],
     present.has("recent_activity") ? getRecentActivity() : [],
+    present.has("my_tasks") ? getMyTasks() : [],
   ]);
 
   const data: DashboardWidgetData = {
@@ -44,6 +47,7 @@ export default async function HomePage() {
     purchase_orders_awaiting_confirmation: purchaseOrdersAwaitingConfirmation,
     pipeline_value: pipelineValue,
     recent_activity: recentActivity,
+    my_tasks: myTasks,
   };
 
   // Keys DashboardGrid by the widget list's identity (ids + sizes, order

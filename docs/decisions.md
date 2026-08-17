@@ -990,3 +990,47 @@ functions, the `throw new StatusTransitionError(...)` on an illegal transition h
 before the `tx.update(...)` and the `logActivity(tx, ...)` call, and a throw inside
 `db.transaction(...)` rolls back everything in that transaction — there's no code path where a
 rejected transition could produce a log row.
+
+## 2026-08-17 — Tasks, Slice 1: assign a task to a colleague ("ping")
+
+New feature, not in the original phased build order (P0–P9) — confirmed with Jia Long: "pinging"
+someone is assigning them a task, one mechanism not two (no separate lightweight-mention system).
+A task can optionally tie to an existing CRM record or stand alone.
+
+**Split into slices**, same reasoning as the activity-tracking work: tying a task to a specific
+record needs a way to pick _which_ one, and this codebase's own established pattern for that
+(confirmed by reading `activity-timeline.tsx`) is a component embedded on each record's own detail
+page, not a global picker — touching 6 different detail pages is its own slice. **This slice is
+freestanding tasks only** — assignment, due dates, completion, a nav badge, a dashboard widget.
+Complete on its own, not a stub: the schema's `related_type`/`related_id` columns exist and are
+CHECK-paired-nullable from day one (`task_related_pair`: both null or neither), so tying a task to
+a record later needs no new migration, just code that populates them.
+
+Deliberately binary `open`/`done` status, not a multi-stage workflow — this is the lightweight
+"ping" asked for, not a ticketing system. A richer status set is a separate decision if actually
+wanted later, not assumed now.
+
+**Reused three established patterns rather than inventing new ones**: `getUsers()`
+(`src/server/users.ts`) for the assignee picker, same as the project-owner `<Select>`;
+`WIDGET_CATALOG` (`src/lib/dashboard.ts`) as the single source of truth for the new `my_tasks`
+widget type — confirmed the "add widget" picker derives its list from `Object.keys(WIDGET_CATALOG)`
+automatically, no separate UI change needed; and Slice 2 of the activity-tracking work's own
+pattern for wiring a new mutation into `audit_log` (`"task"` added to `audit_entity_type`,
+`createTask`/`completeTask` each get one `logActivity(tx, ...)` call).
+
+**Ownership scoped in the query, not trusted from the caller**: `completeTask(id)` only updates a
+row where `assignee_user_id` matches the acting user (`requireUser()`'s own id) — same reasoning
+already used for dashboard widget mutations' per-user `WHERE` scoping. Throws if the row doesn't
+match, rather than silently no-op'ing.
+
+**Verified for real**: full e2e suite (12 tests) green after the change — `layout.tsx` (which now
+also calls `getMyOpenTaskCount()`) is shared by every authenticated page, so this is meaningful
+regression coverage, not just a Tasks-specific check. Manually verified cross-user: one injected
+session creates a task assigned to a different real user, a second injected session (that other
+user) confirmed the task appears on their `/tasks` page and the nav badge shows the correct open
+count (hidden at 0, shows the number otherwise — confirmed both states), marking it done removes it
+from the open list on a fresh page load, and both the create and complete actions produced the
+correct `audit_log` rows.
+
+**Deferred to a later slice**: tying a task to an existing record (schema-ready, not built), the
+embedded "Tasks" section on other detail pages, multi-stage status, priority, reassignment.
