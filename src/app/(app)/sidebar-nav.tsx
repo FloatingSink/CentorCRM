@@ -8,6 +8,7 @@ import {
   Package,
   Receipt,
   Ship,
+  ShieldCheck,
   ShoppingCart,
   Users,
   type LucideIcon,
@@ -27,12 +28,15 @@ const NAV_ITEMS: { href: string; label: string; icon: LucideIcon }[] = [
   { href: "/shipments", label: "Shipments", icon: Ship },
 ];
 
-export function SidebarNav() {
+const ADMIN_NAV_ITEM = { href: "/admin", label: "Admin", icon: ShieldCheck };
+
+export function SidebarNav({ isAdmin }: { isAdmin: boolean }) {
   const pathname = usePathname();
+  const items = isAdmin ? [...NAV_ITEMS, ADMIN_NAV_ITEM] : NAV_ITEMS;
 
   return (
     <nav className="flex flex-col gap-[3px]">
-      {NAV_ITEMS.map((item) => {
+      {items.map((item) => {
         const active = pathname.startsWith(item.href);
         return (
           <Link

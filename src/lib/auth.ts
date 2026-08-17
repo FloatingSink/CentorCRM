@@ -5,6 +5,7 @@ import MicrosoftEntraID from "next-auth/providers/microsoft-entra-id";
 
 import { db } from "@/db/client";
 import { account, session, user, verificationToken } from "@/db/schema/auth";
+import { recordLogin } from "@/server/login-event";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: DrizzleAdapter(db, {
@@ -72,6 +73,14 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         isActive: sessionUser.isActive,
       };
       return session;
+    },
+  },
+  events: {
+    // Fires after handleLoginOrRegister resolves the real DB user (verified
+    // against the installed @auth/core source during the SSO work) — a
+    // history of every sign-in, not just a single "last login" timestamp.
+    async signIn({ user: signedInUser }) {
+      if (signedInUser.id) await recordLogin(signedInUser.id);
     },
   },
 });
