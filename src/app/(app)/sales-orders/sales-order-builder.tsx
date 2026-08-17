@@ -28,6 +28,17 @@ import {
 } from "@/components/ui/select";
 import { Segmented, SegmentedItem } from "@/components/ui/segmented";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  canEditOrder,
+  isLegalOrderTransition,
+  ORDER_STATUS_HELP,
+  type OrderStatus,
+} from "@/lib/status-transitions";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 const INCOTERMS = ["EXW", "FOB", "CFR", "CIF", "DAP"] as const;
 const STATUSES = [
@@ -134,6 +145,12 @@ export function SalesOrderBuilder({
   const [error, setError] = useState<string | undefined>();
   const [pending, setPending] = useState(false);
 
+  // A sales order is only editable in place while draft
+  // (src/lib/status-transitions.ts, remediation slice 3) — always editable
+  // in create mode (there's no saved status yet).
+  const editable =
+    mode === "create" || canEditOrder((status as OrderStatus) ?? "draft");
+
   function buildPayload() {
     return {
       header: {
@@ -218,17 +235,28 @@ export function SalesOrderBuilder({
       {mode === "edit" ? (
         <div className="flex flex-wrap items-center gap-3">
           {STATUSES.map((s) => (
-            <Button
-              key={s}
-              type="button"
-              variant={s === status ? "default" : "outline"}
-              size="sm"
-              disabled={pending || s === status}
-              onClick={() => handleStatusChange(s)}
-              className="capitalize"
-            >
-              {s.replace("_", " ")}
-            </Button>
+            <Tooltip key={s}>
+              <TooltipTrigger render={<span className="inline-block" />}>
+                <Button
+                  type="button"
+                  variant={s === status ? "default" : "outline"}
+                  size="sm"
+                  disabled={
+                    pending ||
+                    s === status ||
+                    !isLegalOrderTransition(
+                      (status as OrderStatus) ?? "draft",
+                      s,
+                    )
+                  }
+                  onClick={() => handleStatusChange(s)}
+                  className="capitalize"
+                >
+                  {s.replace("_", " ")}
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>{ORDER_STATUS_HELP[s]}</TooltipContent>
+            </Tooltip>
           ))}
         </div>
       ) : null}
@@ -482,9 +510,15 @@ export function SalesOrderBuilder({
         </CardContent>
       </Card>
 
+      {mode === "edit" && !editable ? (
+        <p className="text-sm text-muted-foreground">
+          Only draft sales orders can be edited.
+        </p>
+      ) : null}
+
       <Button
         type="button"
-        disabled={pending}
+        disabled={pending || !editable}
         onClick={handleSave}
         className="w-fit"
       >

@@ -2,10 +2,15 @@ import { Handshake } from "lucide-react";
 import { notFound } from "next/navigation";
 
 import { updateOpportunityAction } from "../actions";
-import { OpportunityForm } from "../opportunity-form";
+import { OPPORTUNITY_STAGE_HELP, OpportunityForm } from "../opportunity-form";
 import { ActivityTimeline } from "@/components/activity-timeline";
 import { DocumentLibrary } from "@/components/document-library";
 import { Badge } from "@/components/ui/badge";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { getActivitiesForRelated } from "@/server/activities";
 import { getCompanies } from "@/server/companies";
 import { getDocumentsForRelated } from "@/server/documents";
@@ -50,9 +55,16 @@ export default async function OpportunityDetailPage({
         <div>
           <div className="flex items-center gap-2.5">
             <h2 className="text-2xl">{opportunity.reference}</h2>
-            <Badge variant="secondary" className="capitalize">
-              {opportunity.stage.replace(/_/g, " ")}
-            </Badge>
+            <Tooltip>
+              <TooltipTrigger render={<span className="inline-block" />}>
+                <Badge variant="secondary" className="capitalize">
+                  {opportunity.stage.replace(/_/g, " ")}
+                </Badge>
+              </TooltipTrigger>
+              <TooltipContent>
+                {OPPORTUNITY_STAGE_HELP[opportunity.stage]}
+              </TooltipContent>
+            </Tooltip>
           </div>
           <p className="text-sm text-muted-foreground">{opportunity.title}</p>
         </div>

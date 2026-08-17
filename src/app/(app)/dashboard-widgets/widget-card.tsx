@@ -15,6 +15,11 @@ import {
 } from "@/components/ui/card";
 import { Segmented, SegmentedItem } from "@/components/ui/segmented";
 import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
   WIDGET_CATALOG,
   type DashboardWidgetSize,
   type DashboardWidgetType,
@@ -61,15 +66,22 @@ export function WidgetCard({
       <CardHeader>
         <div className="flex items-center gap-2">
           {editable && (
-            <button
-              type="button"
-              className="cursor-grab touch-none text-muted-foreground active:cursor-grabbing"
-              aria-label={`Reorder ${WIDGET_CATALOG[widgetType].label}`}
-              {...dragHandleAttributes}
-              {...dragHandleListeners}
-            >
-              <GripVertical className="size-4" />
-            </button>
+            <Tooltip>
+              <TooltipTrigger render={<span className="inline-block" />}>
+                <button
+                  type="button"
+                  className="cursor-grab touch-none text-muted-foreground active:cursor-grabbing"
+                  aria-label={`Reorder ${WIDGET_CATALOG[widgetType].label}`}
+                  {...dragHandleAttributes}
+                  {...dragHandleListeners}
+                >
+                  <GripVertical className="size-4" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent>
+                Drag to move — drop on another widget to swap places.
+              </TooltipContent>
+            </Tooltip>
           )}
           <CardTitle>{WIDGET_CATALOG[widgetType].label}</CardTitle>
         </div>
@@ -87,14 +99,21 @@ export function WidgetCard({
                 </SegmentedItem>
               ))}
             </Segmented>
-            <button
-              type="button"
-              onClick={onRemove}
-              aria-label={`Remove ${WIDGET_CATALOG[widgetType].label}`}
-              className="text-muted-foreground hover:text-foreground"
-            >
-              <X className="size-4" />
-            </button>
+            <Tooltip>
+              <TooltipTrigger render={<span className="inline-block" />}>
+                <button
+                  type="button"
+                  onClick={onRemove}
+                  aria-label={`Remove ${WIDGET_CATALOG[widgetType].label}`}
+                  className="text-muted-foreground hover:text-foreground"
+                >
+                  <X className="size-4" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent>
+                Removes it from your dashboard — you can add it back later.
+              </TooltipContent>
+            </Tooltip>
           </CardAction>
         )}
       </CardHeader>

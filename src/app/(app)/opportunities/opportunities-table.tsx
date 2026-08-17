@@ -9,6 +9,12 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Segmented, SegmentedItem } from "@/components/ui/segmented";
 import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { OPPORTUNITY_STAGE_HELP } from "./opportunity-form";
+import {
   Table,
   TableBody,
   TableCell,
@@ -130,9 +136,20 @@ export function OpportunitiesTable({
                     </Link>
                   </TableCell>
                   <TableCell>
-                    <Badge variant="secondary" className="capitalize">
-                      {o.stage.replace(/_/g, " ")}
-                    </Badge>
+                    <Tooltip>
+                      <TooltipTrigger
+                        render={<span className="inline-block" />}
+                      >
+                        <Badge variant="secondary" className="capitalize">
+                          {o.stage.replace(/_/g, " ")}
+                        </Badge>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        {OPPORTUNITY_STAGE_HELP[
+                          o.stage as keyof typeof OPPORTUNITY_STAGE_HELP
+                        ] ?? o.stage}
+                      </TooltipContent>
+                    </Tooltip>
                   </TableCell>
                   <TableCell>
                     {o.estimatedValue !== null && o.currency

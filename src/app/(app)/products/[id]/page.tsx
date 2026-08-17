@@ -15,6 +15,11 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { getCompanies } from "@/server/companies";
 import { getProductDocuments } from "@/server/product-documents";
 import { getProductById } from "@/server/products";
@@ -96,7 +101,22 @@ export default async function ProductDetailPage({
                   <TableHead>Language</TableHead>
                   <TableHead>Version</TableHead>
                   <TableHead>Issued date</TableHead>
-                  <TableHead>Current</TableHead>
+                  <TableHead>
+                    <Tooltip>
+                      <TooltipTrigger
+                        render={
+                          <span className="cursor-help underline decoration-dotted underline-offset-2" />
+                        }
+                      >
+                        Current
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        Only one document per type + language can be current at
+                        a time. Uploading a new one of the same type + language
+                        supersedes the old one — kept for history, not deleted.
+                      </TooltipContent>
+                    </Tooltip>
+                  </TableHead>
                   <TableHead className="pr-4"></TableHead>
                 </TableRow>
               </TableHeader>

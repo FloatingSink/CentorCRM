@@ -15,6 +15,24 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+
+// Exported so projects-table.tsx and [id]/page.tsx can show the same copy
+// on their read-only status badges instead of redefining it. Free-form,
+// not enforced anywhere — no gating logic exists for project status.
+export const PROJECT_STATUS_HELP: Record<
+  "prospect" | "active" | "on_hold" | "completed",
+  string
+> = {
+  prospect: "Not yet won any business here.",
+  active: "Has live opportunities or orders.",
+  on_hold: "Paused — work isn't currently progressing.",
+  completed: "Closed out — a terminal status.",
+};
 
 type ProjectFormAction = (
   prevState: { error?: string } | undefined,
@@ -126,7 +144,20 @@ export function ProjectForm({
 
           <div className="grid grid-cols-2 gap-4">
             <div className="flex flex-col gap-2">
-              <Label htmlFor="status">Status</Label>
+              <Tooltip>
+                <TooltipTrigger render={<span className="w-fit" />}>
+                  <Label
+                    htmlFor="status"
+                    className="cursor-help underline decoration-dotted underline-offset-2"
+                  >
+                    Status
+                  </Label>
+                </TooltipTrigger>
+                <TooltipContent side="right">
+                  Prospect: no business won yet. Active: has live
+                  opportunities/orders. On hold: paused. Completed: closed out.
+                </TooltipContent>
+              </Tooltip>
               <Select
                 name="status"
                 defaultValue={defaultValues?.status ?? "prospect"}
