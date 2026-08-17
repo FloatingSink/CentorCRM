@@ -277,8 +277,9 @@ remediation slice 6 — not a gap to fix incidentally while touching a list page
 | Hosting | Vercel + Neon (confirmed 2026-08-14 — see docs/decisions.md) |
 | Testing | Vitest for domain logic; Playwright for two or three critical flows |
 
-Data residency question to settle before Phase 5: does any customer contract
-require data to stay in Singapore? `<TBD>`
+Data residency: no customer contract currently requires data to stay in Singapore — confirmed
+with Jia Long, 2026-08-17, see docs/decisions.md. Revisit if that changes; nothing in the current
+architecture (Neon in `ap-southeast-1`, R2 storage) assumes it either way.
 
 ## 10. Build order
 
