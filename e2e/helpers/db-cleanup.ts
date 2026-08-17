@@ -110,6 +110,30 @@ export async function cleanupActivityBySubject(subject: string): Promise<void> {
   await withSql((db) => db`delete from activity where subject = ${subject}`);
 }
 
+// unauthorized-mutation.spec.ts's own throwaway fixture — not seeded data,
+// created and torn down within that one test.
+export async function cleanupCompanyByName(nameEn: string): Promise<void> {
+  await withSql(async (db) => {
+    const [row] = await db<{ id: string }[]>`
+      select id from company where name_en = ${nameEn}
+    `;
+    if (!row) return;
+    await db`delete from company_role where company_id = ${row.id}`;
+    await db`delete from company where id = ${row.id}`;
+  });
+}
+
+// Reads the current notes column directly — used to prove a replayed,
+// unauthenticated mutation attempt did not actually change the row.
+export async function getCompanyNotesById(id: string): Promise<string | null> {
+  return withSql(async (db) => {
+    const [row] = await db<{ notes: string | null }[]>`
+      select notes from company where id = ${id}
+    `;
+    return row?.notes ?? null;
+  });
+}
+
 // Looks up a seeded fixture's id directly rather than navigating the UI to
 // find it — src/db/seed.ts's rows have no stable, guessable id otherwise.
 export async function getCompanyIdByName(nameEn: string): Promise<string> {

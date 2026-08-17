@@ -34,8 +34,17 @@ questions quickly and correctly:
 | Commercial staff | Companies, contacts, enquiries, quotations, orders. |
 | Technical staff | Products, TDS/SDS/COC, project consumption data. |
 
-Expected headcount: `<5>`. Design for **under 20 users**. Do not build
-role hierarchies beyond `admin` / `member` / `viewer` until asked.
+Expected headcount: `<5>`. Design for **under 20 users**.
+
+**Roles (confirmed 2026-08-16, see docs/decisions.md):** exactly two —
+`member` (full commercial access: companies, contacts, projects,
+opportunities, quotations, orders, activities, documents) and `admin`
+(everything `member` can do, plus user management and legal-entity
+configuration — neither has a UI yet; both are a later Settings phase).
+No read-only role. Enforced server-side in the data-access layer
+(`src/server/*`, via `requireUser`/`requireAdmin` in `src/server/auth.ts`),
+not just hidden in the UI. Do not build role hierarchies beyond these two
+until asked.
 
 ## 3. Non-goals
 
@@ -208,7 +217,7 @@ combined screen — see docs/decisions.md, 2026-08-12.
 `related_type`, `related_id`
 
 **`user`**
-`id`, `name`, `email`, `role` (`admin` | `member` | `viewer`), `is_active`
+`id`, `name`, `email`, `role` (`admin` | `member` — see §2), `is_active`
 
 ## 7. Cross-cutting rules
 
@@ -290,7 +299,9 @@ next begins.
 
 ## 11. Open questions
 
-- [ ] How many users, and do any of them need to be read-only?
+- [x] How many users, and do any of them need to be read-only? — ~5 users,
+      two roles (`member`/`admin`, see §2), no read-only role. Confirmed
+      2026-08-16, see docs/decisions.md.
 - [ ] Must the quotation PDF match the existing CENTOR quotation template exactly?
 - [ ] Which spreadsheets are the source for the initial data import?
 - [ ] Do we need an accounting export, and to which system?

@@ -15,13 +15,15 @@ import type {
   PurchaseOrderHeaderInput,
   PurchaseOrderLineInput,
 } from "@/lib/validation/purchase-order";
+import { requireUser } from "./auth";
 import { getNextSequenceNumber } from "./document-sequence";
 
 const DOC_TYPE = "purchase_order";
 
 const supplierLegalEntity = alias(legalEntity, "supplier_legal_entity");
 
-export function getPurchaseOrders() {
+export async function getPurchaseOrders() {
+  await requireUser();
   return db
     .select({
       id: purchaseOrder.id,
@@ -54,6 +56,7 @@ export function getPurchaseOrders() {
 // purchase-order-document.tsx does no data access of its own — same
 // rationale as getQuotationForPdf in src/server/quotations.ts.
 export async function getPurchaseOrderForPdf(id: string) {
+  await requireUser();
   const [row] = await db
     .select({
       order: purchaseOrder,
@@ -92,6 +95,7 @@ export async function getPurchaseOrderPdfDataFromDraft(
   lines: (PurchaseOrderLineInput & { unitPriceMinor: number })[],
   orderNo: string,
 ) {
+  await requireUser();
   const [legalEntityRow] = header.legalEntityId
     ? await db
         .select()
@@ -196,6 +200,7 @@ export async function getPurchaseOrderPdfDataFromDraft(
 }
 
 export async function getPurchaseOrderById(id: string) {
+  await requireUser();
   const [orderRow] = await db
     .select()
     .from(purchaseOrder)
@@ -213,7 +218,8 @@ export async function getPurchaseOrderById(id: string) {
 
 // Used by the sales order detail page's margin section (crm-spec.md §6.4 —
 // linked_sales_order_id "is what makes the margin roll-up work").
-export function getLinkedPurchaseOrders(salesOrderId: string) {
+export async function getLinkedPurchaseOrders(salesOrderId: string) {
+  await requireUser();
   return db
     .select({
       id: purchaseOrder.id,
@@ -285,6 +291,7 @@ export async function createPurchaseOrder(
   lines: (PurchaseOrderLineInput & { unitPriceMinor: number })[],
   createdBy: string,
 ) {
+  await requireUser();
   return db.transaction(async (tx) => {
     const [entity] = await tx
       .select()
@@ -321,6 +328,7 @@ export async function updatePurchaseOrderHeaderAndLines(
   lines: (PurchaseOrderLineInput & { unitPriceMinor: number })[],
   createdBy: string,
 ) {
+  await requireUser();
   return db.transaction(async (tx) => {
     const totalValue = sumLineTotals(lines);
 
@@ -347,6 +355,7 @@ export async function updatePurchaseOrderStatus(
     | "completed"
     | "cancelled",
 ) {
+  await requireUser();
   const [updated] = await db
     .update(purchaseOrder)
     .set({ status })

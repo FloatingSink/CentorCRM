@@ -4,8 +4,10 @@ import { db } from "@/db/client";
 import { company } from "@/db/schema/company";
 import { contact } from "@/db/schema/contact";
 import type { ContactFormInput } from "@/lib/validation/contact";
+import { requireUser } from "./auth";
 
-export function getContacts() {
+export async function getContacts() {
+  await requireUser();
   return db
     .select({
       id: contact.id,
@@ -23,7 +25,8 @@ export function getContacts() {
     .orderBy(asc(contact.nameEn));
 }
 
-export function getContactsByCompany(companyId: string) {
+export async function getContactsByCompany(companyId: string) {
+  await requireUser();
   return db
     .select()
     .from(contact)
@@ -32,6 +35,7 @@ export function getContactsByCompany(companyId: string) {
 }
 
 export async function getContactById(id: string) {
+  await requireUser();
   const [row] = await db
     .select({ contact, company })
     .from(contact)
@@ -45,6 +49,7 @@ export async function createContact(
   input: ContactFormInput,
   createdBy: string,
 ) {
+  await requireUser();
   const [created] = await db
     .insert(contact)
     .values({ ...input, createdBy })
@@ -54,6 +59,7 @@ export async function createContact(
 }
 
 export async function updateContact(id: string, input: ContactFormInput) {
+  await requireUser();
   const [updated] = await db
     .update(contact)
     .set(input)

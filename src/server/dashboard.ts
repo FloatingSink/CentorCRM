@@ -30,6 +30,7 @@ import {
   sumByCurrency,
   type DashboardWidgetSize,
 } from "@/lib/dashboard";
+import { requireUser } from "./auth";
 
 const CLOSED_STAGES = ["won", "lost"] as const;
 
@@ -38,6 +39,7 @@ const CLOSED_STAGES = ["won", "lost"] as const;
 // see docs/decisions.md, dashboard entry, on why this is write-on-read
 // rather than a seed script or per-page "no rows yet" branching.
 export async function getDashboardWidgets(userId: string) {
+  await requireUser();
   const existing = await db
     .select()
     .from(dashboardWidget)
@@ -80,7 +82,8 @@ export async function getDashboardWidgets(userId: string) {
   });
 }
 
-export function getOpportunitiesByStage() {
+export async function getOpportunitiesByStage() {
+  await requireUser();
   return db
     .select({ stage: opportunity.stage, count: count() })
     .from(opportunity)
@@ -88,7 +91,8 @@ export function getOpportunitiesByStage() {
     .groupBy(opportunity.stage);
 }
 
-export function getExpiringQuotations() {
+export async function getExpiringQuotations() {
+  await requireUser();
   const cutoff = new Date();
   cutoff.setDate(cutoff.getDate() + QUOTE_EXPIRY_WINDOW_DAYS);
 
@@ -110,7 +114,8 @@ export function getExpiringQuotations() {
     .orderBy(quotation.validUntil);
 }
 
-export function getMyOpenOpportunities(userId: string) {
+export async function getMyOpenOpportunities(userId: string) {
+  await requireUser();
   return db
     .select({
       id: opportunity.id,
@@ -129,7 +134,8 @@ export function getMyOpenOpportunities(userId: string) {
     .orderBy(desc(opportunity.createdAt));
 }
 
-export function getPurchaseOrdersAwaitingConfirmation() {
+export async function getPurchaseOrdersAwaitingConfirmation() {
+  await requireUser();
   return db
     .select({
       id: purchaseOrder.id,
@@ -143,6 +149,7 @@ export function getPurchaseOrdersAwaitingConfirmation() {
 }
 
 export async function getPipelineValueByCurrency() {
+  await requireUser();
   const rows = await db
     .select({
       estimatedValue: opportunity.estimatedValue,
@@ -169,7 +176,8 @@ export async function getPipelineValueByCurrency() {
   return sumByCurrency(amounts);
 }
 
-export function getRecentActivity(limit = 8) {
+export async function getRecentActivity(limit = 8) {
+  await requireUser();
   return db
     .select({
       id: activity.id,
@@ -198,6 +206,7 @@ export async function addDashboardWidget(
   userId: string,
   widgetType: DashboardWidgetTypeValue,
 ) {
+  await requireUser();
   const [row] = await db
     .select({ maxPosition: max(dashboardWidget.position) })
     .from(dashboardWidget)
@@ -227,6 +236,7 @@ export async function addDashboardWidget(
 // empty, not get closed up (that's the whole point of this grid model —
 // see src/lib/dashboard.ts's grid-placement comment).
 export async function removeDashboardWidget(userId: string, widgetId: string) {
+  await requireUser();
   await db
     .delete(dashboardWidget)
     .where(
@@ -239,6 +249,7 @@ export async function resizeDashboardWidget(
   widgetId: string,
   size: DashboardWidgetSize,
 ) {
+  await requireUser();
   const [existing] = await db
     .select({ position: dashboardWidget.position })
     .from(dashboardWidget)
@@ -280,6 +291,7 @@ export async function setDashboardWidgetPositions(
   userId: string,
   updates: { id: string; position: number }[],
 ) {
+  await requireUser();
   await db.transaction(async (tx) => {
     for (const { id, position } of updates) {
       await tx
@@ -295,5 +307,6 @@ export async function setDashboardWidgetPositions(
 // Deletes the user's whole saved layout — the next getDashboardWidgets call
 // re-materializes the spec-required defaults, same as a brand new user.
 export async function resetDashboard(userId: string) {
+  await requireUser();
   await db.delete(dashboardWidget).where(eq(dashboardWidget.userId, userId));
 }

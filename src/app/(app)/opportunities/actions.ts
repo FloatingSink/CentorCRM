@@ -98,6 +98,11 @@ export async function updateOpportunityAction(
     return { error: parsed.error };
   }
 
+  const session = await auth();
+  if (!session?.user) {
+    redirect("/sign-in");
+  }
+
   await updateOpportunity(id, parsed.data);
   redirect(`/opportunities/${id}`);
 }

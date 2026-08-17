@@ -57,6 +57,11 @@ export async function updateProductAction(
     return { error: parsed.error.issues[0]?.message ?? "Invalid input" };
   }
 
+  const session = await auth();
+  if (!session?.user) {
+    redirect("/sign-in");
+  }
+
   await updateProduct(id, parsed.data);
   redirect(`/products/${id}`);
 }

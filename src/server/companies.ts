@@ -4,8 +4,10 @@ import { db } from "@/db/client";
 import { company, companyRole } from "@/db/schema/company";
 import { contact } from "@/db/schema/contact";
 import type { CompanyFormInput } from "@/lib/validation/company";
+import { requireUser } from "./auth";
 
 export async function getCompanies() {
+  await requireUser();
   const [companies, roles] = await Promise.all([
     db.select().from(company).orderBy(asc(company.nameEn)),
     db.select().from(companyRole),
@@ -25,6 +27,7 @@ export async function getCompanies() {
 }
 
 export async function getCompanyById(id: string) {
+  await requireUser();
   const [companyRow] = await db
     .select()
     .from(company)
@@ -47,6 +50,7 @@ export async function createCompany(
   input: CompanyFormInput,
   createdBy: string,
 ) {
+  await requireUser();
   const { roles, ...companyData } = input;
 
   return db.transaction(async (tx) => {
@@ -64,6 +68,7 @@ export async function createCompany(
 }
 
 export async function updateCompany(id: string, input: CompanyFormInput) {
+  await requireUser();
   const { roles, ...companyData } = input;
 
   return db.transaction(async (tx) => {

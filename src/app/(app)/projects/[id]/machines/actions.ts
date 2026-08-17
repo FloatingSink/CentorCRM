@@ -50,6 +50,11 @@ export async function updateMachineAction(
     return { error: parsed.error.issues[0]?.message ?? "Invalid input" };
   }
 
+  const session = await auth();
+  if (!session?.user) {
+    redirect("/sign-in");
+  }
+
   await updateMachine(id, parsed.data);
   redirect(`/projects/${projectId}`);
 }

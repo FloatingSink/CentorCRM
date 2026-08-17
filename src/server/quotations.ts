@@ -17,13 +17,15 @@ import type {
   QuotationHeaderInput,
   QuotationLineInput,
 } from "@/lib/validation/quotation";
+import { requireUser } from "./auth";
 import { getNextSequenceNumber } from "./document-sequence";
 
 type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
 
 const DOC_TYPE = "quotation";
 
-export function getQuotations() {
+export async function getQuotations() {
+  await requireUser();
   return db
     .select({
       id: quotation.id,
@@ -49,6 +51,7 @@ export function getQuotations() {
 }
 
 export async function getQuotationById(id: string) {
+  await requireUser();
   const [quotationRow] = await db
     .select()
     .from(quotation)
@@ -67,6 +70,7 @@ export async function getQuotationById(id: string) {
 // Bundles everything the PDF template needs in one place, so
 // quotation-document.tsx does no data access of its own.
 export async function getQuotationForPdf(id: string) {
+  await requireUser();
   const [row] = await db
     .select({ quotation, legalEntity, company, contact })
     .from(quotation)
@@ -100,6 +104,7 @@ export async function getQuotationPdfDataFromDraft(
   quoteNo: string,
   version: number,
 ) {
+  await requireUser();
   const [legalEntityRow] = header.legalEntityId
     ? await db
         .select()
@@ -219,6 +224,7 @@ export async function createQuotation(
   lines: (QuotationLineInput & { unitPriceMinor: number })[],
   createdBy: string,
 ) {
+  await requireUser();
   return db.transaction(async (tx) => {
     const [entity] = await tx
       .select()
@@ -253,6 +259,7 @@ export async function updateQuotationHeaderAndLines(
   lines: (QuotationLineInput & { unitPriceMinor: number })[],
   createdBy: string,
 ) {
+  await requireUser();
   return db.transaction(async (tx) => {
     const [updated] = await tx
       .update(quotation)
@@ -276,6 +283,7 @@ export async function createQuotationVersion(
   lines: (QuotationLineInput & { unitPriceMinor: number })[],
   createdBy: string,
 ) {
+  await requireUser();
   return db.transaction(async (tx) => {
     const [current] = await tx
       .select()
@@ -308,6 +316,7 @@ export async function updateQuotationStatus(
   id: string,
   status: (typeof quotationStatusEnum.enumValues)[number],
 ) {
+  await requireUser();
   const [updated] = await db
     .update(quotation)
     .set({ status })
