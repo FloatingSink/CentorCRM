@@ -5,12 +5,16 @@ import { updateContactAction } from "../actions";
 import { ContactForm } from "../contact-form";
 import { ActivityTimeline } from "@/components/activity-timeline";
 import { DocumentLibrary } from "@/components/document-library";
+import { TaskPanel } from "@/components/task-panel";
 import { Badge } from "@/components/ui/badge";
+import { auth } from "@/lib/auth";
 import { getInitials } from "@/lib/initials";
 import { getActivitiesForRelated } from "@/server/activities";
 import { getCompanies } from "@/server/companies";
 import { getContactById } from "@/server/contacts";
 import { getDocumentsForRelated } from "@/server/documents";
+import { getTasksForRelated } from "@/server/tasks";
+import { getUsers } from "@/server/users";
 
 export default async function ContactDetailPage({
   params,
@@ -18,12 +22,16 @@ export default async function ContactDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const [result, companies, activities, documents] = await Promise.all([
-    getContactById(id),
-    getCompanies(),
-    getActivitiesForRelated("contact", id),
-    getDocumentsForRelated("contact", id),
-  ]);
+  const [session, result, companies, activities, documents, tasks, users] =
+    await Promise.all([
+      auth(),
+      getContactById(id),
+      getCompanies(),
+      getActivitiesForRelated("contact", id),
+      getDocumentsForRelated("contact", id),
+      getTasksForRelated("contact", id),
+      getUsers(),
+    ]);
   if (!result) {
     notFound();
   }
@@ -82,6 +90,14 @@ export default async function ContactDetailPage({
         relatedType="contact"
         relatedId={id}
         activities={activities}
+      />
+
+      <TaskPanel
+        relatedType="contact"
+        relatedId={id}
+        tasks={tasks}
+        users={users}
+        currentUserId={session!.user.id}
       />
     </div>
   );

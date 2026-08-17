@@ -5,6 +5,7 @@ import { updateCompanyAction } from "../actions";
 import { CompanyForm } from "../company-form";
 import { ActivityTimeline } from "@/components/activity-timeline";
 import { DocumentLibrary } from "@/components/document-library";
+import { TaskPanel } from "@/components/task-panel";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -16,10 +17,13 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { auth } from "@/lib/auth";
 import { getInitials } from "@/lib/initials";
 import { getActivitiesForRelated } from "@/server/activities";
 import { getCompanyById } from "@/server/companies";
 import { getDocumentsForRelated } from "@/server/documents";
+import { getTasksForRelated } from "@/server/tasks";
+import { getUsers } from "@/server/users";
 
 export default async function CompanyDetailPage({
   params,
@@ -27,11 +31,15 @@ export default async function CompanyDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const [result, activities, documents] = await Promise.all([
-    getCompanyById(id),
-    getActivitiesForRelated("company", id),
-    getDocumentsForRelated("company", id),
-  ]);
+  const [session, result, activities, documents, tasks, users] =
+    await Promise.all([
+      auth(),
+      getCompanyById(id),
+      getActivitiesForRelated("company", id),
+      getDocumentsForRelated("company", id),
+      getTasksForRelated("company", id),
+      getUsers(),
+    ]);
   if (!result) {
     notFound();
   }
@@ -140,6 +148,14 @@ export default async function CompanyDetailPage({
         relatedType="company"
         relatedId={id}
         activities={activities}
+      />
+
+      <TaskPanel
+        relatedType="company"
+        relatedId={id}
+        tasks={tasks}
+        users={users}
+        currentUserId={session!.user.id}
       />
     </div>
   );

@@ -227,9 +227,10 @@ combined screen — see docs/decisions.md, 2026-08-12.
 (see docs/decisions.md)
 `id`, `title`, `description`, `assignee_user_id`, `status` (`open` | `done`), `due_date`, and an
 optional polymorphic link (`related_type`, `related_id`) to company / contact / project /
-opportunity / order — nullable pair, unlike `activity`/`document`'s always-required version:
-a task can stand alone. First slice only ever writes both null; a later slice ties a task to a
-specific record via the same embedded-on-the-record-detail-page pattern `activity` already uses.
+opportunity / sales order / purchase order — nullable pair, unlike `activity`/`document`'s
+always-required version: a task can stand alone. Tied to a record via the same
+embedded-on-the-record-detail-page pattern `activity` already uses (companies, contacts, projects,
+opportunities, sales orders, purchase orders — not quotations, matching `activity`'s own set).
 
 ## 7. Cross-cutting rules
 
@@ -270,8 +271,9 @@ specific record via the same embedded-on-the-record-detail-page pattern `activit
 10. **Settings** — legal entities, users, currencies, incoterms, numbering
 11. **Tasks** — not in the original screen list, added 2026-08-17 (see docs/decisions.md).
     "My Tasks": open tasks assigned to you, with a nav badge showing the open count and a
-    dashboard widget. First slice is freestanding tasks only — no record-tied "Tasks" section
-    embedded on other screens yet.
+    dashboard widget. Tasks can also be freestanding (not tied to any record) or tied to a
+    specific company/contact/project/opportunity/sales order/purchase order via a "Tasks" section
+    embedded on that record's own detail page, same as the existing Activity section.
 
 **Known deferred limitation**: every list screen above currently selects the whole table and
 filters/searches client-side (`useMemo`). Fine under ~20 users and hundreds of rows per table;
