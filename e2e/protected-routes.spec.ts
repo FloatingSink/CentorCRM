@@ -4,7 +4,7 @@ import { expect, test } from "@playwright/test";
 // these routes when signed out. Authenticated coverage of the app's actual
 // critical flows lives in quotation-flow.spec.ts, back-to-back-flow.spec.ts,
 // and document-and-activity-flow.spec.ts (see e2e/global-setup.ts for the
-// real magic-link sign-in those share) — everything else stays covered by
+// injected-session sign-in those share) — everything else stays covered by
 // manual QA via `pnpm dev`, per crm-spec.md §9's "two or three critical
 // flows".
 for (const path of [

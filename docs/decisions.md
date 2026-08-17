@@ -830,3 +830,56 @@ what the corrected seed script now produces, rather than drifting from it.
 Out of scope: fetching each product's individual detail page (main-bearing-sealant.html etc.) for
 TDS/SDS/COC documents — a separate, larger task involving real `product_document` rows and file
 uploads to R2, not part of resolving the code list itself.
+
+## 2026-08-17 — Auth switched from email magic link to Microsoft Entra ID SSO
+
+Confirmed with Jia Long: replaces magic link entirely (not offered alongside), restricted to
+CENTOR's own Entra tenant for now (a single env var — `AUTH_MICROSOFT_ENTRA_ID_ISSUER` — away from
+opening it to any Microsoft account later, not a code change), and no self-service signup — a
+Microsoft account must match an existing, active `user` row before it can sign in, same as magic
+link only ever authenticated existing rows, never created them itself.
+
+**Zero new dependencies**: `next-auth@5.0.0-beta.32` already bundles
+`providers/microsoft-entra-id`. `nodemailer`/`@types/nodemailer` removed (`pnpm remove`, not a
+hand-edit).
+
+**Verified two things against the installed `@auth/core@0.41.3` source before relying on them, not
+assumed:**
+
+1. The `signIn` callback runs _before_ the adapter can create a user row. Traced
+   `lib/actions/callback/index.js`: for OAuth, `handleAuthorized()` (which calls the app's
+   `signIn` callback) runs first; `handleLoginOrRegister()` (which calls `adapter.createUser`)
+   only runs if that approves. A rejection throws `AccessDenied` immediately — no row is ever
+   written. This is what makes rejecting a not-yet-provisioned account in `signIn` safe: no
+   orphaned-row cleanup needed, because nothing gets written in the first place.
+2. A `Credentials` provider does **not** work with this app's `session: { strategy: "database" }`.
+   Traced the same file's `credentials` branch: it always builds a JWT session
+   (`callbacks.jwt(...)`) and never calls `createSession`/the adapter at all, regardless of the
+   app-wide session strategy. Originally planned to add a test-only Credentials provider for e2e;
+   dropped once this was confirmed, since it would have produced a session the rest of the app —
+   which reads sessions from the `session` table — couldn't recognize.
+
+**Real bug hit and fixed while verifying this manually, not just in theory**: the first attempt
+failed with a generic `Configuration` error. Server log showed the actual cause:
+`OperationProcessingError: "response" body "issuer" property does not match the expected value`.
+Fetched CENTOR's tenant's real OIDC discovery document directly
+(`https://login.microsoftonline.com/<tenant>/v2.0/.well-known/openid-configuration`) and confirmed
+its `issuer` field has **no trailing slash** — `https://login.microsoftonline.com/<tenant>/v2.0` —
+even though both Microsoft's own docs and the Auth.js provider's own doc comment show the
+`AUTH_MICROSOFT_ENTRA_ID_ISSUER` example _with_ a trailing slash. Auth.js validates these as an
+exact string match, so the trailing slash caused every sign-in attempt to fail. Fixed in
+`.env.local` and noted directly in `.env.example`'s comment so this doesn't get rediscovered the
+hard way again. Confirmed fixed by driving the actual `/api/auth/signin/microsoft-entra-id`
+flow (CSRF token + POST) and inspecting the resulting redirect: correct tenant, correct
+`client_id`, correct `redirect_uri`, correct scopes (`openid profile email User.Read`). Completing
+the interactive Microsoft login itself is Jia Long's to do — no automated tool can complete a real
+Microsoft MFA/browser login.
+
+**E2e**: only `e2e/global-setup.ts` ever performed a sign-in (every other spec reuses its saved
+`e2e/.auth/user.json` storage state) — replaced the MailDev magic-link round trip with directly
+inserting a `session` row for the seeded admin user and setting it as a cookie
+(`authjs.session-token`, no `__Secure-` prefix on non-HTTPS `localhost` — matches
+`@auth/core`'s `defaultCookies()`), the same mechanism already proven working during the Neon
+region-move verification earlier in this project. `e2e/helpers/maildev.ts` deleted. Ran the full
+suite locally after the change — all 12 tests pass, confirming the new mechanism actually produces
+a session every other spec can reuse, not just that it doesn't error.
