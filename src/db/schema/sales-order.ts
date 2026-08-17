@@ -148,5 +148,16 @@ export const orderLine = pgTable(
       "order_line_purchase_type_matches",
       sql`(${table.orderType} = 'purchase') = (${table.purchaseOrderId} IS NOT NULL)`,
     ),
+    // DB-level backstop for the zod-level checks in
+    // src/lib/validation/{quotation,purchase-order}.ts (remediation slice 4,
+    // docs/decisions.md) — holds regardless of which code path writes it.
+    check(
+      "order_line_discount_pct_range",
+      sql`${table.discountPct} IS NULL OR (${table.discountPct} >= 0 AND ${table.discountPct} <= 100)`,
+    ),
+    check(
+      "order_line_net_weight_kg_non_negative",
+      sql`${table.netWeightKg} IS NULL OR ${table.netWeightKg} >= 0`,
+    ),
   ],
 );

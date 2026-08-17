@@ -1,0 +1,3 @@
+ALTER TABLE "quotation_line" ADD CONSTRAINT "quotation_line_discount_pct_range" CHECK ("quotation_line"."discount_pct" IS NULL OR ("quotation_line"."discount_pct" >= 0 AND "quotation_line"."discount_pct" <= 100));--> statement-breakpoint
+ALTER TABLE "order_line" ADD CONSTRAINT "order_line_discount_pct_range" CHECK ("order_line"."discount_pct" IS NULL OR ("order_line"."discount_pct" >= 0 AND "order_line"."discount_pct" <= 100));--> statement-breakpoint
+ALTER TABLE "order_line" ADD CONSTRAINT "order_line_net_weight_kg_non_negative" CHECK ("order_line"."net_weight_kg" IS NULL OR "order_line"."net_weight_kg" >= 0);

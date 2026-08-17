@@ -516,3 +516,59 @@ scenario the brief's "existing e2e parallel-worker scenario must still pass" acc
 refers to (there's no separate dedicated "parallel worker" spec) — both depend on
 `draft→sent→accepted` staying clickable via `e2e/helpers/fixtures.ts`'s `acceptQuotation`, unaffected
 since that's exactly the legal path confirmed above.
+
+## 2026-08-17 — Remediation Slice 4: close the input-validation gaps
+
+**Full audit, not just the known field.** The brief's own example — `discountPct`
+(`src/lib/validation/quotation.ts`) as a bare `z.string().nullable()` feeding
+`parsePercentToHundredths`'s unguarded `BigInt()` — checked out exactly as described. Auditing
+every file in `src/lib/validation/` (brief: "assume it is not the only one") found one more real
+gap not in the brief's own example: **`netWeightKg`** (`purchase-order.ts`), also a bare
+`z.string().nullable()`, and arguably worse — it isn't JS-parsed at all, so a malformed value was
+only ever caught by a raw Postgres error deep inside a transaction, no application-layer defense
+whatsoever. Confirmed everything else in that directory is already safe: `unitPrice` looks
+bare-ish (`.min(1)` only) but is backed by `parseMoneyToMinorUnits`, which already regex-validates
+and returns `null` instead of throwing, and every call site checks for `null`; `fxRateToSgd`/
+`inspectionDays` use `.refine()` against `Number()`, which never throws; every other validation
+file infers numeric fields straight from `integer`/`bigint` columns via drizzle-zod, which already
+produces `z.number()`, not a string.
+
+Also found, not in the brief's framing: the crash isn't only a server-side risk.
+`src/components/order-line-editor.tsx` (the live line-total preview used by all three builders)
+calls `calculateLineTotal` directly from component state on every keystroke, entirely outside zod
+— typing a stray character into Discount % threw mid-render before this slice, independent of any
+server action ever running.
+
+**Fix, one root cause for both gaps**: `parsePercentToHundredths` (`src/lib/quotation-math.ts`) now
+mirrors `money.ts`'s `parseMoneyToMinorUnits` — regex-gate first, return `null` instead of throwing.
+`calculateLineTotal` treats a `null` parse (absent or malformed) as "no discount." This single change
+closes both the server path (now unreachable anyway once the zod fix below rejects bad input first)
+and the client-side live-preview path (which has no zod gate and needed the function itself to be
+non-throwing) — no try/catch needed at any of the ~8 `calculateLineTotal` call sites across
+`src/server/{quotations,sales-orders,purchase-orders}.ts`.
+
+`discountPct` and `netWeightKg` both get a `.refine()` at the zod boundary matching their column's
+actual shape (`numeric(5,2)`, 0–100 only — confirmed with Jia Long, section 10: no negative/surcharge
+case; `numeric(10,3)`, non-negative). `sales-order.ts`'s `orderLineInputSchema` re-exports
+`quotationLineInputSchema` unchanged, so it inherits the `discountPct` fix automatically.
+
+**DB CHECK constraints** (the brief's explicit ask for `discount_pct`, extended to `net_weight_kg`
+since the audit found it's the same class of gap on a table already being touched):
+`quotation_line_discount_pct_range`, `order_line_discount_pct_range` (0–100), and
+`order_line_net_weight_kg_non_negative` — same `check(...)` pattern as the existing XOR constraints
+in these files. Confirmed no existing row in the dev DB would violate any of the three before
+applying.
+
+**Verified**: extended `quotation-math.test.ts` with the brief's three concrete cases
+(`"abc"`/`"1.2.3"`/`"-5"`) asserting `calculateLineTotal` degrades to the gross amount rather than
+throwing or silently computing wrong; new `src/lib/validation/{quotation,purchase-order}.test.ts`
+assert the same three cases are clean zod rejections, plus range/precision edges. Manually confirmed
+on the running dev server: typing `"abc"`/`"1.2.3"`/`"-5"` into a live builder's Discount % field no
+longer throws (zero page errors), and submitting `discountPct: "150"` shows a clean inline validation
+message with no navigation and no crash — not a 500.
+
+**Left alone**: `convertMinorToSgd` in `money.ts` has the same unguarded-`BigInt` shape the old
+percent parser had, but its only current input is already-validated, already-stored
+`fx_rate_to_sgd` — noted as worth hardening for consistency if that ever changes, not fixed now
+since nothing currently feeds it unvalidated input and it's outside this slice's three concrete
+failure cases.
