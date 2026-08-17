@@ -275,7 +275,7 @@ remediation slice 6 — not a gap to fix incidentally while touching a list page
 | Database | PostgreSQL |
 | ORM / migrations | Drizzle |
 | UI | Tailwind + shadcn/ui |
-| Auth | Auth.js, email magic link, internal users only |
+| Auth | Auth.js, Microsoft Entra ID SSO (CENTOR tenant only), internal users only — no self-service signup, an admin-created `user` row is required before sign-in works. See docs/decisions.md, 2026-08-17. |
 | File storage | S3-compatible object storage, private bucket, signed URLs |
 | PDF generation | Server-side, `@react-pdf/renderer` (JSX document templates, not literal HTML — see docs/decisions.md) |
 | Hosting | Vercel + Neon (confirmed 2026-08-14 — see docs/decisions.md) |

@@ -32,7 +32,7 @@ Run `pnpm typecheck && pnpm test` before declaring any task done.
 ## Stack
 
 Next.js (App Router) · TypeScript · PostgreSQL · Drizzle ORM · Tailwind ·
-shadcn/ui · Auth.js (email magic link) · Vitest · Playwright
+shadcn/ui · Auth.js (Microsoft Entra ID SSO) · Vitest · Playwright
 
 ## Layout
 
