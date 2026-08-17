@@ -572,3 +572,39 @@ percent parser had, but its only current input is already-validated, already-sto
 `fx_rate_to_sgd` — noted as worth hardening for consistency if that ever changes, not fixed now
 since nothing currently feeds it unvalidated input and it's outside this slice's three concrete
 failure cases.
+
+## 2026-08-17 — Neon database moved from `us-east-2` to `ap-southeast-1`
+
+Jia Long flagged that the Neon project was in `us-east-2` (Ohio) while every user and legal entity
+this app serves is in Singapore, Hong Kong, or mainland China — every query was paying US round-trip
+latency. Confirmed with him this is a **pure latency concern, not a compliance one**: it does not
+answer, and is not intended to answer, the data-residency question already open in
+`specs/crm-spec.md` §11. That question stays open until it's addressed on its own terms.
+
+Neon has no in-place region migration, so this was a create-new-project-and-cut-over, done together
+step by step rather than unilaterally:
+
+1. Jia Long created a new Neon project in `ap-southeast-1` (Singapore) and added its connection
+   string to `.env.local` as `DATABASE_URL_NEW`. First attempt was the pooled (`-pooler`) variant;
+   swapped to the direct connection on request, since pooled connections front Postgres with
+   PgBouncer in transaction mode, which resets session-level state between statements.
+2. Schema brought up on the new project via the project's own `pnpm db:migrate` against
+   `DATABASE_URL_NEW` (all 17 migrations, not a `pg_dump`/`psql` schema dump — neither tool nor
+   Homebrew was available in this environment, and reusing the app's own migration path avoids
+   introducing a new tool dependency while guaranteeing schema parity through the same mechanism
+   the app already trusts).
+3. Data copied with a throwaway Node script (`postgres` driver, already a project dependency) rather
+   than `pg_dump`/`psql`, for the same tooling-availability reason. First attempt used
+   `SET session_replication_role = replica` to bulk-load without regard to FK order; Neon's
+   `neondb_owner` role is not a Postgres superuser and cannot set that GUC, even though it owns
+   every table, so this failed immediately (zero rows copied — the whole transaction rolled back
+   cleanly). Fixed by copying tables in an explicit order that respects the real FK dependency graph
+   from `src/db/schema/*.ts` instead of bypassing the check. 162 rows across 16 non-empty tables
+   copied; per-table `count(*)` verified equal between old and new before cutover.
+4. `DATABASE_URL` in `.env.local` repointed at the new project; old project's connection string kept
+   as `DATABASE_URL_OLD` for rollback. Verified with a fresh (not reused) dev server process — Next.js
+   only reads `.env.local` at boot — plus a direct query against the new `DATABASE_URL` confirming
+   expected row counts.
+
+Old `us-east-2` project is still live, kept as a rollback path. Decommissioning it is Jia Long's
+call, not scheduled here.
