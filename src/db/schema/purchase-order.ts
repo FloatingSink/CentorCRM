@@ -9,6 +9,7 @@ import {
   pgTable,
   text,
   timestamp,
+  uniqueIndex,
   uuid,
 } from "drizzle-orm/pg-core";
 
@@ -100,5 +101,8 @@ export const purchaseOrder = pgTable(
       "purchase_order_supplier_xor",
       sql`(${table.supplierCompanyId} IS NOT NULL) <> (${table.supplierLegalEntityId} IS NOT NULL)`,
     ),
+    // DB-level backstop for getNextSequenceNumber's own uniqueness
+    // guarantee (docs/decisions.md, remediation slice 3).
+    uniqueIndex("purchase_order_order_no_unique").on(table.orderNo),
   ],
 );
