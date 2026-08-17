@@ -5,6 +5,7 @@ import { machine } from "@/db/schema/machine";
 import { project } from "@/db/schema/project";
 import type { MachineFormInput } from "@/lib/validation/machine";
 import { requireUser } from "./auth";
+import { logActivity } from "./audit-log";
 
 export async function getMachinesByProject(projectId: string) {
   await requireUser();
@@ -30,22 +31,42 @@ export async function createMachine(
   input: MachineFormInput,
   createdBy: string,
 ) {
-  await requireUser();
-  const [created] = await db
-    .insert(machine)
-    .values({ ...input, createdBy })
-    .returning();
+  const actor = await requireUser();
+  return db.transaction(async (tx) => {
+    const [created] = await tx
+      .insert(machine)
+      .values({ ...input, createdBy })
+      .returning();
 
-  return created;
+    await logActivity(tx, {
+      userId: actor.id,
+      action: "create",
+      entityType: "machine",
+      entityId: created.id,
+      message: `created machine ${created.designation}`,
+    });
+
+    return created;
+  });
 }
 
 export async function updateMachine(id: string, input: MachineFormInput) {
-  await requireUser();
-  const [updated] = await db
-    .update(machine)
-    .set(input)
-    .where(eq(machine.id, id))
-    .returning();
+  const actor = await requireUser();
+  return db.transaction(async (tx) => {
+    const [updated] = await tx
+      .update(machine)
+      .set(input)
+      .where(eq(machine.id, id))
+      .returning();
 
-  return updated;
+    await logActivity(tx, {
+      userId: actor.id,
+      action: "update",
+      entityType: "machine",
+      entityId: updated.id,
+      message: `updated machine ${updated.designation}`,
+    });
+
+    return updated;
+  });
 }

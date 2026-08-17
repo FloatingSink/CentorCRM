@@ -928,3 +928,65 @@ admin page renders both sections with real data.
 every entity. Flagged there as candidates to exclude: `dashboard_widget` mutations (personal UI
 layout, not a shared CRM record — would just be drag/resize noise) and `activity`-table creation
 (would be a log entry about a log entry).
+
+## 2026-08-17 — User activity tracking, Slice 2: full activity log
+
+Closes out the third and last part of the original ask: an event feed of what each user has done
+("Jia Long updated quotation Q-0004"), covering every entity, admin-only.
+
+**Re-verified the mutation inventory directly against the current code, not just the earlier
+audit** — read all 24 mutation functions across the 11 instrumented files before touching any of
+them. Two things this surfaced that shaped the design:
+
+1. **10 of the 24 already ran inside `db.transaction`** (the header+lines create/update functions
+   for quotations, sales orders, purchase orders; `createCompany`/`updateCompany`;
+   `createProductDocument`) — those got one `logActivity(tx, ...)` call added inside, no structural
+   change. **The other 14 were single-statement, not transactional** — `createContact`/
+   `updateContact`, `createProject`/`updateProject`, `createMachine`/`updateMachine`,
+   `createOpportunity`/`updateOpportunity`, `createProduct`/`updateProduct`, `createDocument`, and
+   the three `update*Status` functions. Each got wrapped in a new `db.transaction(...)` so the log
+   entry and the mutation it describes commit or roll back together — not a best-effort side note,
+   same reasoning as Slice 1's presence write, but here it's correctness-critical rather than
+   best-effort, since this is meant to be a trustworthy record, not just a nice-to-have.
+2. **Every update-flavored function discarded `requireUser()`'s return value** — called only for
+   its authorization side effect. No update function had the acting user's `id` available anywhere
+   in its body (only create functions receive a `createdBy` parameter, threaded from the calling
+   action). Fixed by changing `await requireUser();` to `const actor = await requireUser();`
+   everywhere instrumented, logging `actor.id` — not the `createdBy` parameter some create
+   functions also happen to receive, even though today it's always the same value. One mechanism:
+   every log entry's `userId` comes from `requireUser()`'s own return, matching how `requireUser()`
+   is already the single real auth boundary (remediation slice 2) rather than trusting a value
+   threaded through from elsewhere.
+
+`updateOpportunity` needed one more thing: it didn't previously `select` the row before updating,
+so there was nothing to diff `stage` against. Added that select (inside the new transaction) —
+if `stage` changed, the message is "moved opportunity X to stage Y"; otherwise a generic "updated
+opportunity X". Still `action: "update"`, not `"status_change"` — stage is one field among several
+this function can change, not a dedicated status endpoint like the three order/quotation ones.
+
+**Schema**: new `audit_log` table (`user_id`, `action` enum `create`/`update`/`status_change`,
+`entity_type` enum — the 11 instrumented entities — `entity_id`, `message`, `occurred_at`), indexed
+on `user_id` only, same reasoning as `login_event`'s index in Slice 1. `src/server/audit-log.ts`
+holds `logActivity(executor, entry)` (takes either `db` or an open `tx`) and `getActivityLog()`
+(admin-gated, bounded `LIMIT`, optional per-user filter).
+
+**Confirmed exclusions**, re-confirmed from Slice 1's own plan rather than re-litigated:
+`dashboard_widget` mutations and `activities.ts`'s `createActivity`. `document-sequence.ts`'s
+counter increment and the three line-insertion helpers (`insertLines`,
+`insertSalesOrderLines`, `insertPurchaseOrderLines`) stay uninstrumented — their effect is already
+captured by the one log line their calling function writes.
+
+**Verified for real, not just typecheck**: full `pnpm build` (touches the whole data-access layer)
+and the full e2e suite (12 tests) both green — the e2e run alone exercised 8 of the 11 entity types
+for free (company create+update, opportunity create ×2, document create, quotation create ×2 +
+4 status transitions, sales order create, purchase order create), every resulting `audit_log` row
+checked directly against the database and every message read correctly. Filled the gap for
+`product` with a real UI-driven create against the running dev server, same result. `contact` and
+`machine` weren't separately live-tested — structurally identical to already-verified functions
+(same insert-then-log-inside-new-transaction shape), confirmed via code reading rather than a
+duplicate live test. Atomicity (a rejected mutation must not leave an orphaned log row) confirmed
+by direct code inspection rather than a forced-failure test: in all three `update*Status`
+functions, the `throw new StatusTransitionError(...)` on an illegal transition happens strictly
+before the `tx.update(...)` and the `logActivity(tx, ...)` call, and a throw inside
+`db.transaction(...)` rolls back everything in that transaction — there's no code path where a
+rejected transition could produce a log row.

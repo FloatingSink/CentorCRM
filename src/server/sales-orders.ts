@@ -19,6 +19,7 @@ import type {
   SalesOrderHeaderInput,
 } from "@/lib/validation/sales-order";
 import { requireUser } from "./auth";
+import { logActivity } from "./audit-log";
 import { getNextSequenceNumber } from "./document-sequence";
 
 const DOC_TYPE = "sales_order";
@@ -119,7 +120,7 @@ export async function createSalesOrder(
   lines: (OrderLineInput & { unitPriceMinor: number })[],
   createdBy: string,
 ) {
-  await requireUser();
+  const actor = await requireUser();
   return db.transaction(async (tx) => {
     const [entity] = await tx
       .select()
@@ -146,6 +147,14 @@ export async function createSalesOrder(
 
     await insertSalesOrderLines(tx, created.id, lines, createdBy);
 
+    await logActivity(tx, {
+      userId: actor.id,
+      action: "create",
+      entityType: "sales_order",
+      entityId: created.id,
+      message: `created sales order ${created.orderNo}`,
+    });
+
     return created;
   });
 }
@@ -156,7 +165,7 @@ export async function updateSalesOrderHeaderAndLines(
   lines: (OrderLineInput & { unitPriceMinor: number })[],
   createdBy: string,
 ) {
-  await requireUser();
+  const actor = await requireUser();
   return db.transaction(async (tx) => {
     const [current] = await tx
       .select()
@@ -182,6 +191,14 @@ export async function updateSalesOrderHeaderAndLines(
     await tx.delete(orderLine).where(eq(orderLine.salesOrderId, id));
     await insertSalesOrderLines(tx, id, lines, createdBy);
 
+    await logActivity(tx, {
+      userId: actor.id,
+      action: "update",
+      entityType: "sales_order",
+      entityId: updated.id,
+      message: `updated sales order ${updated.orderNo}`,
+    });
+
     return updated;
   });
 }
@@ -196,25 +213,35 @@ export async function updateSalesOrderStatus(
     | "completed"
     | "cancelled",
 ) {
-  await requireUser();
-  const [current] = await db
-    .select()
-    .from(salesOrder)
-    .where(eq(salesOrder.id, id));
-  if (!current) {
-    throw new Error(`Sales order ${id} not found`);
-  }
-  if (!isLegalOrderTransition(current.status, status)) {
-    throw new StatusTransitionError(
-      `Cannot transition sales order from "${current.status}" to "${status}"`,
-    );
-  }
+  const actor = await requireUser();
+  return db.transaction(async (tx) => {
+    const [current] = await tx
+      .select()
+      .from(salesOrder)
+      .where(eq(salesOrder.id, id));
+    if (!current) {
+      throw new Error(`Sales order ${id} not found`);
+    }
+    if (!isLegalOrderTransition(current.status, status)) {
+      throw new StatusTransitionError(
+        `Cannot transition sales order from "${current.status}" to "${status}"`,
+      );
+    }
 
-  const [updated] = await db
-    .update(salesOrder)
-    .set({ status })
-    .where(eq(salesOrder.id, id))
-    .returning();
+    const [updated] = await tx
+      .update(salesOrder)
+      .set({ status })
+      .where(eq(salesOrder.id, id))
+      .returning();
 
-  return updated;
+    await logActivity(tx, {
+      userId: actor.id,
+      action: "status_change",
+      entityType: "sales_order",
+      entityId: updated.id,
+      message: `${updated.orderNo} status ${current.status} → ${status}`,
+    });
+
+    return updated;
+  });
 }

@@ -6,6 +6,7 @@ import { opportunity } from "@/db/schema/opportunity";
 import { project } from "@/db/schema/project";
 import type { OpportunityFormInput } from "@/lib/validation/opportunity";
 import { requireUser } from "./auth";
+import { logActivity } from "./audit-log";
 
 export async function getOpportunities() {
   await requireUser();
@@ -44,25 +45,58 @@ export async function createOpportunity(
   input: OpportunityFormInput,
   createdBy: string,
 ) {
-  await requireUser();
-  const [created] = await db
-    .insert(opportunity)
-    .values({ ...input, createdBy })
-    .returning();
+  const actor = await requireUser();
+  return db.transaction(async (tx) => {
+    const [created] = await tx
+      .insert(opportunity)
+      .values({ ...input, createdBy })
+      .returning();
 
-  return created;
+    await logActivity(tx, {
+      userId: actor.id,
+      action: "create",
+      entityType: "opportunity",
+      entityId: created.id,
+      message: `created opportunity ${created.reference}`,
+    });
+
+    return created;
+  });
 }
 
 export async function updateOpportunity(
   id: string,
   input: OpportunityFormInput,
 ) {
-  await requireUser();
-  const [updated] = await db
-    .update(opportunity)
-    .set(input)
-    .where(eq(opportunity.id, id))
-    .returning();
+  const actor = await requireUser();
+  return db.transaction(async (tx) => {
+    const [current] = await tx
+      .select()
+      .from(opportunity)
+      .where(eq(opportunity.id, id));
 
-  return updated;
+    const [updated] = await tx
+      .update(opportunity)
+      .set(input)
+      .where(eq(opportunity.id, id))
+      .returning();
+
+    // Stage is one field among several this function can change, not a
+    // dedicated status endpoint like quotations/orders — still logged as
+    // "update", just with a more specific message when stage moved.
+    const message =
+      current && current.stage !== updated.stage
+        ? `moved opportunity ${updated.reference} to stage ${updated.stage}`
+        : `updated opportunity ${updated.reference}`;
+
+    await logActivity(tx, {
+      userId: actor.id,
+      action: "update",
+      entityType: "opportunity",
+      entityId: updated.id,
+      message,
+    });
+
+    return updated;
+  });
 }

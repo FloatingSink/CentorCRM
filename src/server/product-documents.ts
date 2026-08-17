@@ -4,6 +4,7 @@ import { db } from "@/db/client";
 import { productDocument } from "@/db/schema/product-document";
 import type { ProductDocumentCreateInput } from "@/lib/validation/product-document";
 import { requireUser } from "./auth";
+import { logActivity } from "./audit-log";
 
 export async function getProductDocuments(productId: string) {
   await requireUser();
@@ -34,7 +35,7 @@ export async function createProductDocument(
   input: ProductDocumentCreateInput,
   createdBy: string,
 ) {
-  await requireUser();
+  const actor = await requireUser();
   return db.transaction(async (tx) => {
     await tx
       .update(productDocument)
@@ -52,6 +53,14 @@ export async function createProductDocument(
       .insert(productDocument)
       .values({ ...input, isCurrent: true, createdBy })
       .returning();
+
+    await logActivity(tx, {
+      userId: actor.id,
+      action: "create",
+      entityType: "product_document",
+      entityId: created.id,
+      message: `uploaded ${created.docType} (${created.language}) product document${created.version ? ` v${created.version}` : ""}`,
+    });
 
     return created;
   });

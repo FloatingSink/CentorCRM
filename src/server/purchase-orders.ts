@@ -21,6 +21,7 @@ import type {
   PurchaseOrderLineInput,
 } from "@/lib/validation/purchase-order";
 import { requireUser } from "./auth";
+import { logActivity } from "./audit-log";
 import { getNextSequenceNumber } from "./document-sequence";
 
 const DOC_TYPE = "purchase_order";
@@ -296,7 +297,7 @@ export async function createPurchaseOrder(
   lines: (PurchaseOrderLineInput & { unitPriceMinor: number })[],
   createdBy: string,
 ) {
-  await requireUser();
+  const actor = await requireUser();
   return db.transaction(async (tx) => {
     const [entity] = await tx
       .select()
@@ -323,6 +324,14 @@ export async function createPurchaseOrder(
 
     await insertPurchaseOrderLines(tx, created.id, lines, createdBy);
 
+    await logActivity(tx, {
+      userId: actor.id,
+      action: "create",
+      entityType: "purchase_order",
+      entityId: created.id,
+      message: `created purchase order ${created.orderNo}`,
+    });
+
     return created;
   });
 }
@@ -333,7 +342,7 @@ export async function updatePurchaseOrderHeaderAndLines(
   lines: (PurchaseOrderLineInput & { unitPriceMinor: number })[],
   createdBy: string,
 ) {
-  await requireUser();
+  const actor = await requireUser();
   return db.transaction(async (tx) => {
     const [current] = await tx
       .select()
@@ -359,6 +368,14 @@ export async function updatePurchaseOrderHeaderAndLines(
     await tx.delete(orderLine).where(eq(orderLine.purchaseOrderId, id));
     await insertPurchaseOrderLines(tx, id, lines, createdBy);
 
+    await logActivity(tx, {
+      userId: actor.id,
+      action: "update",
+      entityType: "purchase_order",
+      entityId: updated.id,
+      message: `updated purchase order ${updated.orderNo}`,
+    });
+
     return updated;
   });
 }
@@ -373,25 +390,35 @@ export async function updatePurchaseOrderStatus(
     | "completed"
     | "cancelled",
 ) {
-  await requireUser();
-  const [current] = await db
-    .select()
-    .from(purchaseOrder)
-    .where(eq(purchaseOrder.id, id));
-  if (!current) {
-    throw new Error(`Purchase order ${id} not found`);
-  }
-  if (!isLegalOrderTransition(current.status, status)) {
-    throw new StatusTransitionError(
-      `Cannot transition purchase order from "${current.status}" to "${status}"`,
-    );
-  }
+  const actor = await requireUser();
+  return db.transaction(async (tx) => {
+    const [current] = await tx
+      .select()
+      .from(purchaseOrder)
+      .where(eq(purchaseOrder.id, id));
+    if (!current) {
+      throw new Error(`Purchase order ${id} not found`);
+    }
+    if (!isLegalOrderTransition(current.status, status)) {
+      throw new StatusTransitionError(
+        `Cannot transition purchase order from "${current.status}" to "${status}"`,
+      );
+    }
 
-  const [updated] = await db
-    .update(purchaseOrder)
-    .set({ status })
-    .where(eq(purchaseOrder.id, id))
-    .returning();
+    const [updated] = await tx
+      .update(purchaseOrder)
+      .set({ status })
+      .where(eq(purchaseOrder.id, id))
+      .returning();
 
-  return updated;
+    await logActivity(tx, {
+      userId: actor.id,
+      action: "status_change",
+      entityType: "purchase_order",
+      entityId: updated.id,
+      message: `${updated.orderNo} status ${current.status} → ${status}`,
+    });
+
+    return updated;
+  });
 }
