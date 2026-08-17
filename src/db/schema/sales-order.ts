@@ -4,6 +4,7 @@ import {
   char,
   check,
   date,
+  index,
   integer,
   numeric,
   pgEnum,
@@ -95,6 +96,14 @@ export const salesOrder = pgTable(
     // DB-level backstop for getNextSequenceNumber's own uniqueness
     // guarantee (docs/decisions.md, remediation slice 3).
     uniqueIndex("sales_order_order_no_unique").on(table.orderNo),
+    // sales-orders.ts:getSalesOrders (remediation slice 6,
+    // docs/decisions.md).
+    index("sales_order_quotation_id_idx").on(table.quotationId),
+    index("sales_order_customer_company_id_idx").on(table.customerCompanyId),
+    index("sales_order_customer_legal_entity_id_idx").on(
+      table.customerLegalEntityId,
+    ),
+    index("sales_order_project_id_idx").on(table.projectId),
   ],
 );
 
@@ -159,5 +168,11 @@ export const orderLine = pgTable(
       "order_line_net_weight_kg_non_negative",
       sql`${table.netWeightKg} IS NULL OR ${table.netWeightKg} >= 0`,
     ),
+    // getSalesOrderById/updateSalesOrderHeaderAndLines filter,
+    // purchase-orders.ts (3 call sites), getPurchaseOrderForPdf join
+    // (remediation slice 6, docs/decisions.md).
+    index("order_line_sales_order_id_idx").on(table.salesOrderId),
+    index("order_line_purchase_order_id_idx").on(table.purchaseOrderId),
+    index("order_line_product_id_idx").on(table.productId),
   ],
 );

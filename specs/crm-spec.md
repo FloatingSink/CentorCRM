@@ -257,6 +257,12 @@ combined screen — see docs/decisions.md, 2026-08-12.
 9. **Shipments** — list + detail
 10. **Settings** — legal entities, users, currencies, incoterms, numbering
 
+**Known deferred limitation**: every list screen above currently selects the whole table and
+filters/searches client-side (`useMemo`). Fine under ~20 users and hundreds of rows per table;
+revisit (server-side pagination, or at least a server-side search) once any single table's row
+count reaches roughly the low thousands. Deliberately deferred — see docs/decisions.md,
+remediation slice 6 — not a gap to fix incidentally while touching a list page for something else.
+
 ## 9. Technical decisions
 
 | Area | Choice |

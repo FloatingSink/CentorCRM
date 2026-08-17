@@ -657,3 +657,68 @@ for.
 4.5MB total. This commit more than doubles it, permanently (git doesn't shrink on its own). The
 brief anticipated this trade-off explicitly; noting the number here rather than letting it pass
 silently.
+
+## 2026-08-17 — Remediation Slice 6: foreign-key indexes
+
+**Premise correction**: the brief says "the schema has four indexes total." A full audit (every
+`.where`/`.innerJoin`/`.leftJoin` in all 17 `src/server/*.ts` files, cross-checked against every
+`.references(() => ...)` column in `src/db/schema/*.ts`, spot-verified independently rather than
+taken on faith) found **7** index-backed constraints already in place: the two named in the brief
+(`product_document_current_unique`, `dashboard_widget_user_type_unique`) plus `user.email`,
+`legal_entity.short_code`, and three the brief predates from slice 3
+(`quotation_legal_entity_quote_no_version_unique`, `sales_order_order_no_unique`,
+`purchase_order_order_no_unique`). Doesn't change the brief's actual point — none of the 7 are on
+a foreign-key column, and no plain (non-unique) index existed anywhere.
+
+**Method**: derive the index list from the real queries, not from the schema in the abstract — the
+brief is explicit that blanket-indexing every FK column is wrong. Walked every WHERE/JOIN in
+`src/server/*` and matched it against the FK column it filters or joins on. Result: **26** FK
+columns are actually queried and lacked an index; each got a plain btree index
+(`<table>_<column>_idx`, mirroring the existing `<table>_<col>_unique` naming):
+
+- `activity.user_id` — `activities.ts:getActivitiesForRelated`, `dashboard.ts:getRecentActivity`.
+- `contact.company_id` — `contacts.ts` (3 functions) + `companies.ts:getCompanyById`.
+- `machine.project_id` — `machines.ts` (2 functions), `projects.ts:getProjectById`.
+- `opportunity.project_id`, `.customer_company_id` — `opportunities.ts:getOpportunities` (2 joins).
+- `opportunity.owner_user_id` — `dashboard.ts:getMyOpenOpportunities`.
+- `product.manufacturer_company_id` — `products.ts:getProducts`.
+- `product_document.product_id` — `product-documents.ts:getProductDocuments`/`createProductDocument`
+  (the existing `product_document_current_unique` is partial — `WHERE is_current` — so it can't
+  serve a scan across historical rows too; this is a genuinely separate index, not a duplicate).
+- `project.client_company_id` — `projects.ts:getProjects`.
+- `purchase_order.legal_entity_id`, `.supplier_company_id`, `.supplier_legal_entity_id`,
+  `.project_id`, `.linked_sales_order_id` — `purchase-orders.ts`: `getPurchaseOrders`,
+  `getPurchaseOrderForPdf`, `getLinkedPurchaseOrders` (the sales-order-detail margin roll-up).
+- `quotation.opportunity_id`, `.customer_company_id`, `.contact_id` — `quotations.ts:getQuotations`/
+  `getQuotationForPdf`, `dashboard.ts:getExpiringQuotations`.
+- `quotation_line.quotation_id`, `.product_id` — `getQuotations` join, `getQuotationById`/
+  `getQuotationForPdf` filter, `updateQuotationHeaderAndLines`'s delete.
+- `sales_order.quotation_id`, `.customer_company_id`, `.customer_legal_entity_id`, `.project_id` —
+  `sales-orders.ts:getSalesOrders` (4 joins).
+- `order_line.sales_order_id`, `.purchase_order_id`, `.product_id` — `getSalesOrderById`/
+  `updateSalesOrderHeaderAndLines` filter, `purchase-orders.ts` (3 call sites),
+  `getPurchaseOrderForPdf` join.
+
+**Deliberately not indexed, already covered**: `company_role.company_id` and
+`document_sequence.legal_entity_id` are each the leftmost column of their table's composite
+primary key; `dashboard_widget.user_id` and `quotation.legal_entity_id` are each the leftmost
+column of an existing unique index. A leftmost-column equality lookup can already use these —
+adding a dedicated single-column index would be redundant.
+
+**Deliberately not indexed, never queried**: every `created_by`/`uploaded_by` audit column on
+every table, plus `opportunity.legal_entity_id`, `project.owner_user_id`,
+`sales_order.legal_entity_id`, `sales_order.executed_document_id`,
+`purchase_order.executed_document_id`, `document.uploaded_by`/`created_by`,
+`legal_entity.created_by`, `user.created_by`, `account.user_id`, `session.user_id` (NextAuth's own
+adapter owns `account`/`session`; nothing in `src/server/*` queries them directly). This is the
+brief's "do not blanket-index" instruction applied, not just stated — these are real gaps in
+principle but not in practice, since nothing filters or joins on them today.
+
+**Pagination** (explicit non-goal for this slice): `specs/crm-spec.md` now notes list pages'
+whole-table-select-plus-client-side-`useMemo`-filter pattern as a known, deliberately deferred
+limitation, with a rough row-count threshold to revisit it — not built here, per the brief.
+
+Migration `0017_old_whirlwind.sql` — 26 plain `CREATE INDEX` statements, no unique constraints, no
+column changes. Verified against `pg_indexes` post-migration that all 26 exist with the expected
+table/column. No behavior change expected or observed — all 111 existing tests still pass
+unchanged; this is a pure read-performance change.

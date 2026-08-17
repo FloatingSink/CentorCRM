@@ -2,6 +2,7 @@ import { sql } from "drizzle-orm";
 import {
   boolean,
   date,
+  index,
   pgEnum,
   pgTable,
   text,
@@ -56,5 +57,10 @@ export const productDocument = pgTable(
     uniqueIndex("product_document_current_unique")
       .on(table.productId, table.docType, table.language)
       .where(sql`${table.isCurrent} = true`),
+    // product-documents.ts:getProductDocuments/createProductDocument
+    // (remediation slice 6, docs/decisions.md) — the unique index above is
+    // partial (WHERE is_current), so it can't serve a plain product_id scan
+    // across historical rows too.
+    index("product_document_product_id_idx").on(table.productId),
   ],
 );
