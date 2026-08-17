@@ -1,6 +1,5 @@
 import {
   Document,
-  Font,
   Image,
   Page,
   StyleSheet,
@@ -12,15 +11,11 @@ import { formatMoney } from "@/lib/money";
 import type { getQuotationForPdf } from "@/server/quotations";
 import { label } from "./labels";
 import { letterheadImagePath } from "./letterhead";
+import { registerCjkFont } from "./register-cjk-font";
 
 // react-pdf's built-in fonts have no CJK glyphs — registered once at module
-// scope, only actually fetched by react-pdf when a Chinese glyph is used
-// (docs/decisions.md, 2026-08-12). Verified working direct TTF URL (not the
-// CSS endpoint, which serves woff2 that fontkit can't always read).
-Font.register({
-  family: "Noto Sans SC",
-  src: "https://fonts.gstatic.com/s/notosanssc/v40/k3kCo84MPvpLmixcA63oeAL7Iqp5IZJF9bmaG9_FnYw.ttf",
-});
+// scope, only actually loaded by react-pdf when a Chinese glyph is used.
+registerCjkFont();
 
 type QuotationData = NonNullable<
   Awaited<ReturnType<typeof getQuotationForPdf>>
