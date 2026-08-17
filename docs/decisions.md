@@ -722,3 +722,36 @@ Migration `0017_old_whirlwind.sql` — 26 plain `CREATE INDEX` statements, no un
 column changes. Verified against `pg_indexes` post-migration that all 26 exist with the expected
 table/column. No behavior change expected or observed — all 111 existing tests still pass
 unchanged; this is a pure read-performance change.
+
+## 2026-08-17 — Remediation Slice 7: CI and a human-facing README
+
+Two open decisions from the brief's section 10, asked directly rather than defaulted:
+
+- **E2E in CI**: staying local-only for now. `.github/workflows/ci.yml` runs `lint`, `typecheck`,
+  `test` on every push and pull request; `test:e2e` remains a local workflow (needs MailDev
+  running, see below). Matches the brief's own fallback clause — full CI e2e (a Postgres service
+  container plus a mail-catcher container) is real setup work, not something to half-do here.
+  Revisit as a follow-up if e2e coverage gaps become a real problem.
+- **Node version**: no version was pinned anywhere in the repo before this slice — no `engines`
+  field, no `.nvmrc`, no `vercel.json` — and there's no way to read the actual Vercel project's
+  configured Node version from inside the repo. CI is pinned to **Node 22**, matching this dev
+  environment's installed version. This is a stated assumption, not a confirmed fact about
+  production — worth checking against the real Vercel project setting at some point and updating
+  the workflow if it's wrong.
+
+**CI needs zero secrets and zero service containers** — verified, not assumed: ran `lint`,
+`typecheck`, and `test` locally with `DATABASE_URL` unset, all three passed. `src/db/client.ts`
+throws if `DATABASE_URL` is missing, but nothing on the lint/typecheck/test path imports it
+(consistent with slice 6's audit finding that `src/lib/*.ts` has no direct DB queries — this is
+the same property, confirmed end to end rather than inferred). The workflow has no `env:` block at
+all as a result, which is deliberate, not an oversight.
+
+`pnpm/action-setup@v4` is used with no explicit `version` input, so it auto-detects from
+`package.json`'s `packageManager` field (`pnpm@11.21.0`) instead of a second hand-pinned copy that
+could drift out of sync.
+
+**README.md** (new — repo had none) covers what the system is, the stack, prereqs, first-run
+sequence (`.env.example` → `.env.local` → `pnpm install` → `db:migrate` → `db:seed` → `dev`), and
+what e2e additionally needs (`npx maildev`, `npx playwright install`) — links out to
+`specs/crm-spec.md`, `docs/decisions.md`, and `CLAUDE.md` rather than restating them, per the
+brief's explicit instruction.
