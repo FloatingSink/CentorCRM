@@ -1,5 +1,6 @@
 import { sql } from "drizzle-orm";
 import {
+  bigint,
   char,
   check,
   date,
@@ -59,7 +60,9 @@ export const salesOrder = pgTable(
     namedPlace: text("named_place"),
     // Stored (unlike quotation, which computes its total via SUM on read) —
     // spec §6.4 lists total_value as an explicit column for sales_order.
-    totalValue: integer("total_value").notNull(),
+    // bigint, not integer: int4's ~$21.47M ceiling (in minor units) is too
+    // low for a metro-scale order (docs/decisions.md, remediation slice 1).
+    totalValue: bigint("total_value", { mode: "number" }).notNull(),
     governingLaw: text("governing_law"),
     // Free text, not a closed enum — spec's "e.g. SIAC/HKIAC" isn't exhaustive.
     arbitrationRules: text("arbitration_rules"),
@@ -115,9 +118,10 @@ export const orderLine = pgTable(
     descriptionOverride: text("description_override"),
     quantity: integer("quantity").notNull(),
     uom: text("uom"),
-    unitPrice: integer("unit_price").notNull(),
+    // bigint, not integer — same reasoning as sales_order.total_value above.
+    unitPrice: bigint("unit_price", { mode: "number" }).notNull(),
     discountPct: numeric("discount_pct", { precision: 5, scale: 2 }),
-    lineTotal: integer("line_total").notNull(),
+    lineTotal: bigint("line_total", { mode: "number" }).notNull(),
     // The real purchase-order template prints a line's total net weight as a
     // remark (e.g. 52 drums x 250kg = 13,000kg) — stored as the already-
     // computed total, not a per-unit weight the app multiplies out, since

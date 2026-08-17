@@ -1,4 +1,5 @@
 import {
+  bigint,
   boolean,
   char,
   date,
@@ -43,7 +44,9 @@ export const opportunity = pgTable("opportunity", {
   stage: opportunityStageEnum("stage").notNull().default("enquiry"),
   // Minor units + ISO 4217 code, both nullable together — not always known at
   // enquiry stage (CLAUDE.md: money is integer minor units + currency, never a float).
-  estimatedValue: integer("estimated_value"),
+  // bigint, not integer: int4's ~$21.47M ceiling (in minor units) is too low
+  // for a metro-scale opportunity (docs/decisions.md, remediation slice 1).
+  estimatedValue: bigint("estimated_value", { mode: "number" }),
   currency: char("currency", { length: 3 }),
   probability: integer("probability"),
   expectedCloseDate: date("expected_close_date", { mode: "date" }),
