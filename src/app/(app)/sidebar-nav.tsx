@@ -2,6 +2,7 @@
 
 import {
   Building2,
+  CheckSquare,
   FileText,
   Handshake,
   HardHat,
@@ -16,6 +17,8 @@ import {
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
+import { Badge } from "@/components/ui/badge";
+
 const NAV_ITEMS: { href: string; label: string; icon: LucideIcon }[] = [
   { href: "/companies", label: "Companies", icon: Building2 },
   { href: "/contacts", label: "Contacts", icon: Users },
@@ -26,11 +29,18 @@ const NAV_ITEMS: { href: string; label: string; icon: LucideIcon }[] = [
   { href: "/sales-orders", label: "Sales Orders", icon: ShoppingCart },
   { href: "/purchase-orders", label: "Purchase Orders", icon: Receipt },
   { href: "/shipments", label: "Shipments", icon: Ship },
+  { href: "/tasks", label: "Tasks", icon: CheckSquare },
 ];
 
 const ADMIN_NAV_ITEM = { href: "/admin", label: "Admin", icon: ShieldCheck };
 
-export function SidebarNav({ isAdmin }: { isAdmin: boolean }) {
+export function SidebarNav({
+  isAdmin,
+  openTaskCount,
+}: {
+  isAdmin: boolean;
+  openTaskCount: number;
+}) {
   const pathname = usePathname();
   const items = isAdmin ? [...NAV_ITEMS, ADMIN_NAV_ITEM] : NAV_ITEMS;
 
@@ -51,6 +61,9 @@ export function SidebarNav({ isAdmin }: { isAdmin: boolean }) {
           >
             <item.icon className="size-[18px]" />
             {item.label}
+            {item.href === "/tasks" && openTaskCount > 0 ? (
+              <Badge className="ml-auto">{openTaskCount}</Badge>
+            ) : null}
           </Link>
         );
       })}

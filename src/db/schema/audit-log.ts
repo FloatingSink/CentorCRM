@@ -27,6 +27,7 @@ export const auditEntityType = pgEnum("audit_entity_type", [
   "product",
   "product_document",
   "document",
+  "task",
 ]);
 
 // Event feed, not a field-level diff — "Jia Long updated quotation Q-0004",

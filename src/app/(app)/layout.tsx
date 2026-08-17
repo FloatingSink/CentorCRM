@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { auth, signOut } from "@/lib/auth";
 import { getInitials } from "@/lib/initials";
+import { getMyOpenTaskCount } from "@/server/tasks";
 
 export default async function AppLayout({
   children,
@@ -17,6 +18,8 @@ export default async function AppLayout({
   if (!session?.user) {
     redirect("/sign-in");
   }
+
+  const openTaskCount = await getMyOpenTaskCount();
 
   return (
     <TooltipProvider>
@@ -54,7 +57,10 @@ export default async function AppLayout({
             />
           </Link>
 
-          <SidebarNav isAdmin={session.user.role === "admin"} />
+          <SidebarNav
+            isAdmin={session.user.role === "admin"}
+            openTaskCount={openTaskCount}
+          />
 
           <div className="mt-auto flex items-center gap-2 rounded-md bg-muted p-2">
             <span className="flex size-[30px] flex-none items-center justify-center rounded-full bg-brand-800 text-xs font-medium text-brand-100">

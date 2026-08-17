@@ -1,0 +1,1 @@
+ALTER TYPE "public"."dashboard_widget_type" ADD VALUE 'my_tasks';

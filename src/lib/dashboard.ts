@@ -44,6 +44,10 @@ export const WIDGET_CATALOG: Record<
     label: "Recent activity",
     description: "The latest notes, calls, meetings and emails logged.",
   },
+  my_tasks: {
+    label: "My tasks",
+    description: "Open tasks assigned to you.",
+  },
 };
 
 export const DEFAULT_WIDGET_TYPES: DashboardWidgetType[] = [

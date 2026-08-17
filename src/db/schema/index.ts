@@ -18,3 +18,4 @@ export * from "./activity";
 export * from "./dashboard-widget";
 export * from "./login-event";
 export * from "./audit-log";
+export * from "./task";
