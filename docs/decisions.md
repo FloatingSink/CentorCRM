@@ -722,3 +722,51 @@ Migration `0017_old_whirlwind.sql` — 26 plain `CREATE INDEX` statements, no un
 column changes. Verified against `pg_indexes` post-migration that all 26 exist with the expected
 table/column. No behavior change expected or observed — all 111 existing tests still pass
 unchanged; this is a pure read-performance change.
+
+## 2026-08-17 — Remediation Slice 7: CI and a human-facing README
+
+Two open decisions from the brief's section 10, asked directly rather than defaulted:
+
+- **E2E in CI**: staying local-only for now. `.github/workflows/ci.yml` runs `lint`, `typecheck`,
+  `test` on every push and pull request; `test:e2e` remains a local workflow (needs MailDev
+  running, see below). Matches the brief's own fallback clause — full CI e2e (a Postgres service
+  container plus a mail-catcher container) is real setup work, not something to half-do here.
+  Revisit as a follow-up if e2e coverage gaps become a real problem.
+- **Node version**: no version was pinned anywhere in the repo before this slice — no `engines`
+  field, no `.nvmrc`, no `vercel.json` — and there's no way to read the actual Vercel project's
+  configured Node version from inside the repo. CI is pinned to **Node 22**, matching this dev
+  environment's installed version. This is a stated assumption, not a confirmed fact about
+  production — worth checking against the real Vercel project setting at some point and updating
+  the workflow if it's wrong.
+
+**Correction after the first push**: the workflow was first written with no `env:` block at all,
+on the claim that `lint`/`typecheck`/`test` need zero environment variables — based on running all
+three locally with `DATABASE_URL` unset. That local check was silently invalid: this environment
+has a global dotenvx auto-injection that reloads `.env.local` into every command's process
+environment regardless of a shell-level `unset`, so the "unset" run was still secretly getting a
+real `DATABASE_URL`. The actual push to CI failed at the `test` step. Root cause:
+`src/db/bigint-money.test.ts` is a genuine live-DB integration test (remediation slice 1) — the
+only way to prove a value above the old int4 ceiling round-trips through the real bigint columns,
+not just through pure-JS `BigInt` math — and it needs a reachable, migrated Postgres. Confirmed
+this precisely (not just theorized) by cloning the pushed branch fresh into an isolated directory
+with no `.env.local` at all: `lint` and `typecheck` genuinely pass with zero environment
+variables (that part of the original claim held), but `test` fails on exactly that one file with
+`DATABASE_URL is not set`.
+
+**Fix**: `.github/workflows/ci.yml` now runs a `postgres:16` service container for the job, sets
+`DATABASE_URL` to point at it, and runs `pnpm db:migrate` before `pnpm test` so the schema exists.
+This is deliberately **not** the e2e-in-CI question answered above — no MailDev, no Playwright
+browsers, no running app server, just a bare Postgres reachable for one integration test that
+inserts and rolls back inside a transaction (self-cleaning, no seed data needed). Verified for
+real before pushing again: pointed the same clean clone at a real, already-migrated Postgres and
+confirmed `db:migrate` (idempotent) plus the full test suite, including the bigint test, pass.
+
+`pnpm/action-setup@v4` is used with no explicit `version` input, so it auto-detects from
+`package.json`'s `packageManager` field (`pnpm@11.21.0`) instead of a second hand-pinned copy that
+could drift out of sync.
+
+**README.md** (new — repo had none) covers what the system is, the stack, prereqs, first-run
+sequence (`.env.example` → `.env.local` → `pnpm install` → `db:migrate` → `db:seed` → `dev`), and
+what e2e additionally needs (`npx maildev`, `npx playwright install`) — links out to
+`specs/crm-spec.md`, `docs/decisions.md`, and `CLAUDE.md` rather than restating them, per the
+brief's explicit instruction.
