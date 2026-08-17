@@ -307,3 +307,29 @@ but `min-h-32`) was what had been reserving an empty row's space all along, not 
 drop target — hiding it in view mode visibly snapped whatever came after the gap upward. Fixed by
 always rendering it in both modes; staying registered as a droppable target in view mode is
 harmless since nothing can ever be dragged there to begin with.
+
+## 2026-08-16 — Remediation Slice 0: `next typegen` as a `pretypecheck` hook
+
+First slice of `docs/centor-crm-remediation-prompt.md`'s eight-item audit. `pnpm typecheck` failed
+on a clean clone (no `.next/` present) with `error TS2304: Cannot find name 'LayoutProps'` in
+`src/app/layout.tsx` — `LayoutProps<"/">` is a Next 16 route-aware type helper, previously only
+generated as a side effect of `next dev` / `next build`, so a fresh checkout running `tsc --noEmit`
+directly (as CI or a first-time `pnpm typecheck` would) had nothing to satisfy it.
+
+Checked `node_modules/next/dist/docs/01-app/03-api-reference/06-cli/next.md` per the brief's
+instruction before picking an approach: Next 15.5+ (this repo: 16.3.0) ships a dedicated
+`next typegen` command for exactly this — generates route types without a full build, and its own
+docs recommend `next typegen && tsc --noEmit` for standalone type-checking. Reproduced the failure
+live (`.next/` moved aside), confirmed `next typegen` alone fixes it, and confirmed `tsconfig.json`
+already includes both possible output paths (`.next/types/**/*.ts`, `.next/dev/types/**/*.ts`) —
+no tsconfig change needed.
+
+Added `"pretypecheck": "next typegen"` to `package.json`. pnpm (11.21.0, this repo's pinned
+version) auto-runs `pre<script>` hooks before the matching `pnpm run <script>` — confirmed
+empirically in a scratch package rather than assumed, since this is exactly the kind of
+behavior-not-signature question the brief calls out. `pnpm typecheck` alone is now sufficient from
+a clean clone; no separate manual step or README instruction needed.
+
+Rejected: hand-writing an explicit local prop type on `RootLayout` (the brief's fallback for if
+typegen weren't available) — not needed here since the dedicated command exists and is already
+installed. No new dependency; `next typegen` is part of the already-installed `next` CLI.
