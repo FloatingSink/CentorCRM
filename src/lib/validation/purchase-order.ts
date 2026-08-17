@@ -35,12 +35,24 @@ export type PurchaseOrderHeaderInput = z.infer<
   typeof purchaseOrderHeaderSchema
 >;
 
+// Shape of the net_weight_kg NUMERIC(10,3) column, non-negative.
+const NET_WEIGHT_PATTERN = /^\d{1,7}(\.\d{1,3})?$/;
+
 // Extends the shared quotation/sales-order line shape with net_weight_kg —
 // purchase-order-specific (the real source template's 净重合计 remark), not
 // added to quotationLineInputSchema itself since quotation_line has no such
-// column.
+// column. Previously a bare z.string() with zero validation of any kind —
+// not even JS-parsed, so a malformed value was only ever caught by a raw
+// Postgres error deep inside a transaction (remediation slice 4,
+// docs/decisions.md).
 export const purchaseOrderLineInputSchema = quotationLineInputSchema.extend({
-  netWeightKg: z.string().nullable(),
+  netWeightKg: z
+    .string()
+    .nullable()
+    .refine(
+      (v) => v === null || NET_WEIGHT_PATTERN.test(v),
+      "Net weight must be a non-negative number, up to 3 decimal places",
+    ),
 });
 export type PurchaseOrderLineInput = z.infer<
   typeof purchaseOrderLineInputSchema

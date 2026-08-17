@@ -1,6 +1,8 @@
+import { sql } from "drizzle-orm";
 import {
   bigint,
   char,
+  check,
   date,
   integer,
   numeric,
@@ -94,30 +96,42 @@ export const quotation = pgTable(
   ],
 );
 
-export const quotationLine = pgTable("quotation_line", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  quotationId: uuid("quotation_id")
-    .notNull()
-    .references(() => quotation.id),
-  lineNo: integer("line_no").notNull(),
-  productId: uuid("product_id")
-    .notNull()
-    .references(() => product.id),
-  descriptionOverride: text("description_override"),
-  quantity: integer("quantity").notNull(),
-  uom: text("uom"),
-  // Minor units; currency comes from the parent quotation.currency — one
-  // currency per quotation, not per line, so no separate currency column here.
-  // bigint, not integer: int4's ~$21.47M ceiling (in minor units) is too low
-  // for a metro-scale line (docs/decisions.md, remediation slice 1).
-  unitPrice: bigint("unit_price", { mode: "number" }).notNull(),
-  // A rate, not money — NUMERIC is the right type, not integer minor units.
-  discountPct: numeric("discount_pct", { precision: 5, scale: 2 }),
-  lineTotal: bigint("line_total", { mode: "number" }).notNull(),
-  createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
-  updatedAt: timestamp("updated_at", { mode: "date" })
-    .notNull()
-    .defaultNow()
-    .$onUpdate(() => new Date()),
-  createdBy: uuid("created_by").references(() => user.id),
-});
+export const quotationLine = pgTable(
+  "quotation_line",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    quotationId: uuid("quotation_id")
+      .notNull()
+      .references(() => quotation.id),
+    lineNo: integer("line_no").notNull(),
+    productId: uuid("product_id")
+      .notNull()
+      .references(() => product.id),
+    descriptionOverride: text("description_override"),
+    quantity: integer("quantity").notNull(),
+    uom: text("uom"),
+    // Minor units; currency comes from the parent quotation.currency — one
+    // currency per quotation, not per line, so no separate currency column here.
+    // bigint, not integer: int4's ~$21.47M ceiling (in minor units) is too low
+    // for a metro-scale line (docs/decisions.md, remediation slice 1).
+    unitPrice: bigint("unit_price", { mode: "number" }).notNull(),
+    // A rate, not money — NUMERIC is the right type, not integer minor units.
+    discountPct: numeric("discount_pct", { precision: 5, scale: 2 }),
+    lineTotal: bigint("line_total", { mode: "number" }).notNull(),
+    createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { mode: "date" })
+      .notNull()
+      .defaultNow()
+      .$onUpdate(() => new Date()),
+    createdBy: uuid("created_by").references(() => user.id),
+  },
+  (table) => [
+    // DB-level backstop for the zod-level 0-100 check in
+    // src/lib/validation/quotation.ts (remediation slice 4,
+    // docs/decisions.md) — holds regardless of which code path writes it.
+    check(
+      "quotation_line_discount_pct_range",
+      sql`${table.discountPct} IS NULL OR (${table.discountPct} >= 0 AND ${table.discountPct} <= 100)`,
+    ),
+  ],
+);
