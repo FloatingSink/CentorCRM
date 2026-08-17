@@ -4,7 +4,9 @@ import { notFound } from "next/navigation";
 import { PurchaseOrderBuilder } from "../purchase-order-builder";
 import { ActivityTimeline } from "@/components/activity-timeline";
 import { DocumentLibrary } from "@/components/document-library";
+import { TaskPanel } from "@/components/task-panel";
 import { Badge } from "@/components/ui/badge";
+import { auth } from "@/lib/auth";
 import { getActivitiesForRelated } from "@/server/activities";
 import { getCompanies } from "@/server/companies";
 import { getDocumentsForRelated } from "@/server/documents";
@@ -13,6 +15,8 @@ import { getProducts } from "@/server/products";
 import { getProjects } from "@/server/projects";
 import { getSalesOrderById, getSalesOrders } from "@/server/sales-orders";
 import { getPurchaseOrderById } from "@/server/purchase-orders";
+import { getTasksForRelated } from "@/server/tasks";
+import { getUsers } from "@/server/users";
 
 export default async function PurchaseOrderDetailPage({
   params,
@@ -27,6 +31,7 @@ export default async function PurchaseOrderDetailPage({
   const { order, lines } = result;
 
   const [
+    session,
     legalEntities,
     companies,
     projects,
@@ -35,7 +40,10 @@ export default async function PurchaseOrderDetailPage({
     linked,
     activities,
     documents,
+    tasks,
+    users,
   ] = await Promise.all([
+    auth(),
     getLegalEntities(),
     getCompanies(),
     getProjects(),
@@ -46,6 +54,8 @@ export default async function PurchaseOrderDetailPage({
       : Promise.resolve(null),
     getActivitiesForRelated("purchase_order", order.id),
     getDocumentsForRelated("purchase_order", order.id),
+    getTasksForRelated("purchase_order", order.id),
+    getUsers(),
   ]);
 
   return (
@@ -118,6 +128,14 @@ export default async function PurchaseOrderDetailPage({
         relatedType="purchase_order"
         relatedId={order.id}
         activities={activities}
+      />
+
+      <TaskPanel
+        relatedType="purchase_order"
+        relatedId={order.id}
+        tasks={tasks}
+        users={users}
+        currentUserId={session!.user.id}
       />
     </div>
   );

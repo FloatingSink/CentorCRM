@@ -1034,3 +1034,44 @@ correct `audit_log` rows.
 
 **Deferred to a later slice**: tying a task to an existing record (schema-ready, not built), the
 embedded "Tasks" section on other detail pages, multi-stage status, priority, reassignment.
+
+## 2026-08-17 — Tasks, Slice 2: tie a task to an existing CRM record
+
+The other half Slice 1 deferred — "pinging" someone about a _specific_
+company/contact/project/opportunity/sales order/purchase order, not just a standalone task. No
+migration: `task.related_type`/`related_id` already existed (nullable, CHECK-paired) from Slice 1
+specifically so this slice wouldn't need one.
+
+**Confirmed the pattern by reading the actual code, not assumed**: this codebase's established way
+to "attach something to a record" is `src/components/activity-timeline.tsx` — a shared client
+component parameterized by `relatedType`/`relatedId`, embedded directly on each record's own detail
+page, not a global picker. `TaskPanel` mirrors that structure exactly (same props shape, same
+`router.refresh()`-after-mutation pattern, same non-redirecting server action shape as
+`createActivityAction`), embedded on the same 6 pages `activity` already covers — `task_related_type`
+was set to match `activity_related_type`'s 6 values back in Slice 1, and quotations stay excluded
+from both for the same reason (never asked for, don't expand the set speculatively).
+
+**Real bug caught by the existing e2e suite, not written by hand**: the full suite (unchanged from
+Slice 1, still 12 specs) failed once, for a reason worth recording. `TaskPanel`'s "Title" field
+collided with `DocumentLibrary`'s existing "Title" field — both render on the same company/contact/
+etc. detail pages, and `document-and-activity-flow.spec.ts`'s `getByLabel("Title")` hit a strict-mode
+violation (two matching elements). First fix attempt (`"Task title"`) still collided — Playwright's
+`getByLabel` does _substring_ matching by default, not exact, so `"Task title"` still matches a
+query for `"Title"`. Settled on `"Task"` (no shared substring with `"Title"` at all). Worth noting
+for the next time a new embedded-panel field is added to these pages: check for substring overlap
+with `activity`/`document`'s existing labels, not just exact-string overlap.
+
+`getTasksForRelated` mirrors `getActivitiesForRelated` exactly: shows every task tied to that
+record regardless of assignee or status (open and done both), not filtered to "mine" — that's what
+`getMyTasks()`/the central `/tasks` page are for. `createTask`/`completeTask` needed no changes;
+`taskFormSchema` just needed `relatedType`/`relatedId` un-omitted, validated as a pair via
+`.refine()` (mirrors the DB's own `task_related_pair` CHECK at the zod boundary too, per CLAUDE.md).
+The central `/tasks` page's own form now explicitly sends both as `null` rather than relying on
+`undefined`/omission, so it keeps creating freestanding tasks unchanged.
+
+**Verified for real**: after the label fix, full e2e suite green again. Manually, with fresh page
+loads (not trusting client-side `router.refresh()` timing, same lesson as Slice 1's own
+verification): created a task tied to one company from that company's detail page, confirmed it
+appears there and not on a different company's page, confirmed the same row is visible on the
+assignee's central `/tasks` page too (same underlying data, two different views), and confirmed the
+`audit_log` entry. `pnpm build` clean across all 6 changed detail pages.

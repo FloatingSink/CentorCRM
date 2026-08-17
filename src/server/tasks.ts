@@ -1,10 +1,13 @@
 import { and, asc, count, eq } from "drizzle-orm";
 
 import { db } from "@/db/client";
-import { task } from "@/db/schema/task";
+import { user } from "@/db/schema/auth";
+import { task, type taskRelatedTypeEnum } from "@/db/schema/task";
 import type { TaskFormInput } from "@/lib/validation/task";
 import { requireUser } from "./auth";
 import { logActivity } from "./audit-log";
+
+type TaskRelatedType = (typeof taskRelatedTypeEnum.enumValues)[number];
 
 export async function createTask(input: TaskFormInput, createdBy: string) {
   const actor = await requireUser();
@@ -72,4 +75,32 @@ export async function getMyOpenTaskCount() {
     .from(task)
     .where(and(eq(task.assigneeUserId, actor.id), eq(task.status, "open")));
   return row?.count ?? 0;
+}
+
+// Mirrors getActivitiesForRelated (src/server/activities.ts) exactly — same
+// query shape, same reasoning: everyone viewing this record sees every task
+// about it regardless of assignee, not just their own (that's what
+// getMyTasks()/the central /tasks page are for).
+export async function getTasksForRelated(
+  relatedType: TaskRelatedType,
+  relatedId: string,
+) {
+  await requireUser();
+  return db
+    .select({
+      id: task.id,
+      title: task.title,
+      description: task.description,
+      status: task.status,
+      dueDate: task.dueDate,
+      assigneeUserId: task.assigneeUserId,
+      assigneeName: user.name,
+      assigneeEmail: user.email,
+    })
+    .from(task)
+    .innerJoin(user, eq(task.assigneeUserId, user.id))
+    .where(
+      and(eq(task.relatedType, relatedType), eq(task.relatedId, relatedId)),
+    )
+    .orderBy(asc(task.status), asc(task.dueDate));
 }

@@ -6,6 +6,9 @@ import { auth } from "@/lib/auth";
 import { taskFormSchema } from "@/lib/validation/task";
 import { completeTask, createTask } from "@/server/tasks";
 
+// The central /tasks page always creates a freestanding task — a task tied
+// to a specific record is created from that record's own detail page (see
+// src/components/task-panel.tsx / task-panel-actions.ts), not here.
 function parseTaskForm(formData: FormData) {
   const dueDateRaw = formData.get("dueDate");
 
@@ -14,6 +17,8 @@ function parseTaskForm(formData: FormData) {
     description: formData.get("description") || null,
     assigneeUserId: formData.get("assigneeUserId"),
     dueDate: dueDateRaw ? dueDateRaw : null,
+    relatedType: null,
+    relatedId: null,
   });
 }
 

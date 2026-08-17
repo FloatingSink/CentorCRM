@@ -5,18 +5,21 @@ import { updateOpportunityAction } from "../actions";
 import { OPPORTUNITY_STAGE_HELP, OpportunityForm } from "../opportunity-form";
 import { ActivityTimeline } from "@/components/activity-timeline";
 import { DocumentLibrary } from "@/components/document-library";
+import { TaskPanel } from "@/components/task-panel";
 import { Badge } from "@/components/ui/badge";
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { auth } from "@/lib/auth";
 import { getActivitiesForRelated } from "@/server/activities";
 import { getCompanies } from "@/server/companies";
 import { getDocumentsForRelated } from "@/server/documents";
 import { getLegalEntities } from "@/server/legal-entities";
 import { getOpportunityById } from "@/server/opportunities";
 import { getProjects } from "@/server/projects";
+import { getTasksForRelated } from "@/server/tasks";
 import { getUsers } from "@/server/users";
 
 export default async function OpportunityDetailPage({
@@ -26,6 +29,7 @@ export default async function OpportunityDetailPage({
 }) {
   const { id } = await params;
   const [
+    session,
     opportunity,
     projects,
     companies,
@@ -33,7 +37,9 @@ export default async function OpportunityDetailPage({
     users,
     activities,
     documents,
+    tasks,
   ] = await Promise.all([
+    auth(),
     getOpportunityById(id),
     getProjects(),
     getCompanies(),
@@ -41,6 +47,7 @@ export default async function OpportunityDetailPage({
     getUsers(),
     getActivitiesForRelated("opportunity", id),
     getDocumentsForRelated("opportunity", id),
+    getTasksForRelated("opportunity", id),
   ]);
   if (!opportunity) {
     notFound();
@@ -106,6 +113,14 @@ export default async function OpportunityDetailPage({
         relatedType="opportunity"
         relatedId={id}
         activities={activities}
+      />
+
+      <TaskPanel
+        relatedType="opportunity"
+        relatedId={id}
+        tasks={tasks}
+        users={users}
+        currentUserId={session!.user.id}
       />
     </div>
   );

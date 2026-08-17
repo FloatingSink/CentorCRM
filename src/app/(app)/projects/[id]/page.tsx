@@ -6,6 +6,7 @@ import { updateProjectAction } from "../actions";
 import { ProjectForm, PROJECT_STATUS_HELP } from "../project-form";
 import { ActivityTimeline } from "@/components/activity-timeline";
 import { DocumentLibrary } from "@/components/document-library";
+import { TaskPanel } from "@/components/task-panel";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -22,10 +23,12 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { auth } from "@/lib/auth";
 import { getActivitiesForRelated } from "@/server/activities";
 import { getCompanies } from "@/server/companies";
 import { getDocumentsForRelated } from "@/server/documents";
 import { getProjectById } from "@/server/projects";
+import { getTasksForRelated } from "@/server/tasks";
 import { getUsers } from "@/server/users";
 
 export default async function ProjectDetailPage({
@@ -34,13 +37,16 @@ export default async function ProjectDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const [result, companies, users, activities, documents] = await Promise.all([
-    getProjectById(id),
-    getCompanies(),
-    getUsers(),
-    getActivitiesForRelated("project", id),
-    getDocumentsForRelated("project", id),
-  ]);
+  const [session, result, companies, users, activities, documents, tasks] =
+    await Promise.all([
+      auth(),
+      getProjectById(id),
+      getCompanies(),
+      getUsers(),
+      getActivitiesForRelated("project", id),
+      getDocumentsForRelated("project", id),
+      getTasksForRelated("project", id),
+    ]);
   if (!result) {
     notFound();
   }
@@ -149,6 +155,14 @@ export default async function ProjectDetailPage({
         relatedType="project"
         relatedId={id}
         activities={activities}
+      />
+
+      <TaskPanel
+        relatedType="project"
+        relatedId={id}
+        tasks={tasks}
+        users={users}
+        currentUserId={session!.user.id}
       />
     </div>
   );

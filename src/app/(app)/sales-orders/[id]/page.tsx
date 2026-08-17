@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { SalesOrderBuilder } from "../sales-order-builder";
 import { ActivityTimeline } from "@/components/activity-timeline";
 import { DocumentLibrary } from "@/components/document-library";
+import { TaskPanel } from "@/components/task-panel";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -15,6 +16,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { auth } from "@/lib/auth";
 import { convertMinorToSgd, formatMoney } from "@/lib/money";
 import { getActivitiesForRelated } from "@/server/activities";
 import { getCompanies } from "@/server/companies";
@@ -25,6 +27,8 @@ import { getProducts } from "@/server/products";
 import { getProjects } from "@/server/projects";
 import { getQuotationById } from "@/server/quotations";
 import { getSalesOrderById } from "@/server/sales-orders";
+import { getTasksForRelated } from "@/server/tasks";
+import { getUsers } from "@/server/users";
 
 export default async function SalesOrderDetailPage({
   params,
@@ -40,6 +44,7 @@ export default async function SalesOrderDetailPage({
   const quotationResult = await getQuotationById(order.quotationId);
 
   const [
+    session,
     legalEntities,
     companies,
     projects,
@@ -47,7 +52,10 @@ export default async function SalesOrderDetailPage({
     linkedPurchaseOrders,
     activities,
     documents,
+    tasks,
+    users,
   ] = await Promise.all([
+    auth(),
     getLegalEntities(),
     getCompanies(),
     getProjects(),
@@ -55,6 +63,8 @@ export default async function SalesOrderDetailPage({
     getLinkedPurchaseOrders(order.id),
     getActivitiesForRelated("sales_order", order.id),
     getDocumentsForRelated("sales_order", order.id),
+    getTasksForRelated("sales_order", order.id),
+    getUsers(),
   ]);
 
   // Back-to-back margin roll-up (crm-spec.md §1, purpose #3) — both sides
@@ -202,6 +212,14 @@ export default async function SalesOrderDetailPage({
         relatedType="sales_order"
         relatedId={order.id}
         activities={activities}
+      />
+
+      <TaskPanel
+        relatedType="sales_order"
+        relatedId={order.id}
+        tasks={tasks}
+        users={users}
+        currentUserId={session!.user.id}
       />
     </div>
   );
