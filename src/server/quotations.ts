@@ -23,6 +23,7 @@ import type {
   QuotationLineInput,
 } from "@/lib/validation/quotation";
 import { requireUser } from "./auth";
+import { logActivity } from "./audit-log";
 import { getNextSequenceNumber } from "./document-sequence";
 
 type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
@@ -229,7 +230,7 @@ export async function createQuotation(
   lines: (QuotationLineInput & { unitPriceMinor: number })[],
   createdBy: string,
 ) {
-  await requireUser();
+  const actor = await requireUser();
   return db.transaction(async (tx) => {
     const [entity] = await tx
       .select()
@@ -254,6 +255,14 @@ export async function createQuotation(
 
     await insertLines(tx, created.id, lines, createdBy);
 
+    await logActivity(tx, {
+      userId: actor.id,
+      action: "create",
+      entityType: "quotation",
+      entityId: created.id,
+      message: `created quotation ${created.quoteNo}`,
+    });
+
     return created;
   });
 }
@@ -264,7 +273,7 @@ export async function updateQuotationHeaderAndLines(
   lines: (QuotationLineInput & { unitPriceMinor: number })[],
   createdBy: string,
 ) {
-  await requireUser();
+  const actor = await requireUser();
   return db.transaction(async (tx) => {
     const [current] = await tx
       .select()
@@ -288,6 +297,14 @@ export async function updateQuotationHeaderAndLines(
     await tx.delete(quotationLine).where(eq(quotationLine.quotationId, id));
     await insertLines(tx, id, lines, createdBy);
 
+    await logActivity(tx, {
+      userId: actor.id,
+      action: "update",
+      entityType: "quotation",
+      entityId: updated.id,
+      message: `updated quotation ${updated.quoteNo}`,
+    });
+
     return updated;
   });
 }
@@ -301,7 +318,7 @@ export async function createQuotationVersion(
   lines: (QuotationLineInput & { unitPriceMinor: number })[],
   createdBy: string,
 ) {
-  await requireUser();
+  const actor = await requireUser();
   return db.transaction(async (tx) => {
     const [current] = await tx
       .select()
@@ -329,6 +346,14 @@ export async function createQuotationVersion(
 
     await insertLines(tx, created.id, lines, createdBy);
 
+    await logActivity(tx, {
+      userId: actor.id,
+      action: "create",
+      entityType: "quotation",
+      entityId: created.id,
+      message: `created quotation ${created.quoteNo} v${created.version} (superseding v${current.version})`,
+    });
+
     return created;
   });
 }
@@ -337,25 +362,35 @@ export async function updateQuotationStatus(
   id: string,
   status: (typeof quotationStatusEnum.enumValues)[number],
 ) {
-  await requireUser();
-  const [current] = await db
-    .select()
-    .from(quotation)
-    .where(eq(quotation.id, id));
-  if (!current) {
-    throw new Error(`Quotation ${id} not found`);
-  }
-  if (!isLegalQuotationTransition(current.status, status)) {
-    throw new StatusTransitionError(
-      `Cannot transition quotation from "${current.status}" to "${status}"`,
-    );
-  }
+  const actor = await requireUser();
+  return db.transaction(async (tx) => {
+    const [current] = await tx
+      .select()
+      .from(quotation)
+      .where(eq(quotation.id, id));
+    if (!current) {
+      throw new Error(`Quotation ${id} not found`);
+    }
+    if (!isLegalQuotationTransition(current.status, status)) {
+      throw new StatusTransitionError(
+        `Cannot transition quotation from "${current.status}" to "${status}"`,
+      );
+    }
 
-  const [updated] = await db
-    .update(quotation)
-    .set({ status })
-    .where(eq(quotation.id, id))
-    .returning();
+    const [updated] = await tx
+      .update(quotation)
+      .set({ status })
+      .where(eq(quotation.id, id))
+      .returning();
 
-  return updated;
+    await logActivity(tx, {
+      userId: actor.id,
+      action: "status_change",
+      entityType: "quotation",
+      entityId: updated.id,
+      message: `${updated.quoteNo} status ${current.status} → ${status}`,
+    });
+
+    return updated;
+  });
 }

@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/table";
 import { formatDateTime } from "@/lib/date";
 import { auth } from "@/lib/auth";
+import { getActivityLog } from "@/server/audit-log";
 import { getLoginHistory } from "@/server/login-event";
 import { getUserPresence } from "@/server/users";
 
@@ -24,9 +25,10 @@ export default async function AdminPage() {
     redirect("/");
   }
 
-  const [users, logins] = await Promise.all([
+  const [users, logins, activity] = await Promise.all([
     getUserPresence(),
     getLoginHistory(),
+    getActivityLog(),
   ]);
 
   return (
@@ -87,6 +89,32 @@ export default async function AdminPage() {
               {logins.map((entry) => (
                 <TableRow key={entry.id}>
                   <TableCell>{entry.userName ?? entry.userEmail}</TableCell>
+                  <TableCell>{formatDateTime(entry.occurredAt)}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Activity log</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>User</TableHead>
+                <TableHead>Activity</TableHead>
+                <TableHead>When</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {activity.map((entry) => (
+                <TableRow key={entry.id}>
+                  <TableCell>{entry.userName ?? entry.userEmail}</TableCell>
+                  <TableCell>{entry.message}</TableCell>
                   <TableCell>{formatDateTime(entry.occurredAt)}</TableCell>
                 </TableRow>
               ))}

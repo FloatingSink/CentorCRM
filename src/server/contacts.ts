@@ -5,6 +5,7 @@ import { company } from "@/db/schema/company";
 import { contact } from "@/db/schema/contact";
 import type { ContactFormInput } from "@/lib/validation/contact";
 import { requireUser } from "./auth";
+import { logActivity } from "./audit-log";
 
 export async function getContacts() {
   await requireUser();
@@ -49,22 +50,42 @@ export async function createContact(
   input: ContactFormInput,
   createdBy: string,
 ) {
-  await requireUser();
-  const [created] = await db
-    .insert(contact)
-    .values({ ...input, createdBy })
-    .returning();
+  const actor = await requireUser();
+  return db.transaction(async (tx) => {
+    const [created] = await tx
+      .insert(contact)
+      .values({ ...input, createdBy })
+      .returning();
 
-  return created;
+    await logActivity(tx, {
+      userId: actor.id,
+      action: "create",
+      entityType: "contact",
+      entityId: created.id,
+      message: `created contact ${created.nameEn}`,
+    });
+
+    return created;
+  });
 }
 
 export async function updateContact(id: string, input: ContactFormInput) {
-  await requireUser();
-  const [updated] = await db
-    .update(contact)
-    .set(input)
-    .where(eq(contact.id, id))
-    .returning();
+  const actor = await requireUser();
+  return db.transaction(async (tx) => {
+    const [updated] = await tx
+      .update(contact)
+      .set(input)
+      .where(eq(contact.id, id))
+      .returning();
 
-  return updated;
+    await logActivity(tx, {
+      userId: actor.id,
+      action: "update",
+      entityType: "contact",
+      entityId: updated.id,
+      message: `updated contact ${updated.nameEn}`,
+    });
+
+    return updated;
+  });
 }

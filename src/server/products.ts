@@ -5,6 +5,7 @@ import { company } from "@/db/schema/company";
 import { product } from "@/db/schema/product";
 import type { ProductFormInput } from "@/lib/validation/product";
 import { requireUser } from "./auth";
+import { logActivity } from "./audit-log";
 
 export async function getProducts() {
   await requireUser();
@@ -40,22 +41,42 @@ export async function createProduct(
   input: ProductFormInput,
   createdBy: string,
 ) {
-  await requireUser();
-  const [created] = await db
-    .insert(product)
-    .values({ ...input, createdBy })
-    .returning();
+  const actor = await requireUser();
+  return db.transaction(async (tx) => {
+    const [created] = await tx
+      .insert(product)
+      .values({ ...input, createdBy })
+      .returning();
 
-  return created;
+    await logActivity(tx, {
+      userId: actor.id,
+      action: "create",
+      entityType: "product",
+      entityId: created.id,
+      message: `created product ${created.centorCode}`,
+    });
+
+    return created;
+  });
 }
 
 export async function updateProduct(id: string, input: ProductFormInput) {
-  await requireUser();
-  const [updated] = await db
-    .update(product)
-    .set(input)
-    .where(eq(product.id, id))
-    .returning();
+  const actor = await requireUser();
+  return db.transaction(async (tx) => {
+    const [updated] = await tx
+      .update(product)
+      .set(input)
+      .where(eq(product.id, id))
+      .returning();
 
-  return updated;
+    await logActivity(tx, {
+      userId: actor.id,
+      action: "update",
+      entityType: "product",
+      entityId: updated.id,
+      message: `updated product ${updated.centorCode}`,
+    });
+
+    return updated;
+  });
 }

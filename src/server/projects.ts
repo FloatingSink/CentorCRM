@@ -6,6 +6,7 @@ import { machine } from "@/db/schema/machine";
 import { project } from "@/db/schema/project";
 import type { ProjectFormInput } from "@/lib/validation/project";
 import { requireUser } from "./auth";
+import { logActivity } from "./audit-log";
 
 export async function getProjects() {
   await requireUser();
@@ -45,22 +46,42 @@ export async function createProject(
   input: ProjectFormInput,
   createdBy: string,
 ) {
-  await requireUser();
-  const [created] = await db
-    .insert(project)
-    .values({ ...input, createdBy })
-    .returning();
+  const actor = await requireUser();
+  return db.transaction(async (tx) => {
+    const [created] = await tx
+      .insert(project)
+      .values({ ...input, createdBy })
+      .returning();
 
-  return created;
+    await logActivity(tx, {
+      userId: actor.id,
+      action: "create",
+      entityType: "project",
+      entityId: created.id,
+      message: `created project ${created.nameEn}`,
+    });
+
+    return created;
+  });
 }
 
 export async function updateProject(id: string, input: ProjectFormInput) {
-  await requireUser();
-  const [updated] = await db
-    .update(project)
-    .set(input)
-    .where(eq(project.id, id))
-    .returning();
+  const actor = await requireUser();
+  return db.transaction(async (tx) => {
+    const [updated] = await tx
+      .update(project)
+      .set(input)
+      .where(eq(project.id, id))
+      .returning();
 
-  return updated;
+    await logActivity(tx, {
+      userId: actor.id,
+      action: "update",
+      entityType: "project",
+      entityId: updated.id,
+      message: `updated project ${updated.nameEn}`,
+    });
+
+    return updated;
+  });
 }

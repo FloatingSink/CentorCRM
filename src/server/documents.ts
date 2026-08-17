@@ -4,6 +4,7 @@ import { db } from "@/db/client";
 import { document, type documentRelatedTypeEnum } from "@/db/schema/document";
 import type { DocumentCreateInput } from "@/lib/validation/document";
 import { requireUser } from "./auth";
+import { logActivity } from "./audit-log";
 
 type RelatedType = (typeof documentRelatedTypeEnum.enumValues)[number];
 
@@ -35,11 +36,21 @@ export async function createDocument(
   uploadedBy: string,
   createdBy: string,
 ) {
-  await requireUser();
-  const [created] = await db
-    .insert(document)
-    .values({ ...input, uploadedBy, createdBy })
-    .returning();
+  const actor = await requireUser();
+  return db.transaction(async (tx) => {
+    const [created] = await tx
+      .insert(document)
+      .values({ ...input, uploadedBy, createdBy })
+      .returning();
 
-  return created;
+    await logActivity(tx, {
+      userId: actor.id,
+      action: "create",
+      entityType: "document",
+      entityId: created.id,
+      message: `uploaded document "${created.title}"`,
+    });
+
+    return created;
+  });
 }

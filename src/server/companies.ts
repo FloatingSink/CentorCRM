@@ -5,6 +5,7 @@ import { company, companyRole } from "@/db/schema/company";
 import { contact } from "@/db/schema/contact";
 import type { CompanyFormInput } from "@/lib/validation/company";
 import { requireUser } from "./auth";
+import { logActivity } from "./audit-log";
 
 export async function getCompanies() {
   await requireUser();
@@ -50,7 +51,7 @@ export async function createCompany(
   input: CompanyFormInput,
   createdBy: string,
 ) {
-  await requireUser();
+  const actor = await requireUser();
   const { roles, ...companyData } = input;
 
   return db.transaction(async (tx) => {
@@ -63,12 +64,20 @@ export async function createCompany(
       .insert(companyRole)
       .values(roles.map((role) => ({ companyId: created.id, role })));
 
+    await logActivity(tx, {
+      userId: actor.id,
+      action: "create",
+      entityType: "company",
+      entityId: created.id,
+      message: `created company ${created.nameEn}`,
+    });
+
     return created;
   });
 }
 
 export async function updateCompany(id: string, input: CompanyFormInput) {
-  await requireUser();
+  const actor = await requireUser();
   const { roles, ...companyData } = input;
 
   return db.transaction(async (tx) => {
@@ -82,6 +91,14 @@ export async function updateCompany(id: string, input: CompanyFormInput) {
     await tx
       .insert(companyRole)
       .values(roles.map((role) => ({ companyId: id, role })));
+
+    await logActivity(tx, {
+      userId: actor.id,
+      action: "update",
+      entityType: "company",
+      entityId: updated.id,
+      message: `updated company ${updated.nameEn}`,
+    });
 
     return updated;
   });
