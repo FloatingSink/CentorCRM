@@ -13,15 +13,13 @@ import { formatMoney } from "@/lib/money";
 import type { getPurchaseOrderForPdf } from "@/server/purchase-orders";
 import { label } from "./labels";
 import { letterheadImagePath } from "./letterhead";
+import { registerCjkFont } from "./register-cjk-font";
 
 // Same registration as quotation-document.tsx — react-pdf's built-in fonts
 // have no CJK glyphs. Font registries are per-module-graph (see
 // docs/decisions.md, 2026-08-12's dynamic-import pitfall), so this must be a
 // static import wherever this component is rendered.
-Font.register({
-  family: "Noto Sans SC",
-  src: "https://fonts.gstatic.com/s/notosanssc/v40/k3kCo84MPvpLmixcA63oeAL7Iqp5IZJF9bmaG9_FnYw.ttf",
-});
+registerCjkFont();
 
 // react-pdf's default hyphenation engine is built for Latin-script "words"
 // and would insert a literal "-" wherever it wraps a long word — kept

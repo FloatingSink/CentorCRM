@@ -608,3 +608,52 @@ step by step rather than unilaterally:
 
 Old `us-east-2` project is still live, kept as a rollback path. Decommissioning it is Jia Long's
 call, not scheduled here.
+
+## 2026-08-17 — Remediation Slice 5: bundle the CJK font (supersedes 2026-08-12)
+
+**Supersedes** the 2026-08-12 entry ("PDF generation: @react-pdf/renderer, not headless
+Chromium"), specifically its line about Noto Sans SC being "registered via `Font.register()` from
+a Google Fonts–hosted URL, fetched at render time... revisit with a bundled local font file if the
+per-render network fetch proves slow or unreliable." That entry is left as-is; this one records
+the revisit actually happening.
+
+**Problem**: `quotation-document.tsx` and `purchase-order-document.tsx` each called an identical
+`Font.register({ family: "Noto Sans SC", src: "https://fonts.gstatic.com/..." })` at module scope
+— a network fetch on every Chinese-language PDF render. A gstatic outage or blocked egress on
+whichever host ends up running this (spec §9's hosting question is still open) means broken
+glyphs on a document going to a customer.
+
+**Verified before changing anything, not assumed**:
+
+- Downloaded the exact file the gstatic URL serves: 10.5MB TTF, `Noto Sans SC`, weight 400 only —
+  matches what was registered before, no new weight introduced.
+- Read its embedded `name` table via `fontkit` (already a transitive dependency through
+  `@react-pdf/font`): copyright `(c) 2014-2021 Adobe (http://www.adobe.com/), with Reserved Font
+Name 'Source'` — this is Source Han Sans/Noto Sans CJK's real lineage, SIL OFL 1.1-licensed.
+  Pulled the license text from `notofonts/noto-cjk`'s own `Sans/LICENSE` (same family) rather than
+  writing it from memory.
+- Read `@react-pdf/font`'s actual source: a non-URL, non-data-URL `src` goes through
+  `fontkit.open(this.src, ...)` — a plain local filesystem path, same mechanism
+  `letterheadImagePath` (`src/lib/pdf/letterhead.ts`) already uses successfully for logos via
+  `path.join(process.cwd(), "public", ...)`. No new mechanism, just reusing a proven one.
+- Rendered a real PDF through the exact registration call the code now makes, with `fetch`
+  instrumented to throw on any request to a `gstatic` host: rendered clean, `gstatic` never
+  reached. Separately confirmed the actual `/quotations/[id]/pdf` route still returns a valid
+  `200 application/pdf` end to end against the live dev server, unauthenticated-request paths
+  aside (used a throwaway DB session row to authenticate the check, deleted immediately after).
+  Could not exercise real Chinese _glyphs_ through actual seed data — every `name_zh` in the dev
+  database is currently `null` (P9 spreadsheet import hasn't run) — so the glyph check used literal
+  test Chinese text in an isolated render rather than inventing a fake company/product name.
+
+**Change**: font + `public/fonts/LICENSE-NotoSansSC.txt` (OFL 1.1 text, with the copyright/Reserved
+Font Name line confirmed above) committed to `public/fonts/`. New
+`src/lib/pdf/register-cjk-font.ts` holds the one `Font.register()` call as a local-path lookup;
+both document modules call it instead of duplicating the registration inline. Left
+`Font.registerHyphenationCallback` (only present in `purchase-order-document.tsx` today) exactly
+where it is — that asymmetry predates this slice and isn't what "dedupe the registration" asked
+for.
+
+**Repo weight, accepted knowingly**: the font is 10.5MB; `.git` history before this change was
+4.5MB total. This commit more than doubles it, permanently (git doesn't shrink on its own). The
+brief anticipated this trade-off explicitly; noting the number here rather than letting it pass
+silently.
