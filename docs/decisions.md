@@ -381,3 +381,77 @@ server functions, against CGPL/CRTG/Panama Metro Line 3 seed data) with a nine-f
 fetched both PDFs through the authenticated route, and visually confirmed `$71,474,836.47` renders
 correctly with no truncation or garbled digits on both documents. Test fixtures deleted afterward;
 nothing left in the dev database.
+
+## 2026-08-16 — Remediation Slice 2: authorization — a real boundary, then real roles
+
+**2a — the real auth boundary moved into the data-access layer.** `src/app/(app)/layout.tsx` was
+the only auth gate; `src/server/*` (16 files, ~60 exported functions) had zero auth checks of its
+own, entirely trusting callers. This was not hypothetical: direct code search found **6 server
+actions with no auth check at all** — `updateCompanyAction`, `updateContactAction`,
+`updateOpportunityAction`, `updateProductAction`, `updateProjectAction`, `updateMachineAction` —
+each missing the check its sibling `create*Action` had right above it, meaning any unauthenticated
+request could edit any company, contact, opportunity, product, project, or machine record. Fixed
+by adding the same `auth()` + `redirect("/sign-in")` block their sibling create-actions already
+use (not a new pattern, just applying the one already established in the same file), **and**
+adding a real boundary one layer deeper: `src/lib/authorization.ts` (pure, unit-tested —
+`assertAuthenticated`/`assertAdmin`, following CLAUDE.md's "domain logic in `lib/`" convention)
+wrapped by `src/server/auth.ts`'s `requireUser`/`requireAdmin`/`requireUserOrError`, called as the
+first statement of every exported `src/server/*` function, reads included (brief's own acceptance
+criterion: "no page renders commercial data without having gone through the helper"). This is
+deliberately redundant with the action layer's own check on every request that goes through both —
+that redundancy is the point: it's exactly what would have caught the 6-gap class of bug
+automatically instead of relying on every action file remembering it. `document-sequence.ts`'s
+`getNextSequenceNumber` and non-exported helpers (e.g. `quotations.ts`'s `insertLines`) are
+excluded — only ever called from inside another `src/server/*` function's own transaction, after
+that function's own `requireUser()` already ran.
+
+The `(app)` layout's own `auth()` check is unchanged, kept as defence-in-depth per the brief — not
+removed. Middleware-based gating was not reconsidered (Edge runtime can't load the Node-only
+`postgres`/`nodemailer` deps `src/lib/auth.ts` needs — 2026-08-10 entry, brief explicitly said not
+to reopen this).
+
+**2b — role collapsed from three to two, and actually enforced.** Confirmed with Jia Long
+(section 10): `user.role` drops `viewer` — `member` gets full commercial access, `admin`
+additionally gets user management and legal-entity configuration, neither of which has any
+mutation function built yet (`getUsers`/`getLegalEntities` are reads only, existing comments
+already flagged both as "later Settings phase"). This is a genuine deviation from both
+`crm-spec.md`'s prior "do not build role hierarchies beyond admin/member/viewer" line and the
+brief's own suggested three-role starting position — confirmed directly, not defaulted to. No
+`viewer` row ever existed (the only user-insert path, `src/db/seed.ts`, is hardcoded to `admin`;
+confirmed against the live dev DB before migrating) — schema enum
+(`src/db/schema/auth.ts`) actually narrowed to `["admin", "member"]`, not just stopped offering
+`viewer` in the UI. Postgres has no `DROP VALUE` for enums; `pnpm db:generate` produced the
+standard create-new-type-and-swap sequence (convert column to `text`, drop+recreate the enum,
+convert back with a `USING` cast) — inspected before applying, safe either way since a `USING` cast
+against a value outside the new enum fails loudly rather than corrupting data, and confirmed no
+existing row would hit that path. `specs/crm-spec.md` §2/§6.6/§11 updated in the same commit
+(spec's own §11 first open question, "how many users, read-only role?", is now resolved: ~5 users,
+two roles, no read-only role).
+
+`requireAdmin()` exists and is unit-tested but has no call site yet — deliberately: nothing in the
+current codebase is actually admin-only (no user-management or legal-entity-config mutation exists
+to gate), and the brief's own "what not to do" list forbids building a permissions admin UI or
+speculative hooks. It's ready for that future work rather than force-fit onto anything today.
+
+**E2E coverage — confirmed scope with Jia Long.** The brief's literal acceptance criterion
+("sign in as a viewer, assert a mutation is rejected") no longer maps to anything real once
+member/admin have identical commercial access and nothing is admin-gated. `e2e/unauthorized-
+mutation.spec.ts` instead proves the actual, concrete fix: captures the exact POST a real
+authenticated `updateCompanyAction` submission makes, then replays it — with a different value, so
+a false pass is detectable — through a completely fresh, cookie-less connection, and confirms the
+row is unchanged.
+
+That test surfaced a real environment finding, unrelated to the auth fix itself: this exact
+Next.js 16.3.0 dev build (the dev overlay itself flags it "stale", 16.3.1 available) has a
+request-isolation bug in its Turbopack dev server — a cookie-less Server Action request can
+incorrectly resolve a session if _any_ connection from the same Chromium browser **process** is
+still open to the dev server, even a fully separate, unrelated `context.close()`'d one (Playwright
+Test's shared per-worker browser doesn't fully close on `context.close()`). Confirmed by direct
+A/B replay: browser process alive → mutation wrongly succeeds; browser process fully closed first
+(plain Node `fetch`, zero shared connection state) → correctly rejected every time. Root-caused,
+not just retried into passing — verified with a standalone script outside Playwright entirely, and
+confirmed the equivalent plain-GET case (layout auth) was never affected, isolating it specifically
+to the Server Action POST path. Worked around in the test by launching and fully closing its own
+dedicated `chromium` instance before replaying, rather than the shared `page`/`context` fixtures.
+Noted here rather than silently retried past, in case it resurfaces elsewhere — likely fixed by
+upgrading to 16.3.1, which is a separate decision, not made as part of this slice.

@@ -13,13 +13,15 @@ import type {
   OrderLineInput,
   SalesOrderHeaderInput,
 } from "@/lib/validation/sales-order";
+import { requireUser } from "./auth";
 import { getNextSequenceNumber } from "./document-sequence";
 
 const DOC_TYPE = "sales_order";
 
 const customerLegalEntity = alias(legalEntity, "customer_legal_entity");
 
-export function getSalesOrders() {
+export async function getSalesOrders() {
+  await requireUser();
   return db
     .select({
       id: salesOrder.id,
@@ -49,6 +51,7 @@ export function getSalesOrders() {
 }
 
 export async function getSalesOrderById(id: string) {
+  await requireUser();
   const [orderRow] = await db
     .select()
     .from(salesOrder)
@@ -111,6 +114,7 @@ export async function createSalesOrder(
   lines: (OrderLineInput & { unitPriceMinor: number })[],
   createdBy: string,
 ) {
+  await requireUser();
   return db.transaction(async (tx) => {
     const [entity] = await tx
       .select()
@@ -147,6 +151,7 @@ export async function updateSalesOrderHeaderAndLines(
   lines: (OrderLineInput & { unitPriceMinor: number })[],
   createdBy: string,
 ) {
+  await requireUser();
   return db.transaction(async (tx) => {
     const totalValue = sumLineTotals(lines);
 
@@ -173,6 +178,7 @@ export async function updateSalesOrderStatus(
     | "completed"
     | "cancelled",
 ) {
+  await requireUser();
   const [updated] = await db
     .update(salesOrder)
     .set({ status })

@@ -3,8 +3,10 @@ import { and, asc, desc, eq } from "drizzle-orm";
 import { db } from "@/db/client";
 import { productDocument } from "@/db/schema/product-document";
 import type { ProductDocumentCreateInput } from "@/lib/validation/product-document";
+import { requireUser } from "./auth";
 
-export function getProductDocuments(productId: string) {
+export async function getProductDocuments(productId: string) {
+  await requireUser();
   return db
     .select()
     .from(productDocument)
@@ -17,6 +19,7 @@ export function getProductDocuments(productId: string) {
 }
 
 export async function getProductDocumentById(id: string) {
+  await requireUser();
   const [row] = await db
     .select()
     .from(productDocument)
@@ -31,6 +34,7 @@ export async function createProductDocument(
   input: ProductDocumentCreateInput,
   createdBy: string,
 ) {
+  await requireUser();
   return db.transaction(async (tx) => {
     await tx
       .update(productDocument)

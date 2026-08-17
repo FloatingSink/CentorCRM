@@ -4,8 +4,10 @@ import { db } from "@/db/client";
 import { machine } from "@/db/schema/machine";
 import { project } from "@/db/schema/project";
 import type { MachineFormInput } from "@/lib/validation/machine";
+import { requireUser } from "./auth";
 
-export function getMachinesByProject(projectId: string) {
+export async function getMachinesByProject(projectId: string) {
+  await requireUser();
   return db
     .select()
     .from(machine)
@@ -14,6 +16,7 @@ export function getMachinesByProject(projectId: string) {
 }
 
 export async function getMachineById(id: string) {
+  await requireUser();
   const [row] = await db
     .select({ machine, project })
     .from(machine)
@@ -27,6 +30,7 @@ export async function createMachine(
   input: MachineFormInput,
   createdBy: string,
 ) {
+  await requireUser();
   const [created] = await db
     .insert(machine)
     .values({ ...input, createdBy })
@@ -36,6 +40,7 @@ export async function createMachine(
 }
 
 export async function updateMachine(id: string, input: MachineFormInput) {
+  await requireUser();
   const [updated] = await db
     .update(machine)
     .set(input)

@@ -4,8 +4,10 @@ import { db } from "@/db/client";
 import { company } from "@/db/schema/company";
 import { product } from "@/db/schema/product";
 import type { ProductFormInput } from "@/lib/validation/product";
+import { requireUser } from "./auth";
 
-export function getProducts() {
+export async function getProducts() {
+  await requireUser();
   return db
     .select({
       id: product.id,
@@ -24,6 +26,7 @@ export function getProducts() {
 }
 
 export async function getProductById(id: string) {
+  await requireUser();
   const [productRow] = await db
     .select()
     .from(product)
@@ -37,6 +40,7 @@ export async function createProduct(
   input: ProductFormInput,
   createdBy: string,
 ) {
+  await requireUser();
   const [created] = await db
     .insert(product)
     .values({ ...input, createdBy })
@@ -46,6 +50,7 @@ export async function createProduct(
 }
 
 export async function updateProduct(id: string, input: ProductFormInput) {
+  await requireUser();
   const [updated] = await db
     .update(product)
     .set(input)

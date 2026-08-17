@@ -1,12 +1,12 @@
 "use server";
 
-import { auth } from "@/lib/auth";
 import {
   dashboardWidgetIdSchema,
   dashboardWidgetSizeSchema,
   dashboardWidgetTypeSchema,
   setDashboardWidgetPositionsSchema,
 } from "@/lib/validation/dashboard";
+import { requireUserOrError } from "@/server/auth";
 import {
   addDashboardWidget,
   removeDashboardWidget,
@@ -18,22 +18,16 @@ import {
 // Not form-bound — dashboard-grid.tsx calls these directly from drag/click
 // handlers, same precedent as quotations/actions.tsx's live-preview actions.
 
-async function requireUserId(): Promise<string | { error: string }> {
-  const session = await auth();
-  if (!session?.user) return { error: "Not signed in" };
-  return session.user.id;
-}
-
 export async function addDashboardWidgetAction(
   widgetType: unknown,
 ): Promise<{ error?: string }> {
   const parsed = dashboardWidgetTypeSchema.safeParse(widgetType);
   if (!parsed.success) return { error: "Invalid widget type" };
 
-  const userId = await requireUserId();
-  if (typeof userId !== "string") return userId;
+  const user = await requireUserOrError();
+  if ("error" in user) return user;
 
-  await addDashboardWidget(userId, parsed.data);
+  await addDashboardWidget(user.id, parsed.data);
   return {};
 }
 
@@ -43,10 +37,10 @@ export async function removeDashboardWidgetAction(
   const parsed = dashboardWidgetIdSchema.safeParse(widgetId);
   if (!parsed.success) return { error: "Invalid widget id" };
 
-  const userId = await requireUserId();
-  if (typeof userId !== "string") return userId;
+  const user = await requireUserOrError();
+  if ("error" in user) return user;
 
-  await removeDashboardWidget(userId, parsed.data);
+  await removeDashboardWidget(user.id, parsed.data);
   return {};
 }
 
@@ -60,10 +54,10 @@ export async function resizeDashboardWidgetAction(
     return { error: "Invalid input" };
   }
 
-  const userId = await requireUserId();
-  if (typeof userId !== "string") return userId;
+  const user = await requireUserOrError();
+  if ("error" in user) return user;
 
-  await resizeDashboardWidget(userId, parsedId.data, parsedSize.data);
+  await resizeDashboardWidget(user.id, parsedId.data, parsedSize.data);
   return {};
 }
 
@@ -73,17 +67,17 @@ export async function setDashboardWidgetPositionsAction(
   const parsed = setDashboardWidgetPositionsSchema.safeParse(updates);
   if (!parsed.success) return { error: "Invalid input" };
 
-  const userId = await requireUserId();
-  if (typeof userId !== "string") return userId;
+  const user = await requireUserOrError();
+  if ("error" in user) return user;
 
-  await setDashboardWidgetPositions(userId, parsed.data);
+  await setDashboardWidgetPositions(user.id, parsed.data);
   return {};
 }
 
 export async function resetDashboardAction(): Promise<{ error?: string }> {
-  const userId = await requireUserId();
-  if (typeof userId !== "string") return userId;
+  const user = await requireUserOrError();
+  if ("error" in user) return user;
 
-  await resetDashboard(userId);
+  await resetDashboard(user.id);
   return {};
 }

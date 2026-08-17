@@ -53,6 +53,11 @@ export async function updateProjectAction(
     return { error: parsed.error.issues[0]?.message ?? "Invalid input" };
   }
 
+  const session = await auth();
+  if (!session?.user) {
+    redirect("/sign-in");
+  }
+
   await updateProject(id, parsed.data);
   redirect(`/projects/${id}`);
 }

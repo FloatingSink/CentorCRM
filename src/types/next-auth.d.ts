@@ -4,13 +4,13 @@ declare module "next-auth" {
   interface Session {
     user: {
       id: string;
-      role: "admin" | "member" | "viewer";
+      role: "admin" | "member";
       isActive: boolean;
     } & DefaultSession["user"];
   }
 
   interface User {
-    role: "admin" | "member" | "viewer";
+    role: "admin" | "member";
     isActive: boolean;
   }
 }

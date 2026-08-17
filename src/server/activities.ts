@@ -4,13 +4,15 @@ import { db } from "@/db/client";
 import { activity, type activityRelatedTypeEnum } from "@/db/schema/activity";
 import { user } from "@/db/schema/auth";
 import type { ActivityCreateInput } from "@/lib/validation/activity";
+import { requireUser } from "./auth";
 
 type RelatedType = (typeof activityRelatedTypeEnum.enumValues)[number];
 
-export function getActivitiesForRelated(
+export async function getActivitiesForRelated(
   relatedType: RelatedType,
   relatedId: string,
 ) {
+  await requireUser();
   return db
     .select({
       id: activity.id,
@@ -38,6 +40,7 @@ export async function createActivity(
   userId: string,
   createdBy: string,
 ) {
+  await requireUser();
   const [created] = await db
     .insert(activity)
     .values({ ...input, userId, createdBy })

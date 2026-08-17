@@ -5,8 +5,10 @@ import { company } from "@/db/schema/company";
 import { machine } from "@/db/schema/machine";
 import { project } from "@/db/schema/project";
 import type { ProjectFormInput } from "@/lib/validation/project";
+import { requireUser } from "./auth";
 
-export function getProjects() {
+export async function getProjects() {
+  await requireUser();
   return db
     .select({
       id: project.id,
@@ -23,6 +25,7 @@ export function getProjects() {
 }
 
 export async function getProjectById(id: string) {
+  await requireUser();
   const [projectRow] = await db
     .select()
     .from(project)
@@ -42,6 +45,7 @@ export async function createProject(
   input: ProjectFormInput,
   createdBy: string,
 ) {
+  await requireUser();
   const [created] = await db
     .insert(project)
     .values({ ...input, createdBy })
@@ -51,6 +55,7 @@ export async function createProject(
 }
 
 export async function updateProject(id: string, input: ProjectFormInput) {
+  await requireUser();
   const [updated] = await db
     .update(project)
     .set(input)

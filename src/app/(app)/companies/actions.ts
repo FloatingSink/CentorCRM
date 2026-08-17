@@ -48,6 +48,11 @@ export async function updateCompanyAction(
     return { error: parsed.error.issues[0]?.message ?? "Invalid input" };
   }
 
+  const session = await auth();
+  if (!session?.user) {
+    redirect("/sign-in");
+  }
+
   await updateCompany(id, parsed.data);
   redirect(`/companies/${id}`);
 }

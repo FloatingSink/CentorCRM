@@ -12,7 +12,11 @@ import {
   type AnyPgColumn,
 } from "drizzle-orm/pg-core";
 
-export const userRole = pgEnum("user_role", ["admin", "member", "viewer"]);
+// Two roles, not three (remediation slice 2, docs/decisions.md): member gets
+// full commercial access, admin additionally gets user management and
+// legal-entity configuration. No viewer row ever existed (src/db/seed.ts is
+// the only insert path, hardcoded to admin).
+export const userRole = pgEnum("user_role", ["admin", "member"]);
 
 // Required columns (id, name, email, emailVerified, image) come from the
 // @auth/drizzle-adapter Postgres schema contract. role/is_active/created_at/

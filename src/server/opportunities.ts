@@ -5,8 +5,10 @@ import { company } from "@/db/schema/company";
 import { opportunity } from "@/db/schema/opportunity";
 import { project } from "@/db/schema/project";
 import type { OpportunityFormInput } from "@/lib/validation/opportunity";
+import { requireUser } from "./auth";
 
-export function getOpportunities() {
+export async function getOpportunities() {
+  await requireUser();
   return db
     .select({
       id: opportunity.id,
@@ -30,6 +32,7 @@ export function getOpportunities() {
 }
 
 export async function getOpportunityById(id: string) {
+  await requireUser();
   const [row] = await db
     .select()
     .from(opportunity)
@@ -41,6 +44,7 @@ export async function createOpportunity(
   input: OpportunityFormInput,
   createdBy: string,
 ) {
+  await requireUser();
   const [created] = await db
     .insert(opportunity)
     .values({ ...input, createdBy })
@@ -53,6 +57,7 @@ export async function updateOpportunity(
   id: string,
   input: OpportunityFormInput,
 ) {
+  await requireUser();
   const [updated] = await db
     .update(opportunity)
     .set(input)
