@@ -13,6 +13,11 @@ import {
 } from "@/db/schema/quotation";
 import { calculateLineTotal } from "@/lib/quotation-math";
 import { buildQuoteNumber } from "@/lib/quote-number";
+import {
+  canEditQuotation,
+  isLegalQuotationTransition,
+  StatusTransitionError,
+} from "@/lib/status-transitions";
 import type {
   QuotationHeaderInput,
   QuotationLineInput,
@@ -261,6 +266,19 @@ export async function updateQuotationHeaderAndLines(
 ) {
   await requireUser();
   return db.transaction(async (tx) => {
+    const [current] = await tx
+      .select()
+      .from(quotation)
+      .where(eq(quotation.id, id));
+    if (!current) {
+      throw new Error(`Quotation ${id} not found`);
+    }
+    if (!canEditQuotation(current.status)) {
+      throw new StatusTransitionError(
+        `Cannot edit a quotation in status "${current.status}" — create a new version instead`,
+      );
+    }
+
     const [updated] = await tx
       .update(quotation)
       .set(header)
@@ -289,6 +307,9 @@ export async function createQuotationVersion(
       .select()
       .from(quotation)
       .where(eq(quotation.id, quotationId));
+    if (!current) {
+      throw new Error(`Quotation ${quotationId} not found`);
+    }
 
     await tx
       .update(quotation)
@@ -317,6 +338,19 @@ export async function updateQuotationStatus(
   status: (typeof quotationStatusEnum.enumValues)[number],
 ) {
   await requireUser();
+  const [current] = await db
+    .select()
+    .from(quotation)
+    .where(eq(quotation.id, id));
+  if (!current) {
+    throw new Error(`Quotation ${id} not found`);
+  }
+  if (!isLegalQuotationTransition(current.status, status)) {
+    throw new StatusTransitionError(
+      `Cannot transition quotation from "${current.status}" to "${status}"`,
+    );
+  }
+
   const [updated] = await db
     .update(quotation)
     .set({ status })

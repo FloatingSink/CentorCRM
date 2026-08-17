@@ -455,3 +455,64 @@ to the Server Action POST path. Worked around in the test by launching and fully
 dedicated `chromium` instance before replaying, rather than the shared `page`/`context` fixtures.
 Noted here rather than silently retried past, in case it resurfaces elsewhere — likely fixed by
 upgrading to 16.3.1, which is a separate decision, not made as part of this slice.
+
+## 2026-08-17 — Remediation Slice 3: integrity constraints and status guards
+
+**Unique constraints.** `getNextSequenceNumber`'s `SELECT ... FOR UPDATE` was already the correct
+concurrency mechanism (unchanged here) but the database itself asserted nothing — added
+`uniqueIndex`es (same pattern as `product_document`/`dashboard_widget`):
+`quotation(legal_entity_id, quote_no, version)`, `sales_order(order_no)`,
+`purchase_order(order_no)`. Confirmed no existing duplicates before applying (direct query against
+the dev DB) and confirmed the generated migration is a plain `CREATE UNIQUE INDEX`, nothing
+destructive.
+
+**Status state machine — corrected the brief's own premise first.** Direct code research (not
+just the brief's description) found the UI gating the brief cited
+(`quotation-builder.tsx:552` "hides the edit button") doesn't exist — that line only gates the
+"Convert to sales order" link. Every status button in all three builders was always clickable
+(only the current status disabled), any-to-any transition was allowed client-side, and the
+header/line edit form was never gated by status at all — worse than described, not better.
+
+The order-status lifecycle (`draft/confirmed/in_production/shipped/completed/cancelled`, shared by
+`sales_order` and `purchase_order`) was explicitly flagged in the 2026-08-12 decision entry as "an
+assumed generic order lifecycle, not asserted as CENTOR's real process" — genuinely ambiguous, so
+the transition graph was confirmed with Jia Long rather than guessed at:
+
+- Quotations: `draft→sent`; `sent→accepted`/`sent→rejected`; reverts `sent→draft` and
+  `rejected→draft` allowed; `accepted` terminal (revise via `createQuotationVersion`, not a
+  same-row transition); `superseded` stays system-only, never manually selectable.
+- Orders (identical rules for sales and purchase orders, confirmed): linear
+  `draft→confirmed→in_production→shipped→completed`, forward skips allowed, no reverting
+  backward; `cancelled` reachable from any non-terminal status, never from `completed`.
+- Header/line edits legal only while `draft`, for both quotations and orders — this is the actual
+  bug: `update*HeaderAndLines` previously did a bare `UPDATE` with no status check at all.
+
+Implemented as one pure module, `src/lib/status-transitions.ts`
+(`isLegalQuotationTransition`/`canEditQuotation`/`isLegalOrderTransition`/`canEditOrder` +
+`StatusTransitionError`), unit-tested exhaustively over every `(from, to)` pair for both status
+types (the brief's literal acceptance criterion) — not sampled. `src/server/{quotations,sales-
+orders,purchase-orders}.ts`'s `update*HeaderAndLines` and `update*Status` functions consult it as
+the first thing they do (existence guard, then the relevant legality check) — `Error` for a
+missing row, `StatusTransitionError` specifically for an illegal transition or edit-lock
+violation, kept as two distinct error types rather than overloading one. `createQuotationVersion`
+gets the missing-row guard the brief called out by name (`current.quoteNo` was dereferenced
+without checking `current` existed); no new status precondition added there — it's the mechanism
+for revising a non-draft quotation, so it deliberately doesn't require `draft` itself.
+
+**UI reads from the same module** — the brief's stated intent (single source of truth between
+client and server), even though there was no pre-existing gating to "keep": status buttons stay
+visible (matches the existing design, shows the whole lifecycle at a glance) but now disable
+illegal next-transitions, not just the current status; the header Card/line editor/Save button
+disable when the row isn't editable, with a short note pointing at "Save as new version" for
+quotations (orders have no versioning mechanism, so their note just says editing is draft-only).
+
+**Verified**: exhaustive unit tests (every transition pair, both status types) green; a real
+attempt to edit an `accepted` quotation, via a raw authenticated request that bypasses the now-
+disabled UI Save button entirely (same capture-and-replay technique as the slice 2 e2e spec, minus
+the cookie-stripping — this one's testing the business rule, not auth), correctly threw
+`StatusTransitionError` and left the row unchanged; full e2e suite green including
+`quotation-flow.spec.ts` and `back-to-back-flow.spec.ts` running concurrently, which is the actual
+scenario the brief's "existing e2e parallel-worker scenario must still pass" acceptance criterion
+refers to (there's no separate dedicated "parallel worker" spec) — both depend on
+`draft→sent→accepted` staying clickable via `e2e/helpers/fixtures.ts`'s `acceptQuotation`, unaffected
+since that's exactly the legal path confirmed above.

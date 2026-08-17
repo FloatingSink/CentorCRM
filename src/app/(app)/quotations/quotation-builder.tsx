@@ -30,6 +30,17 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  canEditQuotation,
+  isLegalQuotationTransition,
+  QUOTATION_STATUS_HELP,
+  type QuotationStatus,
+} from "@/lib/status-transitions";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 const INCOTERMS = ["EXW", "FOB", "CFR", "CIF", "DAP"] as const;
 const LANGUAGES = [
@@ -142,6 +153,14 @@ export function QuotationBuilder({
   const contactsForCompany = contacts.filter(
     (c) => c.companyId === customerCompanyId,
   );
+
+  // A quotation is only editable in place while draft — revising a sent,
+  // accepted, or rejected one means "Save as new version", not overwriting
+  // the row (src/lib/status-transitions.ts, remediation slice 3). Always
+  // editable in create mode (there's no saved status yet).
+  const editable =
+    mode === "create" ||
+    canEditQuotation((status as QuotationStatus) ?? "draft");
 
   function handleOpportunityChange(id: string | null) {
     setOpportunityId(id ?? "");
@@ -264,17 +283,28 @@ export function QuotationBuilder({
         {mode === "edit" ? (
           <div className="flex flex-wrap items-center gap-3">
             {STATUSES.map((s) => (
-              <Button
-                key={s}
-                type="button"
-                variant={s === status ? "default" : "outline"}
-                size="sm"
-                disabled={pending || s === status}
-                onClick={() => handleStatusChange(s)}
-                className="capitalize"
-              >
-                {s}
-              </Button>
+              <Tooltip key={s}>
+                <TooltipTrigger render={<span className="inline-block" />}>
+                  <Button
+                    type="button"
+                    variant={s === status ? "default" : "outline"}
+                    size="sm"
+                    disabled={
+                      pending ||
+                      s === status ||
+                      !isLegalQuotationTransition(
+                        (status as QuotationStatus) ?? "draft",
+                        s,
+                      )
+                    }
+                    onClick={() => handleStatusChange(s)}
+                    className="capitalize"
+                  >
+                    {s}
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>{QUOTATION_STATUS_HELP[s]}</TooltipContent>
+              </Tooltip>
             ))}
             {status === "superseded" ? (
               <Badge variant="secondary">Superseded</Badge>
@@ -521,8 +551,19 @@ export function QuotationBuilder({
           </CardContent>
         </Card>
 
+        {mode === "edit" && !editable ? (
+          <p className="text-sm text-muted-foreground">
+            Only draft quotations can be edited — use &ldquo;Save as new
+            version&rdquo; to revise this one.
+          </p>
+        ) : null}
+
         <div className="flex gap-3">
-          <Button type="button" disabled={pending} onClick={handleSave}>
+          <Button
+            type="button"
+            disabled={pending || !editable}
+            onClick={handleSave}
+          >
             {pending
               ? "Saving…"
               : mode === "create"

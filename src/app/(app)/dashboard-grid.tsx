@@ -31,6 +31,11 @@ import { RecentActivityWidget } from "./dashboard-widgets/recent-activity-widget
 import { ShipmentsPlaceholderWidget } from "./dashboard-widgets/shipments-placeholder-widget";
 import { WidgetCard } from "./dashboard-widgets/widget-card";
 import { Button } from "@/components/ui/button";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import {
   GRID_COLS,
@@ -374,20 +379,29 @@ export function DashboardGrid({
             <AddWidgetDialog presentTypes={presentTypes} onAdd={handleAdd} />
           </>
         )}
-        <Button
-          variant="outline"
-          onClick={() => setMode(editable ? "view" : "edit")}
-        >
-          {editable ? (
-            <>
-              <Check /> Done editing
-            </>
-          ) : (
-            <>
-              <Pencil /> Edit dashboard
-            </>
-          )}
-        </Button>
+        <Tooltip>
+          <TooltipTrigger render={<span className="inline-block" />}>
+            <Button
+              variant="outline"
+              onClick={() => setMode(editable ? "view" : "edit")}
+            >
+              {editable ? (
+                <>
+                  <Check /> Done editing
+                </>
+              ) : (
+                <>
+                  <Pencil /> Edit dashboard
+                </>
+              )}
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>
+            {editable
+              ? "Locks the dashboard again so it can't be rearranged by accident."
+              : "Dashboard starts locked so it can't be rearranged by accident — unlock to drag, resize, or add/remove widgets."}
+          </TooltipContent>
+        </Tooltip>
       </div>
 
       {/* Explicit id: without one, dnd-kit generates aria ids from a

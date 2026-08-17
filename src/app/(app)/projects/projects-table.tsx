@@ -16,7 +16,13 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { matchesQuery } from "@/lib/search-filter";
+import { PROJECT_STATUS_HELP } from "./project-form";
 
 type Project = {
   id: string;
@@ -108,9 +114,20 @@ export function ProjectsTable({ projects }: { projects: Project[] }) {
                   </TableCell>
                   <TableCell>{p.country}</TableCell>
                   <TableCell>
-                    <Badge variant="secondary" className="capitalize">
-                      {p.status.replace("_", " ")}
-                    </Badge>
+                    <Tooltip>
+                      <TooltipTrigger
+                        render={<span className="inline-block" />}
+                      >
+                        <Badge variant="secondary" className="capitalize">
+                          {p.status.replace("_", " ")}
+                        </Badge>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        {PROJECT_STATUS_HELP[
+                          p.status as keyof typeof PROJECT_STATUS_HELP
+                        ] ?? p.status}
+                      </TooltipContent>
+                    </Tooltip>
                   </TableCell>
                   <TableCell className="pr-4">
                     {p.isActive ? "Yes" : "No"}

@@ -15,6 +15,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { minorUnitDigits } from "@/lib/money";
 
 const STAGES = [
@@ -25,6 +30,29 @@ const STAGES = [
   { value: "won", label: "Won" },
   { value: "lost", label: "Lost" },
 ] as const;
+
+// Free-form, not enforced anywhere — crm-spec.md §6.4's pipeline order,
+// shown as a hint since nothing in the app currently prevents skipping
+// stages or moving backward. Static overview for the editable form label;
+// per-stage copy (below) is for the read-only badges elsewhere that know
+// the actual current value.
+const OPPORTUNITY_PIPELINE_OVERVIEW =
+  "Pipeline order: Enquiry → Technical review → Quoted → Negotiation → Won/Lost. Free-form — changing this doesn't trigger anything automatically.";
+
+// Exported so opportunities-table.tsx and [id]/page.tsx can show the same
+// copy on their read-only stage badges instead of redefining it.
+export const OPPORTUNITY_STAGE_HELP: Record<
+  (typeof STAGES)[number]["value"],
+  string
+> = {
+  enquiry: "Initial contact — not yet technically reviewed or quoted.",
+  technical_review:
+    "Being evaluated for technical fit before a quote is issued.",
+  quoted: "A quotation has been issued for this opportunity.",
+  negotiation: "In discussion with the customer on terms or price.",
+  won: "Won — a terminal stage.",
+  lost: 'Lost — a terminal stage. See "Lost reason" below.',
+};
 
 type OpportunityFormAction = (
   prevState: { error?: string } | undefined,
@@ -189,7 +217,19 @@ export function OpportunityForm({
 
           <div className="grid grid-cols-2 gap-4">
             <div className="flex flex-col gap-2">
-              <Label htmlFor="stage">Stage</Label>
+              <Tooltip>
+                <TooltipTrigger render={<span className="w-fit" />}>
+                  <Label
+                    htmlFor="stage"
+                    className="cursor-help underline decoration-dotted underline-offset-2"
+                  >
+                    Stage
+                  </Label>
+                </TooltipTrigger>
+                <TooltipContent side="right">
+                  {OPPORTUNITY_PIPELINE_OVERVIEW}
+                </TooltipContent>
+              </Tooltip>
               <Select
                 name="stage"
                 defaultValue={defaultValues?.stage ?? "enquiry"}
@@ -283,7 +323,19 @@ export function OpportunityForm({
           </div>
 
           <div className="flex flex-col gap-2">
-            <Label htmlFor="lostReason">Lost reason</Label>
+            <Tooltip>
+              <TooltipTrigger render={<span className="w-fit" />}>
+                <Label
+                  htmlFor="lostReason"
+                  className="cursor-help underline decoration-dotted underline-offset-2"
+                >
+                  Lost reason
+                </Label>
+              </TooltipTrigger>
+              <TooltipContent side="right">
+                Only meaningful when stage is set to &ldquo;Lost&rdquo;.
+              </TooltipContent>
+            </Tooltip>
             <Input
               id="lostReason"
               name="lostReason"

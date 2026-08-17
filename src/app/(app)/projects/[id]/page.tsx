@@ -3,12 +3,17 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { updateProjectAction } from "../actions";
-import { ProjectForm } from "../project-form";
+import { ProjectForm, PROJECT_STATUS_HELP } from "../project-form";
 import { ActivityTimeline } from "@/components/activity-timeline";
 import { DocumentLibrary } from "@/components/document-library";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import {
   Table,
   TableBody,
@@ -51,9 +56,16 @@ export default async function ProjectDetailPage({
         <div>
           <div className="flex items-center gap-2.5">
             <h2 className="text-2xl">{project.nameEn}</h2>
-            <Badge variant="secondary" className="capitalize">
-              {project.status.replace("_", " ")}
-            </Badge>
+            <Tooltip>
+              <TooltipTrigger render={<span className="inline-block" />}>
+                <Badge variant="secondary" className="capitalize">
+                  {project.status.replace("_", " ")}
+                </Badge>
+              </TooltipTrigger>
+              <TooltipContent>
+                {PROJECT_STATUS_HELP[project.status]}
+              </TooltipContent>
+            </Tooltip>
           </div>
           <p className="text-sm text-muted-foreground">{project.country}</p>
         </div>

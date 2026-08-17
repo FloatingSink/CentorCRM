@@ -18,6 +18,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 const DOC_TYPES = [
   { value: "TDS", label: "TDS" },
@@ -128,9 +133,22 @@ export function ProductDocumentUploadForm({
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <div className="grid grid-cols-2 gap-4">
             <div className="flex flex-col gap-2">
-              <Label htmlFor="docType" required>
-                Type
-              </Label>
+              <Tooltip>
+                <TooltipTrigger render={<span className="w-fit" />}>
+                  <Label
+                    htmlFor="docType"
+                    required
+                    className="cursor-help underline decoration-dotted underline-offset-2"
+                  >
+                    Type
+                  </Label>
+                </TooltipTrigger>
+                <TooltipContent side="right">
+                  Uploading here supersedes whichever document currently has
+                  this same type + language — the old one is kept for history,
+                  not deleted.
+                </TooltipContent>
+              </Tooltip>
               <Select
                 value={docType}
                 onValueChange={(v) => setDocType(v as typeof docType)}

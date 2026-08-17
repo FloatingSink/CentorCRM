@@ -8,6 +8,7 @@ import {
   pgTable,
   text,
   timestamp,
+  uniqueIndex,
   uuid,
 } from "drizzle-orm/pg-core";
 
@@ -46,40 +47,52 @@ export const quotationStatusEnum = pgEnum("quotation_status", [
 // crm-spec.md §6.4. No is_active — status already carries the lifecycle
 // (draft/sent/accepted/rejected/superseded); nothing is ever hard-deleted,
 // only superseded, same spirit as product_document's is_current pattern.
-export const quotation = pgTable("quotation", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  quoteNo: text("quote_no").notNull(),
-  version: integer("version").notNull().default(1),
-  opportunityId: uuid("opportunity_id")
-    .notNull()
-    .references(() => opportunity.id),
-  legalEntityId: uuid("legal_entity_id")
-    .notNull()
-    .references(() => legalEntity.id),
-  customerCompanyId: uuid("customer_company_id")
-    .notNull()
-    .references(() => company.id),
-  // Nullable — the customer's contact may not be on file yet.
-  contactId: uuid("contact_id").references(() => contact.id),
-  issueDate: date("issue_date", { mode: "date" }).notNull(),
-  validUntil: date("valid_until", { mode: "date" }),
-  currency: char("currency", { length: 3 }).notNull(),
-  incoterm: incotermEnum("incoterm"),
-  // Required only for non-EXW incoterms (crm-spec.md §6.4) — enforced at the
-  // application layer, not NOT NULL, since EXW rows legitimately leave it null.
-  namedPlace: text("named_place"),
-  paymentTerms: text("payment_terms"),
-  leadTimeDays: integer("lead_time_days"),
-  language: quotationLanguageEnum("language").notNull().default("en"),
-  status: quotationStatusEnum("status").notNull().default("draft"),
-  notes: text("notes"),
-  createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
-  updatedAt: timestamp("updated_at", { mode: "date" })
-    .notNull()
-    .defaultNow()
-    .$onUpdate(() => new Date()),
-  createdBy: uuid("created_by").references(() => user.id),
-});
+export const quotation = pgTable(
+  "quotation",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    quoteNo: text("quote_no").notNull(),
+    version: integer("version").notNull().default(1),
+    opportunityId: uuid("opportunity_id")
+      .notNull()
+      .references(() => opportunity.id),
+    legalEntityId: uuid("legal_entity_id")
+      .notNull()
+      .references(() => legalEntity.id),
+    customerCompanyId: uuid("customer_company_id")
+      .notNull()
+      .references(() => company.id),
+    // Nullable — the customer's contact may not be on file yet.
+    contactId: uuid("contact_id").references(() => contact.id),
+    issueDate: date("issue_date", { mode: "date" }).notNull(),
+    validUntil: date("valid_until", { mode: "date" }),
+    currency: char("currency", { length: 3 }).notNull(),
+    incoterm: incotermEnum("incoterm"),
+    // Required only for non-EXW incoterms (crm-spec.md §6.4) — enforced at the
+    // application layer, not NOT NULL, since EXW rows legitimately leave it null.
+    namedPlace: text("named_place"),
+    paymentTerms: text("payment_terms"),
+    leadTimeDays: integer("lead_time_days"),
+    language: quotationLanguageEnum("language").notNull().default("en"),
+    status: quotationStatusEnum("status").notNull().default("draft"),
+    notes: text("notes"),
+    createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { mode: "date" })
+      .notNull()
+      .defaultNow()
+      .$onUpdate(() => new Date()),
+    createdBy: uuid("created_by").references(() => user.id),
+  },
+  (table) => [
+    // DB-level backstop for getNextSequenceNumber's own uniqueness
+    // guarantee (docs/decisions.md, remediation slice 3).
+    uniqueIndex("quotation_legal_entity_quote_no_version_unique").on(
+      table.legalEntityId,
+      table.quoteNo,
+      table.version,
+    ),
+  ],
+);
 
 export const quotationLine = pgTable("quotation_line", {
   id: uuid("id").primaryKey().defaultRandom(),

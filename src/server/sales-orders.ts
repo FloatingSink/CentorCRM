@@ -9,6 +9,11 @@ import { project } from "@/db/schema/project";
 import { quotation } from "@/db/schema/quotation";
 import { calculateLineTotal } from "@/lib/quotation-math";
 import { buildDocumentNumber } from "@/lib/document-number";
+import {
+  canEditOrder,
+  isLegalOrderTransition,
+  StatusTransitionError,
+} from "@/lib/status-transitions";
 import type {
   OrderLineInput,
   SalesOrderHeaderInput,
@@ -153,6 +158,19 @@ export async function updateSalesOrderHeaderAndLines(
 ) {
   await requireUser();
   return db.transaction(async (tx) => {
+    const [current] = await tx
+      .select()
+      .from(salesOrder)
+      .where(eq(salesOrder.id, id));
+    if (!current) {
+      throw new Error(`Sales order ${id} not found`);
+    }
+    if (!canEditOrder(current.status)) {
+      throw new StatusTransitionError(
+        `Cannot edit a sales order in status "${current.status}"`,
+      );
+    }
+
     const totalValue = sumLineTotals(lines);
 
     const [updated] = await tx
@@ -179,6 +197,19 @@ export async function updateSalesOrderStatus(
     | "cancelled",
 ) {
   await requireUser();
+  const [current] = await db
+    .select()
+    .from(salesOrder)
+    .where(eq(salesOrder.id, id));
+  if (!current) {
+    throw new Error(`Sales order ${id} not found`);
+  }
+  if (!isLegalOrderTransition(current.status, status)) {
+    throw new StatusTransitionError(
+      `Cannot transition sales order from "${current.status}" to "${status}"`,
+    );
+  }
+
   const [updated] = await db
     .update(salesOrder)
     .set({ status })
