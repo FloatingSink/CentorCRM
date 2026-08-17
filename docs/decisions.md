@@ -770,3 +770,23 @@ sequence (`.env.example` → `.env.local` → `pnpm install` → `db:migrate` �
 what e2e additionally needs (`npx maildev`, `npx playwright install`) — links out to
 `specs/crm-spec.md`, `docs/decisions.md`, and `CLAUDE.md` rather than restating them, per the
 brief's explicit instruction.
+
+## 2026-08-17 — Data residency question resolved: no
+
+Confirmed with Jia Long: no customer contract currently requires data to stay in Singapore. This
+was the one open item under crm-spec.md §9/§11 blocking nothing in practice so far, but explicitly
+left unresolved rather than guessed at throughout the remediation work (see, e.g., the R2 storage
+decision, 2026-08-10, and the Neon region-move entry above, both of which took care to note they
+don't answer this question). Spec updated to record the answer directly rather than `<TBD>`.
+Revisit if a future contract changes this — nothing in the current architecture (Neon in
+`ap-southeast-1`, R2 private bucket) assumes an answer either way, so nothing needs to change if it
+does.
+
+## 2026-08-17 — Old us-east-2 Neon project decommissioned
+
+Following through on the region move above: Jia Long has decommissioned the old `us-east-2` Neon
+project now that the `ap-southeast-1` cutover has been running cleanly. `DATABASE_URL_OLD` removed
+from `.env.local` — it was only ever a rollback pointer, and there's nothing left to roll back to.
+Deleting the Neon project itself was done directly in the Neon dashboard — outside this repo, and
+outside anything Claude Code has access to (no Neon API key configured in this environment); this
+entry just records that it happened and why the env var disappeared.
