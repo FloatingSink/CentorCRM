@@ -4,6 +4,7 @@ import {
   char,
   check,
   date,
+  index,
   integer,
   numeric,
   pgEnum,
@@ -93,6 +94,13 @@ export const quotation = pgTable(
       table.quoteNo,
       table.version,
     ),
+    // quotations.ts: getQuotations, getQuotationForPdf;
+    // dashboard.ts:getExpiringQuotations (remediation slice 6,
+    // docs/decisions.md). legal_entity_id isn't indexed again here — it's
+    // already the leftmost column of the unique index above.
+    index("quotation_opportunity_id_idx").on(table.opportunityId),
+    index("quotation_customer_company_id_idx").on(table.customerCompanyId),
+    index("quotation_contact_id_idx").on(table.contactId),
   ],
 );
 
@@ -133,5 +141,10 @@ export const quotationLine = pgTable(
       "quotation_line_discount_pct_range",
       sql`${table.discountPct} IS NULL OR (${table.discountPct} >= 0 AND ${table.discountPct} <= 100)`,
     ),
+    // getQuotations join, getQuotationById/getQuotationForPdf filter,
+    // updateQuotationHeaderAndLines delete (remediation slice 6,
+    // docs/decisions.md).
+    index("quotation_line_quotation_id_idx").on(table.quotationId),
+    index("quotation_line_product_id_idx").on(table.productId),
   ],
 );

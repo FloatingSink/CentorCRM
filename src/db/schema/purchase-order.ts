@@ -4,6 +4,7 @@ import {
   char,
   check,
   date,
+  index,
   integer,
   numeric,
   pgTable,
@@ -104,5 +105,16 @@ export const purchaseOrder = pgTable(
     // DB-level backstop for getNextSequenceNumber's own uniqueness
     // guarantee (docs/decisions.md, remediation slice 3).
     uniqueIndex("purchase_order_order_no_unique").on(table.orderNo),
+    // purchase-orders.ts: getPurchaseOrders, getPurchaseOrderForPdf,
+    // getLinkedPurchaseOrders (remediation slice 6, docs/decisions.md).
+    index("purchase_order_legal_entity_id_idx").on(table.legalEntityId),
+    index("purchase_order_supplier_company_id_idx").on(table.supplierCompanyId),
+    index("purchase_order_supplier_legal_entity_id_idx").on(
+      table.supplierLegalEntityId,
+    ),
+    index("purchase_order_project_id_idx").on(table.projectId),
+    index("purchase_order_linked_sales_order_id_idx").on(
+      table.linkedSalesOrderId,
+    ),
   ],
 );

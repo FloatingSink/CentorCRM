@@ -1,0 +1,26 @@
+CREATE INDEX "contact_company_id_idx" ON "contact" USING btree ("company_id");--> statement-breakpoint
+CREATE INDEX "project_client_company_id_idx" ON "project" USING btree ("client_company_id");--> statement-breakpoint
+CREATE INDEX "machine_project_id_idx" ON "machine" USING btree ("project_id");--> statement-breakpoint
+CREATE INDEX "product_manufacturer_company_id_idx" ON "product" USING btree ("manufacturer_company_id");--> statement-breakpoint
+CREATE INDEX "product_document_product_id_idx" ON "product_document" USING btree ("product_id");--> statement-breakpoint
+CREATE INDEX "opportunity_project_id_idx" ON "opportunity" USING btree ("project_id");--> statement-breakpoint
+CREATE INDEX "opportunity_customer_company_id_idx" ON "opportunity" USING btree ("customer_company_id");--> statement-breakpoint
+CREATE INDEX "opportunity_owner_user_id_idx" ON "opportunity" USING btree ("owner_user_id");--> statement-breakpoint
+CREATE INDEX "quotation_opportunity_id_idx" ON "quotation" USING btree ("opportunity_id");--> statement-breakpoint
+CREATE INDEX "quotation_customer_company_id_idx" ON "quotation" USING btree ("customer_company_id");--> statement-breakpoint
+CREATE INDEX "quotation_contact_id_idx" ON "quotation" USING btree ("contact_id");--> statement-breakpoint
+CREATE INDEX "quotation_line_quotation_id_idx" ON "quotation_line" USING btree ("quotation_id");--> statement-breakpoint
+CREATE INDEX "quotation_line_product_id_idx" ON "quotation_line" USING btree ("product_id");--> statement-breakpoint
+CREATE INDEX "order_line_sales_order_id_idx" ON "order_line" USING btree ("sales_order_id");--> statement-breakpoint
+CREATE INDEX "order_line_purchase_order_id_idx" ON "order_line" USING btree ("purchase_order_id");--> statement-breakpoint
+CREATE INDEX "order_line_product_id_idx" ON "order_line" USING btree ("product_id");--> statement-breakpoint
+CREATE INDEX "sales_order_quotation_id_idx" ON "sales_order" USING btree ("quotation_id");--> statement-breakpoint
+CREATE INDEX "sales_order_customer_company_id_idx" ON "sales_order" USING btree ("customer_company_id");--> statement-breakpoint
+CREATE INDEX "sales_order_customer_legal_entity_id_idx" ON "sales_order" USING btree ("customer_legal_entity_id");--> statement-breakpoint
+CREATE INDEX "sales_order_project_id_idx" ON "sales_order" USING btree ("project_id");--> statement-breakpoint
+CREATE INDEX "purchase_order_legal_entity_id_idx" ON "purchase_order" USING btree ("legal_entity_id");--> statement-breakpoint
+CREATE INDEX "purchase_order_supplier_company_id_idx" ON "purchase_order" USING btree ("supplier_company_id");--> statement-breakpoint
+CREATE INDEX "purchase_order_supplier_legal_entity_id_idx" ON "purchase_order" USING btree ("supplier_legal_entity_id");--> statement-breakpoint
+CREATE INDEX "purchase_order_project_id_idx" ON "purchase_order" USING btree ("project_id");--> statement-breakpoint
+CREATE INDEX "purchase_order_linked_sales_order_id_idx" ON "purchase_order" USING btree ("linked_sales_order_id");--> statement-breakpoint
+CREATE INDEX "activity_user_id_idx" ON "activity" USING btree ("user_id");
