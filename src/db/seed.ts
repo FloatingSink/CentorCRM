@@ -64,6 +64,13 @@ async function main() {
         role: "admin",
         isActive: true,
       },
+      {
+        // Shared CENTOR inbox account, admin role per Jia Long. name left
+        // null — not a real person's name to invent one for.
+        email: "info@centorglobal.com",
+        role: "admin",
+        isActive: true,
+      },
     ])
     .onConflictDoNothing({ target: user.email })
     .returning({ email: user.email });
@@ -250,7 +257,7 @@ async function main() {
   }
 
   console.log(
-    `Seeded ${legalEntities.length}/4 legal entities, ${users.length}/1 users, ` +
+    `Seeded ${legalEntities.length}/4 legal entities, ${users.length}/2 users, ` +
       `${companiesSeeded}/1 companies, ${projectsSeeded}/1 projects, ` +
       `${productsSeeded}/${PRODUCTS.length} products (skipped rows already existed).`,
   );
