@@ -739,12 +739,27 @@ Two open decisions from the brief's section 10, asked directly rather than defau
   production — worth checking against the real Vercel project setting at some point and updating
   the workflow if it's wrong.
 
-**CI needs zero secrets and zero service containers** — verified, not assumed: ran `lint`,
-`typecheck`, and `test` locally with `DATABASE_URL` unset, all three passed. `src/db/client.ts`
-throws if `DATABASE_URL` is missing, but nothing on the lint/typecheck/test path imports it
-(consistent with slice 6's audit finding that `src/lib/*.ts` has no direct DB queries — this is
-the same property, confirmed end to end rather than inferred). The workflow has no `env:` block at
-all as a result, which is deliberate, not an oversight.
+**Correction after the first push**: the workflow was first written with no `env:` block at all,
+on the claim that `lint`/`typecheck`/`test` need zero environment variables — based on running all
+three locally with `DATABASE_URL` unset. That local check was silently invalid: this environment
+has a global dotenvx auto-injection that reloads `.env.local` into every command's process
+environment regardless of a shell-level `unset`, so the "unset" run was still secretly getting a
+real `DATABASE_URL`. The actual push to CI failed at the `test` step. Root cause:
+`src/db/bigint-money.test.ts` is a genuine live-DB integration test (remediation slice 1) — the
+only way to prove a value above the old int4 ceiling round-trips through the real bigint columns,
+not just through pure-JS `BigInt` math — and it needs a reachable, migrated Postgres. Confirmed
+this precisely (not just theorized) by cloning the pushed branch fresh into an isolated directory
+with no `.env.local` at all: `lint` and `typecheck` genuinely pass with zero environment
+variables (that part of the original claim held), but `test` fails on exactly that one file with
+`DATABASE_URL is not set`.
+
+**Fix**: `.github/workflows/ci.yml` now runs a `postgres:16` service container for the job, sets
+`DATABASE_URL` to point at it, and runs `pnpm db:migrate` before `pnpm test` so the schema exists.
+This is deliberately **not** the e2e-in-CI question answered above — no MailDev, no Playwright
+browsers, no running app server, just a bare Postgres reachable for one integration test that
+inserts and rolls back inside a transaction (self-cleaning, no seed data needed). Verified for
+real before pushing again: pointed the same clean clone at a real, already-migrated Postgres and
+confirmed `db:migrate` (idempotent) plus the full test suite, including the bigint test, pass.
 
 `pnpm/action-setup@v4` is used with no explicit `version` input, so it auto-detects from
 `package.json`'s `packageManager` field (`pnpm@11.21.0`) instead of a second hand-pinned copy that

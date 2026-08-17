@@ -33,12 +33,16 @@ with — see `pnpm db:seed`'s output, or `src/db/seed.ts`.
 ## Testing
 
 ```bash
-pnpm lint        # eslint + prettier check
-pnpm typecheck   # tsc --noEmit
-pnpm test        # vitest, unit + integration — no database or other services needed
+pnpm lint        # eslint + prettier check — no database needed
+pnpm typecheck   # tsc --noEmit — no database needed
+pnpm test        # vitest, unit + integration — uses the DATABASE_URL from .env.local
 ```
 
-These three run in CI (`.github/workflows/ci.yml`) on every push and pull request.
+Almost all of `pnpm test` is pure-function unit tests with no database involved, but
+`src/db/bigint-money.test.ts` does a real round trip against Postgres (self-cleaning — it inserts
+inside a transaction and rolls back), so `test` needs a migrated, reachable database. All three
+run in CI (`.github/workflows/ci.yml`) on every push and pull request, against a throwaway
+`postgres:16` service container, not your dev database.
 
 End-to-end tests (`pnpm test:e2e`, Playwright) additionally need:
 
