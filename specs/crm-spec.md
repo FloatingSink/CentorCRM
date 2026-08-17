@@ -141,8 +141,12 @@ projects in China — `<TBD: confirm names and machine counts>`.
 `anti_wear` | `other`), `uom`, `pack_size`, `pack_description`,
 `manufacturer_company_id`, `manufacturer_part_no`, `hs_code`, `is_active`, `notes`
 
-Existing line to seed: `CTR-TSG-P`, `PX2350`, `TM-T100`, `PA`, `EP1`, `EP2`,
-`IS-C`, `IS-D`, `IS-P` — `<TBD: confirm full CENTOR code for each>`.
+Product code list confirmed 2026-08-17 against centorglobal.com/products (see docs/decisions.md) —
+resolves the `<TBD: confirm full CENTOR code for each>` this section previously carried. Active
+line: `CTR-TSG-P` (Tail Seal Grease), `CTR-TSG-H` (Tail Sealant Hand-coat), `CTR-MBS-P` (Main
+Bearing Sealant), `CTR-MBG-EP1` / `CTR-MBG-EP2` (Main Bearing Grease), `CTR-ISF-C` / `CTR-ISF-D` /
+`CTR-ISF-P` (Standard/Dispersed/Polymer Foam Agent). `PX2350`, `TM-T100`, `PA` are legacy —
+no longer on the current catalogue, kept as `is_active: false` rather than removed.
 
 **`product_document`**
 `id`, `product_id`, `doc_type` (`TDS` | `SDS` | `COC` | `test_report` |
@@ -314,4 +318,5 @@ next begins.
 - [ ] Do we need an accounting export, and to which system?
 - [ ] Confirm UEN / CR numbers for INFRA TECH, TUNNEL TECHNIC, CHENGTUO
 - [ ] Confirm the four active CRTG projects in China and their machine counts
-- [ ] Confirm the full CENTOR product code list and pack sizes
+- [x] Confirm the full CENTOR product code list and pack sizes — resolved against
+      centorglobal.com/products, 2026-08-17, see §6.3 and docs/decisions.md.

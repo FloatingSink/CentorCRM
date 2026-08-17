@@ -120,32 +120,130 @@ async function main() {
     projectsSeeded = 1;
   }
 
-  // crm-spec.md §6.3 — these 9 codes are given, but category, uom, pack size,
-  // manufacturer and HS code are <TBD: confirm full CENTOR code for each> and
-  // are left null, not guessed (CLAUDE.md "do not invent domain data").
-  const PRODUCT_CODES = [
-    "CTR-TSG-P",
-    "PX2350",
-    "TM-T100",
-    "PA",
-    "EP1",
-    "EP2",
-    "IS-C",
-    "IS-D",
-    "IS-P",
+  // crm-spec.md §6.3 — the original 9 "existing line" codes plus 2 more found
+  // on the same live catalogue, resolved against centorglobal.com/products
+  // (confirmed with Jia Long, 2026-08-17, see docs/decisions.md). Fields left
+  // null where the site doesn't give an unambiguous single answer — not
+  // guessed (CLAUDE.md "do not invent domain data"): uom,
+  // manufacturerPartNo, hsCode for every row, and category for
+  // CTR-MBS-P specifically (grease-like but not EP-branded, a distinct
+  // product line from CTR-MBG-EP1/EP2 — doesn't map cleanly onto the
+  // six-value enum).
+  const PRODUCTS: Array<{
+    centorCode: string;
+    nameEn: string;
+    category?:
+      | "tail_seal_grease"
+      | "soil_conditioner"
+      | "ep_grease"
+      | "polymer"
+      | "anti_wear"
+      | "other";
+    packSize?: string;
+    packDescription?: string;
+    isActive: boolean;
+  }> = [
+    {
+      centorCode: "CTR-TSG-P",
+      nameEn: "Tail Seal Grease",
+      category: "tail_seal_grease",
+      packSize: "25 kg / 70 kg / 250 kg drum",
+      packDescription:
+        "Economical driving-grade tail sealant for shielded TBMs",
+      isActive: true,
+    },
+    {
+      centorCode: "CTR-TSG-H",
+      nameEn: "Tail Sealant Hand-coat",
+      category: "tail_seal_grease",
+      packDescription:
+        "Dedicated first-fill sealant manually packed into the tail sealing brush",
+      isActive: true,
+    },
+    {
+      centorCode: "CTR-MBS-P",
+      nameEn: "Main Bearing Sealant",
+      packSize: "25 kg / 70 kg / 230 kg drum",
+      packDescription:
+        "Clay-thickened lubricating grease for the lips sealing system of TBM main bearings",
+      isActive: true,
+    },
+    {
+      centorCode: "CTR-MBG-EP1",
+      nameEn: "Main Bearing Grease EP1",
+      category: "ep_grease",
+      packDescription:
+        "Eco-friendly sealant for the main bearing lip-seal system",
+      isActive: true,
+    },
+    {
+      centorCode: "CTR-MBG-EP2",
+      nameEn: "Main Bearing Grease EP2",
+      category: "ep_grease",
+      packDescription:
+        "Eco-friendly sealant for the main bearing lip-seal system",
+      isActive: true,
+    },
+    {
+      centorCode: "CTR-ISF-C",
+      nameEn: "Standard Foam Agent",
+      category: "soil_conditioner",
+      packSize: "200 kg drum / 1,000 kg IBC",
+      packDescription: "Standard formulation for wet to sandy clay soils",
+      isActive: true,
+    },
+    {
+      centorCode: "CTR-ISF-D",
+      nameEn: "Dispersed Foam Agent",
+      category: "soil_conditioner",
+      packSize: "200 kg drum / 1,000 kg IBC",
+      packDescription: "Higher solid content for dispersive ground",
+      isActive: true,
+    },
+    {
+      centorCode: "CTR-ISF-P",
+      nameEn: "Polymer Foam Agent",
+      category: "soil_conditioner",
+      packSize: "200 kg drum / 1,000 kg IBC",
+      packDescription:
+        "Polymer-enhanced formula for cohesive or mixed ground conditions",
+      isActive: true,
+    },
+    // Not on the current catalogue — confirmed legacy/discontinued, not
+    // removed (CLAUDE.md: nothing commercial hard-deleted).
+    {
+      centorCode: "PX2350",
+      nameEn: "PX2350",
+      packDescription:
+        "Legacy/discontinued — not on centorglobal.com/products as of 2026-08-17",
+      isActive: false,
+    },
+    {
+      centorCode: "TM-T100",
+      nameEn: "TM-T100",
+      packDescription:
+        "Legacy/discontinued — not on centorglobal.com/products as of 2026-08-17",
+      isActive: false,
+    },
+    {
+      centorCode: "PA",
+      nameEn: "PA",
+      packDescription:
+        "Legacy/discontinued — not on centorglobal.com/products as of 2026-08-17",
+      isActive: false,
+    },
   ];
   let productsSeeded = 0;
-  for (const code of PRODUCT_CODES) {
+  for (const { centorCode, ...rest } of PRODUCTS) {
     const [existing] = await db
       .select()
       .from(product)
-      .where(eq(product.centorCode, code));
+      .where(eq(product.centorCode, centorCode));
     if (existing) continue;
 
     await db.insert(product).values({
-      centorCode: code,
-      nameEn: code,
-      isActive: true,
+      centorCode,
+      ...rest,
       createdBy: admin.id,
     });
     productsSeeded++;
@@ -154,7 +252,7 @@ async function main() {
   console.log(
     `Seeded ${legalEntities.length}/4 legal entities, ${users.length}/1 users, ` +
       `${companiesSeeded}/1 companies, ${projectsSeeded}/1 projects, ` +
-      `${productsSeeded}/9 products (skipped rows already existed).`,
+      `${productsSeeded}/${PRODUCTS.length} products (skipped rows already existed).`,
   );
 
   await client.end();

@@ -790,3 +790,43 @@ from `.env.local` — it was only ever a rollback pointer, and there's nothing l
 Deleting the Neon project itself was done directly in the Neon dashboard — outside this repo, and
 outside anything Claude Code has access to (no Neon API key configured in this environment); this
 entry just records that it happened and why the env var disappeared.
+
+## 2026-08-17 — Product code list resolved against centorglobal.com/products
+
+Closes the `<TBD: confirm full CENTOR code for each>` on crm-spec.md §6.3/§11 that
+`src/db/seed.ts` had been carrying since P3 — the 9 originally-given codes had no confirmed
+category, pack size, or (for several of them) full code at all. Jia Long pointed at
+centorglobal.com/products as the source. Fetched twice with different prompts, identical results
+both times — confident it's the complete page (7 products, two sections, no pagination or hidden
+categories), not a partial render.
+
+**Mapping, confirmed with Jia Long, not guessed**:
+
+- `EP1`→`CTR-MBG-EP1`, `EP2`→`CTR-MBG-EP2`, `IS-C`→`CTR-ISF-C`, `IS-D`→`CTR-ISF-D`,
+  `IS-P`→`CTR-ISF-P` — the site's fuller codes for 5 of the original 9. `CTR-TSG-P` already
+  matched exactly.
+- `PX2350`, `TM-T100`, `PA` aren't on the site — confirmed legacy/discontinued. Set
+  `is_active: false` rather than removed (`CLAUDE.md`: nothing commercial hard-deleted), with a
+  `pack_description` note recording why and when.
+- `CTR-MBS-P` (Main Bearing Sealant) and `CTR-TSG-H` (Tail Sealant Hand-coat) are on the site but
+  weren't in the original 9 — added, since the site is being treated as the authoritative current
+  catalogue rather than the original spec list as a hard ceiling.
+
+**Left null, not guessed**: `CTR-MBS-P`'s `category` — it's grease-like but not `EP`-branded like
+the two that map cleanly to `ep_grease`, and sits under a distinct site heading (Sealants, not
+Grease) from `CTR-MBG-EP1`/`EP2`. Doesn't map unambiguously onto the six-value enum, so left null
+rather than picking the closest-sounding option. `uom`, `manufacturer_part_no`, `hs_code` stay
+null for every row — nothing on the site gives a single unambiguous value for any of them.
+`manufacturer_company_id` stays null too, but that's not a gap: these are CENTOR's own `CTR`-line
+products, and CENTOR's own entities are `legal_entity` rows, never `company` rows (`CLAUDE.md`
+hard rule) — there's no valid row to point at.
+
+`src/db/seed.ts` updated to seed this resolved 11-row list on a fresh database. Since `db:seed`
+only ever inserts (existence-checked by `centor_code`, never updates), editing the seed script
+alone wouldn't touch the rows already sitting in the dev database under the old `EP1`-style codes
+— a one-off script ran the equivalent `UPDATE`s directly against the live dev DB so it matches
+what the corrected seed script now produces, rather than drifting from it.
+
+Out of scope: fetching each product's individual detail page (main-bearing-sealant.html etc.) for
+TDS/SDS/COC documents — a separate, larger task involving real `product_document` rows and file
+uploads to R2, not part of resolving the code list itself.
