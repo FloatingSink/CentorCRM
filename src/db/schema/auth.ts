@@ -37,6 +37,11 @@ export const user = pgTable("user", {
     .$onUpdate(() => new Date()),
   // Nullable: the bootstrap admin seeded in P0 has no creator.
   createdBy: uuid("created_by").references((): AnyPgColumn => user.id),
+  // Best-effort presence tracking (src/server/auth.ts's requireUser()) —
+  // deliberately separate from updatedAt, which already bumps on unrelated
+  // profile edits (role/isActive changes) and would conflate "last edited"
+  // with "last active" if reused for this.
+  lastActiveAt: timestamp("last_active_at", { mode: "date" }),
 });
 
 export const account = pgTable(

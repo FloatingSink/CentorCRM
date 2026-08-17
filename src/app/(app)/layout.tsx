@@ -54,7 +54,7 @@ export default async function AppLayout({
             />
           </Link>
 
-          <SidebarNav />
+          <SidebarNav isAdmin={session.user.role === "admin"} />
 
           <div className="mt-auto flex items-center gap-2 rounded-md bg-muted p-2">
             <span className="flex size-[30px] flex-none items-center justify-center rounded-full bg-brand-800 text-xs font-medium text-brand-100">

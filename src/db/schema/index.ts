@@ -16,3 +16,4 @@ export * from "./sales-order";
 export * from "./purchase-order";
 export * from "./activity";
 export * from "./dashboard-widget";
+export * from "./login-event";

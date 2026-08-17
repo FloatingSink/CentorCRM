@@ -883,3 +883,48 @@ inserting a `session` row for the seeded admin user and setting it as a cookie
 region-move verification earlier in this project. `e2e/helpers/maildev.ts` deleted. Ran the full
 suite locally after the change — all 12 tests pass, confirming the new mechanism actually produces
 a session every other spec can reuse, not just that it doesn't error.
+
+## 2026-08-17 — User activity tracking, Slice 1: login history + online presence
+
+First of two slices for "log login timings, who's online, and what each user has done." Split in
+two — this slice is login history and presence only; the full "everything" audit log is a separate
+plan, since it touches ~26 mutation functions across 13 files in `src/server/*` (confirmed by a
+full audit of every `db.insert/update/delete` call site) and is too large to review as one change
+with this slice.
+
+**Presence, without new infrastructure**: `requireUser()` (`src/server/auth.ts`) already sits at
+the top of nearly every exported `src/server/*` function — confirmed ~69 call sites across the
+codebase. Added a `touchLastActive(userId)` call there that does a single conditional
+`UPDATE "user" SET last_active_at = now() WHERE ... AND (last_active_at IS NULL OR last_active_at
+< now() - interval '60 seconds')`, not awaited and with errors swallowed — this is best-effort
+presence data, and a page load must never be slowed or broken by it. The 60-second throttle matters
+because a single page view can call `requireUser()` 1-3 times (one per `get*` call); without it,
+every page view would be 1-3 unconditional writes instead of at most one. "Online" is computed at
+read time (`last_active_at > now() - interval '5 minutes'`), not stored — no new state machine.
+
+**Login history, not just a single "last login"**: new `login_event` table, one row per successful
+sign-in, populated via a new `events.signIn` hook in `src/lib/auth.ts`. Relies on something already
+verified against the installed `@auth/core` source during the Microsoft SSO work: `events.signIn`
+fires with the fully-resolved DB user (`user.id` is real), not the raw provider profile.
+
+**Admin-only, new territory**: `requireAdmin()` already existed in `src/server/auth.ts` but had
+zero call sites anywhere in the app — this is the first thing to actually use it. No existing
+"admin-only page" precedent to follow, so the new `/admin` page mirrors the layered pattern the
+`(app)` layout already uses for "signed in at all": the page itself checks
+`session.user.role === "admin"` and redirects to `/` as a UX guard, while `requireAdmin()` inside
+`getUserPresence()`/`getLoginHistory()` (`src/server/users.ts`, `src/server/login-event.ts`) stays
+the real boundary — same shape, one role tighter. Nav entry in `sidebar-nav.tsx` is conditional on
+`isAdmin`, passed down from the layout (which already has the session).
+
+**Verified for real, not just via typecheck**: no `member`-role user existed in the dev DB to test
+the redirect against, so a throwaway one was created, session-injected, hit `/admin` (clean 307 to
+`/`), then deleted — same pattern as the FK-indexes and SSO verification work earlier this project.
+Also drove an actual magic-link sign-in through MailDev (not a manually-inserted session, since
+that would bypass `events.signIn` entirely and prove nothing about the login-history hook) and
+confirmed both a `login_event` row and `last_active_at` update landed correctly, then confirmed the
+admin page renders both sections with real data.
+
+**Deferred to Slice 2's own plan**: the full audit log of every create/update/status-change across
+every entity. Flagged there as candidates to exclude: `dashboard_widget` mutations (personal UI
+layout, not a shared CRM record — would just be drag/resize noise) and `activity`-table creation
+(would be a log entry about a log entry).
