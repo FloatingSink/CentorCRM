@@ -1,16 +1,10 @@
-import {
-  Document,
-  Image,
-  Page,
-  StyleSheet,
-  Text,
-  View,
-} from "@react-pdf/renderer";
+import { Document, Page, StyleSheet, Text, View } from "@react-pdf/renderer";
 
 import { formatMoney } from "@/lib/money";
 import type { getQuotationForPdf } from "@/server/quotations";
+import { DocumentHeader } from "./document-header";
+import { formatDate, pickName } from "./format";
 import { label } from "./labels";
-import { letterheadImagePath } from "./letterhead";
 import { registerCjkFont } from "./register-cjk-font";
 
 // react-pdf's built-in fonts have no CJK glyphs — registered once at module
@@ -29,10 +23,6 @@ const styles = StyleSheet.create({
     color: "#111",
   },
   row: { flexDirection: "row", justifyContent: "space-between" },
-  // 826x224 source (public/logos/README.md) — height fixed, width auto so
-  // react-pdf preserves the real aspect ratio instead of stretching it.
-  letterhead: { height: 28, marginBottom: 6 },
-  title: { fontSize: 18, marginBottom: 4 },
   muted: { color: "#555" },
   section: { marginTop: 16 },
   sectionTitle: { fontSize: 11, marginBottom: 4, fontWeight: 700 },
@@ -65,22 +55,10 @@ const styles = StyleSheet.create({
   notes: { marginTop: 16, fontSize: 9, color: "#555" },
 });
 
-function pickName(nameEn: string, nameZh: string | null, language: string) {
-  if (language === "en") return nameEn;
-  if (language === "zh") return nameZh || nameEn;
-  return nameZh ? `${nameEn} / ${nameZh}` : nameEn;
-}
-
-function formatDate(date: Date | null): string {
-  if (!date) return "—";
-  return date.toISOString().slice(0, 10);
-}
-
 export function QuotationDocument({ data }: { data: QuotationData }) {
   const { quotation, legalEntity, company, contact, lines } = data;
   const language = quotation.language;
   const L = (key: Parameters<typeof label>[0]) => label(key, language);
-  const letterhead = letterheadImagePath(legalEntity.letterheadAsset);
 
   return (
     <Document
@@ -88,36 +66,14 @@ export function QuotationDocument({ data }: { data: QuotationData }) {
       language={language === "zh" ? "zh" : "en"}
     >
       <Page size="A4" style={styles.page}>
-        <View style={styles.row}>
-          <View>
-            {letterhead ? (
-              // react-pdf's Image is a PDF primitive, not an HTML <img> —
-              // it has no alt prop; jsx-a11y can't tell the two apart.
-              // eslint-disable-next-line jsx-a11y/alt-text
-              <Image src={letterhead} style={styles.letterhead} />
-            ) : null}
-            <Text style={styles.title}>
-              {pickName(legalEntity.nameEn, legalEntity.nameZh, language)}
-            </Text>
-            {legalEntity.registeredAddress ? (
-              <Text style={styles.muted}>{legalEntity.registeredAddress}</Text>
-            ) : null}
-            {legalEntity.registrationNo ? (
-              <Text style={styles.muted}>
-                {legalEntity.jurisdiction} · {legalEntity.registrationNo}
-              </Text>
-            ) : null}
-          </View>
-          <View>
-            <Text style={styles.title}>{L("quotation")}</Text>
-            <Text>
-              {L("quoteNo")}: {quotation.quoteNo}
-            </Text>
-            <Text style={styles.muted}>
-              {L("version")}: {quotation.version}
-            </Text>
-          </View>
-        </View>
+        <DocumentHeader
+          language={language}
+          legalEntity={legalEntity}
+          docNoLabel={L("quoteNo")}
+          docNoValue={quotation.quoteNo}
+          title={L("quotation")}
+          subtitle={`${L("version")}: ${quotation.version}`}
+        />
 
         <View style={[styles.row, styles.section]}>
           <View>

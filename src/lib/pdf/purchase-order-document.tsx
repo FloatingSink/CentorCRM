@@ -1,7 +1,6 @@
 import {
   Document,
   Font,
-  Image,
   Page,
   StyleSheet,
   Text,
@@ -11,8 +10,9 @@ import {
 import { rmbAmountToCapitalWords } from "@/lib/chinese-numerals";
 import { formatMoney } from "@/lib/money";
 import type { getPurchaseOrderForPdf } from "@/server/purchase-orders";
+import { DocumentHeader } from "./document-header";
+import { cjkWrap, formatDate, pickName } from "./format";
 import { label } from "./labels";
-import { letterheadImagePath } from "./letterhead";
 import { registerCjkFont } from "./register-cjk-font";
 
 // Same registration as quotation-document.tsx — react-pdf's built-in fonts
@@ -43,9 +43,6 @@ const styles = StyleSheet.create({
     color: "#111",
   },
   row: { flexDirection: "row", justifyContent: "space-between" },
-  // Same source/reasoning as quotation-document.tsx's letterhead style.
-  letterhead: { height: 28, marginBottom: 6 },
-  title: { fontSize: 18, marginBottom: 4 },
   muted: { color: "#555" },
   section: { marginTop: 16 },
   sectionTitle: { fontSize: 11, marginBottom: 4, fontWeight: 700 },
@@ -91,30 +88,6 @@ const styles = StyleSheet.create({
   signatureLine: { marginTop: 18, borderBottom: "1px solid #333", height: 1 },
   signatureLabel: { marginTop: 4, color: "#555", fontSize: 9 },
 });
-
-function pickName(nameEn: string, nameZh: string | null, language: string) {
-  if (language === "en") return nameEn;
-  if (language === "zh") return nameZh || nameEn;
-  return nameZh ? `${nameEn} / ${nameZh}` : nameEn;
-}
-
-function formatDate(date: Date | null): string {
-  if (!date) return "—";
-  return date.toISOString().slice(0, 10);
-}
-
-// react-pdf's line-breaker only splits on a literal ASCII space
-// (@react-pdf/textkit splits words on /([ ]+)/g — confirmed by reading its
-// source) and has no awareness of Chinese punctuation as a break
-// opportunity. Without any spaces, an entire unbroken Chinese sentence is
-// one "word" to it: too long to fit a line, it either gets hyphenated with
-// a nonsensical "-" or silently clipped rather than wrapped (observed both
-// ways while building this template). Inserting a real space after natural
-// CJK punctuation gives it valid break points, same practical workaround
-// used elsewhere for CJK text in non-CJK-aware line-breaking engines.
-function cjkWrap(text: string): string {
-  return text.replace(/([，。；：、])/g, "$1 ");
-}
 
 // Fixed contract-terms boilerplate from a real, previously-used CENTOR
 // purchase order. Chinese text is verbatim from that source document, with
@@ -193,47 +166,24 @@ export function PurchaseOrderDocument({ data }: { data: PurchaseOrderData }) {
         ? [inspectionZh, inspectionEn]
         : [inspectionEn];
 
-  // legalEntity is the buyer — the one of our own entities issuing this
-  // order — so its letterhead is what belongs here, never the supplier's.
-  const letterhead = letterheadImagePath(legalEntity.letterheadAsset);
-
   return (
     <Document title={order.orderNo} language={language === "zh" ? "zh" : "en"}>
       <Page size="A4" style={styles.page}>
-        <View style={styles.row}>
-          <View>
-            {letterhead ? (
-              // react-pdf's Image is a PDF primitive, not an HTML <img> —
-              // it has no alt prop; jsx-a11y can't tell the two apart.
-              // eslint-disable-next-line jsx-a11y/alt-text
-              <Image src={letterhead} style={styles.letterhead} />
-            ) : null}
-            <Text style={styles.title}>
-              {pickName(legalEntity.nameEn, legalEntity.nameZh, language)}
-            </Text>
-            {legalEntity.registeredAddress ? (
-              <Text style={styles.muted}>
-                {cjkWrap(legalEntity.registeredAddress)}
-              </Text>
-            ) : null}
-            {legalEntity.registrationNo ? (
-              <Text style={styles.muted}>
-                {legalEntity.jurisdiction} · {legalEntity.registrationNo}
-              </Text>
-            ) : null}
-          </View>
-          <View>
-            <Text style={styles.title}>{L("purchaseOrder")}</Text>
-            <Text>
-              {L("orderNo")}: {order.orderNo}
-            </Text>
-            {order.contractNo ? (
-              <Text style={styles.muted}>
-                {L("contractNo")}: {order.contractNo}
-              </Text>
-            ) : null}
-          </View>
-        </View>
+        {/* legalEntity is the buyer — the one of our own entities issuing
+            this order — so its letterhead is what belongs here, never the
+            supplier's. */}
+        <DocumentHeader
+          language={language}
+          legalEntity={legalEntity}
+          docNoLabel={L("orderNo")}
+          docNoValue={order.orderNo}
+          title={L("purchaseOrder")}
+          subtitle={
+            order.contractNo
+              ? `${L("contractNo")}: ${order.contractNo}`
+              : undefined
+          }
+        />
 
         <View style={[styles.row, styles.section]}>
           <View>

@@ -1098,3 +1098,37 @@ _company_ page (`/companies/{companyId}`) after save, which breaks with no compa
 go to the contact's own page (`/contacts/{id}`) instead — matching how `createProductAction`/
 `updateProductAction` already redirect to the product's own page rather than its manufacturer, not
 a new convention.
+
+## 2026-09-09 — PDF header layout restyled after an external reference document
+
+Jia Long shared a personal payslip PDF (generated outside this app, unrelated to the CRM domain)
+and asked that its top-of-page format become the template for the PDFs this project generates —
+today, `quotation-document.tsx` and `purchase-order-document.tsx`, which previously duplicated an
+identical header block (logo stacked above entity name/address/registration on the left, a small
+title block on the right).
+
+New layout, scoped to the header only (everything below — customer/buyer-supplier blocks, dates,
+line-item table, totals, clauses, signatures — untouched): logo alone top-left; top-right, a single
+highlighted doc-no line (`Quote No:` / `PO No:`), then the legal entity's name (bold), then its
+jurisdiction/registration; the registered address (when set) runs full-width right-aligned beneath;
+then a large centered uppercase document title, with an optional centered subtitle (`Version:` for
+quotations, `Contract No:` for POs when set).
+
+**Deliberately did not copy the payslip's blue accent.** The actual CENTOR logo
+(`public/logos/CGPL.png`) is plain grayscale, and the CRM app's own UI primary color is purple
+(`#9184d9`) — neither matches the payslip's blue, which belongs to an unrelated document. Asked
+Jia Long directly rather than guessing; confirmed no color accent, so the highlighted doc-no line
+stays within the same black/`#555`-muted palette both documents already used.
+
+Extracted the shared header into `src/lib/pdf/document-header.tsx` rather than re-duplicating the
+now more-involved layout a third time, and moved `pickName`/`formatDate`/`cjkWrap` — each
+previously copy-pasted between the two document files — into a new `src/lib/pdf/format.ts` so the
+header component and both documents share one copy. Pure extraction, no behavior change beyond the
+header repositioning itself.
+
+**Verified for real**, not just typechecked: created a purchase order and generated both a
+quotation and a purchase-order PDF against the running dev server (session-cookie auth, same
+mechanism as `e2e/global-setup.ts`), read the rendered PDF output directly, and confirmed the new
+header layout — logo, doc no/entity/registration, centered title — renders correctly with nothing
+overlapping or clipped, for both an English quotation and a purchase order carrying the
+Chinese-contract-clause boilerplate. Test PO and its lines/audit-log row deleted afterward.
