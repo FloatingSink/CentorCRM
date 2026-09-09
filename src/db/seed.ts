@@ -71,6 +71,12 @@ async function main() {
         role: "admin",
         isActive: true,
       },
+      {
+        name: "Tina Jin",
+        email: "tinajin@centorglobal.com",
+        role: "admin",
+        isActive: true,
+      },
     ])
     .onConflictDoNothing({ target: user.email })
     .returning({ email: user.email });
