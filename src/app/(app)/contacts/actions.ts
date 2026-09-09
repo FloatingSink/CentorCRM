@@ -8,7 +8,8 @@ import { createContact, updateContact } from "@/server/contacts";
 
 function parseContactForm(formData: FormData) {
   return contactFormSchema.safeParse({
-    companyId: formData.get("companyId"),
+    companyId:
+      formData.get("companyId") === "none" ? null : formData.get("companyId"),
     nameEn: formData.get("nameEn"),
     nameZh: formData.get("nameZh") || null,
     jobTitle: formData.get("jobTitle") || null,
@@ -37,12 +38,11 @@ export async function createContactAction(
   }
 
   const created = await createContact(parsed.data, session.user.id);
-  redirect(`/companies/${created.companyId}`);
+  redirect(`/contacts/${created.id}`);
 }
 
 export async function updateContactAction(
   id: string,
-  companyId: string,
   _prevState: { error?: string } | undefined,
   formData: FormData,
 ): Promise<{ error?: string }> {
@@ -57,5 +57,5 @@ export async function updateContactAction(
   }
 
   await updateContact(id, parsed.data);
-  redirect(`/companies/${companyId}`);
+  redirect(`/contacts/${id}`);
 }

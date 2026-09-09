@@ -13,7 +13,8 @@ import { company } from "./company";
 
 export const preferredLanguageEnum = pgEnum("preferred_language", ["en", "zh"]);
 
-// Always belongs to a company (crm-spec.md §6.1) — never exists standalone.
+// company_id is optional (crm-spec.md §6.1) — a contact can be captured
+// before their employer exists as a company record.
 // isActive/audit columns aren't in the spec's per-entity field list but
 // follow §7's cross-cutting rules (audit on every table, soft delete only),
 // same precedent as legal_entity and company.
@@ -21,9 +22,7 @@ export const contact = pgTable(
   "contact",
   {
     id: uuid("id").primaryKey().defaultRandom(),
-    companyId: uuid("company_id")
-      .notNull()
-      .references(() => company.id),
+    companyId: uuid("company_id").references(() => company.id),
     nameEn: text("name_en").notNull(),
     nameZh: text("name_zh"),
     jobTitle: text("job_title"),

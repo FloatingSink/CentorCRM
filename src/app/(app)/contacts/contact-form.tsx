@@ -22,7 +22,7 @@ type ContactFormAction = (
 ) => Promise<{ error?: string }>;
 
 type ContactFormValues = {
-  companyId: string;
+  companyId: string | null;
   nameEn: string;
   nameZh: string | null;
   jobTitle: string | null;
@@ -63,13 +63,19 @@ export function ContactForm({
             <Label htmlFor="companyId">Company</Label>
             <Select
               name="companyId"
-              defaultValue={defaultValues?.companyId ?? defaultCompanyId}
-              items={companies.map((c) => ({ value: c.id, label: c.nameEn }))}
+              defaultValue={
+                defaultValues?.companyId ?? defaultCompanyId ?? "none"
+              }
+              items={[
+                { value: "none", label: "None" },
+                ...companies.map((c) => ({ value: c.id, label: c.nameEn })),
+              ]}
             >
               <SelectTrigger id="companyId">
                 <SelectValue placeholder="Select a company" />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="none">None</SelectItem>
                 {companies.map((c) => (
                   <SelectItem key={c.id} value={c.id}>
                     {c.nameEn}

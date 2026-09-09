@@ -22,7 +22,7 @@ export async function getContacts() {
       isActive: contact.isActive,
     })
     .from(contact)
-    .innerJoin(company, eq(contact.companyId, company.id))
+    .leftJoin(company, eq(contact.companyId, company.id))
     .orderBy(asc(contact.nameEn));
 }
 
@@ -40,7 +40,7 @@ export async function getContactById(id: string) {
   const [row] = await db
     .select({ contact, company })
     .from(contact)
-    .innerJoin(company, eq(contact.companyId, company.id))
+    .leftJoin(company, eq(contact.companyId, company.id))
     .where(eq(contact.id, id));
 
   return row ?? null;

@@ -116,8 +116,10 @@ plus `company_role` (many-to-many): `customer` | `supplier` | `agent` |
 `logistics` | `authority` | `other` — a company can be more than one.
 
 **`contact`**
-`id`, `company_id`, `name_en`, `name_zh`, `job_title`, `email`, `phone`,
-`wechat_id`, `preferred_language` (`en` | `zh`), `is_primary`, `notes`
+`id`, `company_id` (optional — a contact can be captured before their
+employer is entered as a `company` record), `name_en`, `name_zh`, `job_title`,
+`email`, `phone`, `wechat_id`, `preferred_language` (`en` | `zh`), `is_primary`,
+`notes`
 
 ### 6.2 Projects
 

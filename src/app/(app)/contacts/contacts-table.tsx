@@ -22,8 +22,8 @@ import { matchesQuery } from "@/lib/search-filter";
 type Contact = {
   id: string;
   nameEn: string;
-  companyId: string;
-  companyName: string;
+  companyId: string | null;
+  companyName: string | null;
   jobTitle: string | null;
   email: string | null;
   phone: string | null;
@@ -110,12 +110,16 @@ export function ContactsTable({ contacts }: { contacts: Contact[] }) {
                     </Link>
                   </TableCell>
                   <TableCell>
-                    <Link
-                      href={`/companies/${contact.companyId}`}
-                      className="hover:underline"
-                    >
-                      {contact.companyName}
-                    </Link>
+                    {contact.companyId ? (
+                      <Link
+                        href={`/companies/${contact.companyId}`}
+                        className="hover:underline"
+                      >
+                        {contact.companyName}
+                      </Link>
+                    ) : (
+                      <span className="text-muted-foreground">—</span>
+                    )}
                   </TableCell>
                   <TableCell>{contact.jobTitle}</TableCell>
                   <TableCell>{contact.email}</TableCell>

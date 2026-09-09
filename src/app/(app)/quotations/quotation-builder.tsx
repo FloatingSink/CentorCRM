@@ -86,7 +86,7 @@ export function QuotationBuilder({
   opportunities: Opportunity[];
   legalEntities: { id: string; nameEn: string; shortCode: string }[];
   companies: { id: string; nameEn: string }[];
-  contacts: { id: string; nameEn: string; companyId: string }[];
+  contacts: { id: string; nameEn: string; companyId: string | null }[];
   products: { id: string; centorCode: string; nameEn: string }[];
   defaultHeader?: {
     opportunityId: string;

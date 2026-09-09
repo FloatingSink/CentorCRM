@@ -1,0 +1,1 @@
+ALTER TABLE "contact" ALTER COLUMN "company_id" DROP NOT NULL;

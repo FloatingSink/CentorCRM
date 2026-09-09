@@ -1075,3 +1075,26 @@ verification): created a task tied to one company from that company's detail pag
 appears there and not on a different company's page, confirmed the same row is visible on the
 assignee's central `/tasks` page too (same underlying data, two different views), and confirmed the
 `audit_log` entry. `pnpm build` clean across all 6 changed detail pages.
+
+## 2026-09-09 — `contact.company_id` made optional
+
+Spec §6.1 read as `contact` always having a `company_id`, and the schema comment said so explicitly
+("never exists standalone"). Jia Long asked to be able to add a contact without binding it to a
+company — e.g. someone met on site before their employer is entered as a `company` record. Spec
+§6.1 updated to mark `company_id` optional rather than quietly loosening the constraint in code
+without the doc agreeing (CLAUDE.md: spec and code must not disagree).
+
+Implementation mirrors an identical shape already in the codebase rather than inventing a new
+pattern: `product.manufacturer_company_id` is already an optional FK to `company` with the full
+round-trip built (nullable column, unmodified `drizzle-zod` inference, `leftJoin` in the query, a
+`"none"` sentinel value in the `<Select>` since the underlying Radix/base-ui primitive can't use an
+empty string, conditional link rendering in the table). `contact.company_id` now follows the same
+shape: `getContacts()`/`getContactById()` (`src/server/contacts.ts`) switched from `innerJoin` to
+`leftJoin` so a company-less contact isn't silently dropped from the list or 404'd on its own detail
+page.
+
+One knock-on change: `createContactAction`/`updateContactAction` used to redirect to the contact's
+_company_ page (`/companies/{companyId}`) after save, which breaks with no company. Redirects now
+go to the contact's own page (`/contacts/{id}`) instead — matching how `createProductAction`/
+`updateProductAction` already redirect to the product's own page rather than its manufacturer, not
+a new convention.

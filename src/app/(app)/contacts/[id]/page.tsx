@@ -52,16 +52,23 @@ export default async function ContactDetailPage({
             </Badge>
           </div>
           <p className="text-sm text-muted-foreground">
-            {contact.jobTitle ? `${contact.jobTitle} · ` : ""}
-            <Link href={`/companies/${company.id}`} className="hover:underline">
-              {company.nameEn}
-            </Link>
+            {contact.jobTitle
+              ? `${contact.jobTitle}${company ? " · " : ""}`
+              : ""}
+            {company ? (
+              <Link
+                href={`/companies/${company.id}`}
+                className="hover:underline"
+              >
+                {company.nameEn}
+              </Link>
+            ) : null}
           </p>
         </div>
       </div>
 
       <ContactForm
-        action={updateContactAction.bind(null, id, contact.companyId)}
+        action={updateContactAction.bind(null, id)}
         companies={companies}
         defaultValues={{
           companyId: contact.companyId,
