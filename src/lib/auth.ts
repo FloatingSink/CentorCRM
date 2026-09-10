@@ -1,13 +1,14 @@
 import { DrizzleAdapter } from "@auth/drizzle-adapter";
 import { eq } from "drizzle-orm";
 import NextAuth from "next-auth";
+import { NextRequest } from "next/server";
 import MicrosoftEntraID from "next-auth/providers/microsoft-entra-id";
 
 import { db } from "@/db/client";
 import { account, session, user, verificationToken } from "@/db/schema/auth";
 import { recordLogin } from "@/server/login-event";
 
-export const { handlers, auth, signIn, signOut } = NextAuth({
+const nextAuth = NextAuth({
   adapter: DrizzleAdapter(db, {
     usersTable: user,
     accountsTable: account,
@@ -84,3 +85,27 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     },
   },
 });
+
+// Next.js's own `request.url` only honors `x-forwarded-proto`, not
+// `x-forwarded-host` — behind a devtunnel/ngrok-style proxy in dev, that
+// leaves every URL @auth/core derives from it (the OAuth redirect_uri it
+// sends Microsoft during the token exchange, the post-login redirect
+// target) pointing at localhost instead of the public tunnel host, one
+// hop after the sign-in button correctly used it. Rewriting the request's
+// URL here — before it reaches NextAuth at all — is the single point that
+// fixes every one of those downstream URLs at once, the same way a static
+// `AUTH_URL` would, but per-request so both a devtunnel and plain
+// localhost keep working without editing env vars between them.
+function withForwardedHost(req: NextRequest): NextRequest {
+  const forwardedHost = req.headers.get("x-forwarded-host");
+  if (!forwardedHost) return req;
+  const proto = req.headers.get("x-forwarded-proto") ?? "https";
+  const realOrigin = `${proto}://${forwardedHost}`;
+  return new NextRequest(req.nextUrl.href.replace(req.nextUrl.origin, realOrigin), req);
+}
+
+export const handlers = {
+  GET: (req: NextRequest) => nextAuth.handlers.GET(withForwardedHost(req)),
+  POST: (req: NextRequest) => nextAuth.handlers.POST(withForwardedHost(req)),
+};
+export const { auth, signIn, signOut } = nextAuth;
