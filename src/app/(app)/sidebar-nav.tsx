@@ -6,6 +6,7 @@ import {
   FileText,
   Handshake,
   HardHat,
+  LayoutDashboard,
   Package,
   Receipt,
   Ship,
@@ -20,6 +21,7 @@ import { usePathname } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 
 const NAV_ITEMS: { href: string; label: string; icon: LucideIcon }[] = [
+  { href: "/", label: "Dashboard", icon: LayoutDashboard },
   { href: "/companies", label: "Companies", icon: Building2 },
   { href: "/contacts", label: "Contacts", icon: Users },
   { href: "/projects", label: "Projects", icon: HardHat },
@@ -47,7 +49,10 @@ export function SidebarNav({
   return (
     <nav className="flex flex-col gap-[3px]">
       {items.map((item) => {
-        const active = pathname.startsWith(item.href);
+        const active =
+          item.href === "/"
+            ? pathname === "/"
+            : pathname.startsWith(item.href);
         return (
           <Link
             key={item.href}
