@@ -77,6 +77,15 @@ async function main() {
         role: "admin",
         isActive: true,
       },
+      {
+        // Tina Jin's personal Microsoft account, confirmed with Jia Long —
+        // added as an Entra ID guest in the tenant so it can sign in
+        // alongside the corporate address above.
+        name: "Tina Jin",
+        email: "posefen@hotmail.com",
+        role: "admin",
+        isActive: true,
+      },
     ])
     .onConflictDoNothing({ target: user.email })
     .returning({ email: user.email });
@@ -263,7 +272,7 @@ async function main() {
   }
 
   console.log(
-    `Seeded ${legalEntities.length}/4 legal entities, ${users.length}/2 users, ` +
+    `Seeded ${legalEntities.length}/4 legal entities, ${users.length}/4 users, ` +
       `${companiesSeeded}/1 companies, ${projectsSeeded}/1 projects, ` +
       `${productsSeeded}/${PRODUCTS.length} products (skipped rows already existed).`,
   );
