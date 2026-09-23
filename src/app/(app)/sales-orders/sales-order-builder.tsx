@@ -39,6 +39,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { useT } from "@/lib/i18n/client";
 
 const INCOTERMS = ["EXW", "FOB", "CFR", "CIF", "DAP"] as const;
 const STATUSES = [
@@ -105,6 +106,7 @@ export function SalesOrderBuilder({
     discountPct: string | null;
   }[];
 }) {
+  const { t } = useT();
   const router = useRouter();
   const [legalEntityId, setLegalEntityId] = useState(
     defaultHeader.legalEntityId,
@@ -226,7 +228,7 @@ export function SalesOrderBuilder({
 
   return (
     <div className="flex flex-col gap-6">
-      {error ? <p className="text-sm text-destructive">{error}</p> : null}
+      {error ? <p className="text-sm text-destructive">{t(error)}</p> : null}
 
       <p className="text-sm text-muted-foreground">
         From quotation <Badge variant="outline">{quoteNo}</Badge>
@@ -250,12 +252,11 @@ export function SalesOrderBuilder({
                     )
                   }
                   onClick={() => handleStatusChange(s)}
-                  className="capitalize"
                 >
-                  {s.replace("_", " ")}
+                  {t(`orderStatus.${s}`)}
                 </Button>
               </TooltipTrigger>
-              <TooltipContent>{ORDER_STATUS_HELP[s]}</TooltipContent>
+              <TooltipContent>{t(ORDER_STATUS_HELP[s])}</TooltipContent>
             </Tooltip>
           ))}
         </div>
@@ -266,7 +267,7 @@ export function SalesOrderBuilder({
           <div className="grid grid-cols-3 gap-4">
             <div className="flex flex-col gap-2">
               <Label htmlFor="legalEntityId" required>
-                Legal entity
+                {t("doc.legalEntity")}
               </Label>
               <Select
                 value={legalEntityId}
@@ -277,7 +278,7 @@ export function SalesOrderBuilder({
                 }))}
               >
                 <SelectTrigger id="legalEntityId">
-                  <SelectValue placeholder="Select an entity" />
+                  <SelectValue placeholder={t("doc.selectEntity")} />
                 </SelectTrigger>
                 <SelectContent>
                   {legalEntities.map((le) => (
@@ -290,7 +291,7 @@ export function SalesOrderBuilder({
             </div>
             <div className="flex flex-col gap-2">
               <Label htmlFor="projectId" required>
-                Project
+                {t("doc.project")}
               </Label>
               <Select
                 value={projectId}
@@ -298,7 +299,7 @@ export function SalesOrderBuilder({
                 items={projects.map((p) => ({ value: p.id, label: p.nameEn }))}
               >
                 <SelectTrigger id="projectId">
-                  <SelectValue placeholder="Select a project" />
+                  <SelectValue placeholder={t("doc.selectProject")} />
                 </SelectTrigger>
                 <SelectContent>
                   {projects.map((p) => (
@@ -310,7 +311,7 @@ export function SalesOrderBuilder({
               </Select>
             </div>
             <div className="flex flex-col gap-2">
-              <Label htmlFor="contractNo">Contract no.</Label>
+              <Label htmlFor="contractNo">{t("doc.contractNo")}</Label>
               <Input
                 id="contractNo"
                 value={contractNo}
@@ -321,14 +322,16 @@ export function SalesOrderBuilder({
 
           {mode === "edit" ? (
             <div className="flex flex-col gap-2">
-              <Label htmlFor="executedDocumentId">Executed document</Label>
+              <Label htmlFor="executedDocumentId">
+                {t("doc.executedDocument")}
+              </Label>
               <Select
                 value={executedDocumentId || "none"}
                 onValueChange={(v) =>
                   setExecutedDocumentId(v === "none" || !v ? "" : v)
                 }
                 items={[
-                  { value: "none", label: "None" },
+                  { value: "none", label: t("contact.none") },
                   ...documents.map((d) => ({ value: d.id, label: d.title })),
                 ]}
               >
@@ -336,7 +339,7 @@ export function SalesOrderBuilder({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="none">None</SelectItem>
+                  <SelectItem value="none">{t("contact.none")}</SelectItem>
                   {documents.map((d) => (
                     <SelectItem key={d.id} value={d.id}>
                       {d.title}
@@ -348,16 +351,18 @@ export function SalesOrderBuilder({
           ) : null}
 
           <div className="flex flex-col gap-2">
-            <Label required>Customer</Label>
+            <Label required>{t("doc.customer")}</Label>
             <Segmented
               value={customerType}
               onValueChange={(v) =>
                 setCustomerType((v as "company" | "legalEntity") ?? "company")
               }
             >
-              <SegmentedItem value="company">External company</SegmentedItem>
+              <SegmentedItem value="company">
+                {t("doc.externalCompany")}
+              </SegmentedItem>
               <SegmentedItem value="legalEntity">
-                Our own legal entity
+                {t("doc.ourLegalEntity")}
               </SegmentedItem>
             </Segmented>
             {customerType === "company" ? (
@@ -367,7 +372,7 @@ export function SalesOrderBuilder({
                 items={companies.map((c) => ({ value: c.id, label: c.nameEn }))}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select a company" />
+                  <SelectValue placeholder={t("doc.selectCompany")} />
                 </SelectTrigger>
                 <SelectContent>
                   {companies.map((c) => (
@@ -387,7 +392,7 @@ export function SalesOrderBuilder({
                 }))}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select an entity" />
+                  <SelectValue placeholder={t("doc.selectEntity")} />
                 </SelectTrigger>
                 <SelectContent>
                   {legalEntities.map((le) => (
@@ -402,7 +407,7 @@ export function SalesOrderBuilder({
 
           <div className="grid grid-cols-4 gap-4">
             <div className="flex flex-col gap-2">
-              <Label htmlFor="signedDate">Signed date</Label>
+              <Label htmlFor="signedDate">{t("doc.signedDate")}</Label>
               <Input
                 id="signedDate"
                 type="date"
@@ -412,7 +417,7 @@ export function SalesOrderBuilder({
             </div>
             <div className="flex flex-col gap-2">
               <Label htmlFor="currency" required>
-                Currency
+                {t("doc.currency")}
               </Label>
               <Input
                 id="currency"
@@ -424,7 +429,7 @@ export function SalesOrderBuilder({
             </div>
             <div className="flex flex-col gap-2">
               <Label htmlFor="fxRateToSgd" required>
-                FX rate to SGD
+                {t("doc.fxRateToSgd")}
               </Label>
               <Input
                 id="fxRateToSgd"
@@ -435,12 +440,12 @@ export function SalesOrderBuilder({
               />
             </div>
             <div className="flex flex-col gap-2">
-              <Label htmlFor="incoterm">Incoterm</Label>
+              <Label htmlFor="incoterm">{t("doc.incoterm")}</Label>
               <Select
                 value={incoterm || "none"}
                 onValueChange={(v) => setIncoterm(v === "none" || !v ? "" : v)}
                 items={[
-                  { value: "none", label: "Unspecified" },
+                  { value: "none", label: t("doc.unspecified") },
                   ...INCOTERMS.map((i) => ({ value: i, label: i })),
                 ]}
               >
@@ -448,7 +453,7 @@ export function SalesOrderBuilder({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="none">Unspecified</SelectItem>
+                  <SelectItem value="none">{t("doc.unspecified")}</SelectItem>
                   {INCOTERMS.map((i) => (
                     <SelectItem key={i} value={i}>
                       {i}
@@ -461,7 +466,7 @@ export function SalesOrderBuilder({
 
           <div className="grid grid-cols-3 gap-4">
             <div className="flex flex-col gap-2">
-              <Label htmlFor="namedPlace">Named place</Label>
+              <Label htmlFor="namedPlace">{t("doc.namedPlace")}</Label>
               <Input
                 id="namedPlace"
                 value={namedPlace}
@@ -470,7 +475,7 @@ export function SalesOrderBuilder({
               />
             </div>
             <div className="flex flex-col gap-2">
-              <Label htmlFor="governingLaw">Governing law</Label>
+              <Label htmlFor="governingLaw">{t("doc.governingLaw")}</Label>
               <Input
                 id="governingLaw"
                 value={governingLaw}
@@ -478,7 +483,9 @@ export function SalesOrderBuilder({
               />
             </div>
             <div className="flex flex-col gap-2">
-              <Label htmlFor="arbitrationRules">Arbitration rules</Label>
+              <Label htmlFor="arbitrationRules">
+                {t("doc.arbitrationRules")}
+              </Label>
               <Input
                 id="arbitrationRules"
                 placeholder="e.g. SIAC, HKIAC"
@@ -489,7 +496,7 @@ export function SalesOrderBuilder({
           </div>
 
           <div className="flex flex-col gap-2">
-            <Label htmlFor="notes">Notes</Label>
+            <Label htmlFor="notes">{t("doc.notes")}</Label>
             <Textarea
               id="notes"
               value={notes}
@@ -512,7 +519,7 @@ export function SalesOrderBuilder({
 
       {mode === "edit" && !editable ? (
         <p className="text-sm text-muted-foreground">
-          Only draft sales orders can be edited.
+          {t("salesOrder.draftOnly")}
         </p>
       ) : null}
 

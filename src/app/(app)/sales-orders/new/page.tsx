@@ -7,6 +7,8 @@ import { getOpportunityById } from "@/server/opportunities";
 import { getProducts } from "@/server/products";
 import { getProjects } from "@/server/projects";
 import { getQuotationById, getQuotations } from "@/server/quotations";
+import { t } from "@/lib/i18n/dictionary";
+import { getLocale } from "@/lib/i18n/server";
 
 export default async function NewSalesOrderPage({
   searchParams,
@@ -16,14 +18,17 @@ export default async function NewSalesOrderPage({
   const { quotationId } = await searchParams;
 
   if (!quotationId) {
-    const quotations = await getQuotations();
+    const [quotations, locale] = await Promise.all([
+      getQuotations(),
+      getLocale(),
+    ]);
     const accepted = quotations.filter((q) => q.status === "accepted");
 
     return (
       <div className="flex flex-col gap-6">
-        <h2 className="text-2xl">New sales order</h2>
+        <h2 className="text-2xl">{t(locale, "salesOrder.new")}</h2>
         <p className="text-sm text-muted-foreground">
-          A sales order is created from an accepted quotation. Pick one:
+          {t(locale, "salesOrder.pickAcceptedQuotation")}
         </p>
         <ul className="flex flex-col gap-2">
           {accepted.map((q) => (
@@ -38,7 +43,7 @@ export default async function NewSalesOrderPage({
           ))}
           {accepted.length === 0 ? (
             <li className="text-sm text-muted-foreground">
-              No accepted quotations yet.
+              {t(locale, "salesOrder.noAcceptedQuotations")}
             </li>
           ) : null}
         </ul>
@@ -48,21 +53,27 @@ export default async function NewSalesOrderPage({
 
   const result = await getQuotationById(quotationId);
   if (!result) {
-    return <p className="text-sm text-destructive">Quotation not found.</p>;
+    return (
+      <p className="text-sm text-destructive">
+        {t(await getLocale(), "quotation.notFound")}
+      </p>
+    );
   }
   const { quotation, lines } = result;
   const opportunity = await getOpportunityById(quotation.opportunityId);
 
-  const [legalEntities, companies, projects, products] = await Promise.all([
-    getLegalEntities(),
-    getCompanies(),
-    getProjects(),
-    getProducts(),
-  ]);
+  const [legalEntities, companies, projects, products, locale] =
+    await Promise.all([
+      getLegalEntities(),
+      getCompanies(),
+      getProjects(),
+      getProducts(),
+      getLocale(),
+    ]);
 
   return (
     <div className="flex flex-col gap-6">
-      <h2 className="text-2xl">New sales order</h2>
+      <h2 className="text-2xl">{t(locale, "salesOrder.new")}</h2>
       <SalesOrderBuilder
         mode="create"
         quoteNo={quotation.quoteNo}

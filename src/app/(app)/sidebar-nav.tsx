@@ -19,22 +19,29 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 import { Badge } from "@/components/ui/badge";
+import { useT } from "@/lib/i18n/client";
 
+// `label` is a dictionary key, resolved at render — hrefs and icons are
+// language-independent and stay as they were.
 const NAV_ITEMS: { href: string; label: string; icon: LucideIcon }[] = [
-  { href: "/", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/companies", label: "Companies", icon: Building2 },
-  { href: "/contacts", label: "Contacts", icon: Users },
-  { href: "/projects", label: "Projects", icon: HardHat },
-  { href: "/products", label: "Products", icon: Package },
-  { href: "/opportunities", label: "Opportunities", icon: Handshake },
-  { href: "/quotations", label: "Quotations", icon: FileText },
-  { href: "/sales-orders", label: "Sales Orders", icon: ShoppingCart },
-  { href: "/purchase-orders", label: "Purchase Orders", icon: Receipt },
-  { href: "/shipments", label: "Shipments", icon: Ship },
-  { href: "/tasks", label: "Tasks", icon: CheckSquare },
+  { href: "/", label: "nav.dashboard", icon: LayoutDashboard },
+  { href: "/companies", label: "nav.companies", icon: Building2 },
+  { href: "/contacts", label: "nav.contacts", icon: Users },
+  { href: "/projects", label: "nav.projects", icon: HardHat },
+  { href: "/products", label: "nav.products", icon: Package },
+  { href: "/opportunities", label: "nav.opportunities", icon: Handshake },
+  { href: "/quotations", label: "nav.quotations", icon: FileText },
+  { href: "/sales-orders", label: "nav.salesOrders", icon: ShoppingCart },
+  { href: "/purchase-orders", label: "nav.purchaseOrders", icon: Receipt },
+  { href: "/shipments", label: "nav.shipments", icon: Ship },
+  { href: "/tasks", label: "nav.tasks", icon: CheckSquare },
 ];
 
-const ADMIN_NAV_ITEM = { href: "/admin", label: "Admin", icon: ShieldCheck };
+const ADMIN_NAV_ITEM = {
+  href: "/admin",
+  label: "nav.admin",
+  icon: ShieldCheck,
+};
 
 export function SidebarNav({
   isAdmin,
@@ -44,15 +51,14 @@ export function SidebarNav({
   openTaskCount: number;
 }) {
   const pathname = usePathname();
+  const { t } = useT();
   const items = isAdmin ? [...NAV_ITEMS, ADMIN_NAV_ITEM] : NAV_ITEMS;
 
   return (
     <nav className="flex flex-col gap-[3px]">
       {items.map((item) => {
         const active =
-          item.href === "/"
-            ? pathname === "/"
-            : pathname.startsWith(item.href);
+          item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
         return (
           <Link
             key={item.href}
@@ -65,7 +71,7 @@ export function SidebarNav({
             }
           >
             <item.icon className="size-[18px]" />
-            {item.label}
+            {t(item.label)}
             {item.href === "/tasks" && openTaskCount > 0 ? (
               <Badge className="ml-auto">{openTaskCount}</Badge>
             ) : null}

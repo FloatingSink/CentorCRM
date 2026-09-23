@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { formatDate } from "@/lib/date";
+import { useT } from "@/lib/i18n/client";
 
 type Row = {
   id: string;
@@ -10,9 +11,12 @@ type Row = {
 };
 
 export function QuotesExpiringWidget({ rows }: { rows: Row[] }) {
+  const { t } = useT();
   if (rows.length === 0) {
     return (
-      <p className="text-sm text-muted-foreground">Nothing expiring soon.</p>
+      <p className="text-sm text-muted-foreground">
+        {t("widget.emptyQuotesExpiring")}
+      </p>
     );
   }
 

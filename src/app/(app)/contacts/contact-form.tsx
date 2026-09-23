@@ -15,6 +15,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { useT } from "@/lib/i18n/client";
 
 type ContactFormAction = (
   prevState: { error?: string } | undefined,
@@ -50,32 +51,33 @@ export function ContactForm({
   mode: "create" | "edit";
   submitLabel: string;
 }) {
+  const { t } = useT();
   const [state, formAction, pending] = useActionState(action, undefined);
 
   return (
     <Card>
       <CardContent>
         {state?.error ? (
-          <p className="mb-4 text-sm text-destructive">{state.error}</p>
+          <p className="mb-4 text-sm text-destructive">{t(state.error)}</p>
         ) : null}
         <form action={formAction} className="flex flex-col gap-4">
           <div className="flex flex-col gap-2">
-            <Label htmlFor="companyId">Company</Label>
+            <Label htmlFor="companyId">{t("contact.company")}</Label>
             <Select
               name="companyId"
               defaultValue={
                 defaultValues?.companyId ?? defaultCompanyId ?? "none"
               }
               items={[
-                { value: "none", label: "None" },
+                { value: "none", label: t("contact.none") },
                 ...companies.map((c) => ({ value: c.id, label: c.nameEn })),
               ]}
             >
               <SelectTrigger id="companyId">
-                <SelectValue placeholder="Select a company" />
+                <SelectValue placeholder={t("contact.selectCompany")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="none">None</SelectItem>
+                <SelectItem value="none">{t("contact.none")}</SelectItem>
                 {companies.map((c) => (
                   <SelectItem key={c.id} value={c.id}>
                     {c.nameEn}
@@ -87,7 +89,7 @@ export function ContactForm({
 
           <div className="grid grid-cols-2 gap-4">
             <div className="flex flex-col gap-2">
-              <Label htmlFor="nameEn">Name (English)</Label>
+              <Label htmlFor="nameEn">{t("contact.nameEn")}</Label>
               <Input
                 id="nameEn"
                 name="nameEn"
@@ -96,7 +98,7 @@ export function ContactForm({
               />
             </div>
             <div className="flex flex-col gap-2">
-              <Label htmlFor="nameZh">Name (Chinese)</Label>
+              <Label htmlFor="nameZh">{t("contact.nameZh")}</Label>
               <Input
                 id="nameZh"
                 name="nameZh"
@@ -107,7 +109,7 @@ export function ContactForm({
 
           <div className="grid grid-cols-2 gap-4">
             <div className="flex flex-col gap-2">
-              <Label htmlFor="jobTitle">Job title</Label>
+              <Label htmlFor="jobTitle">{t("contact.jobTitle")}</Label>
               <Input
                 id="jobTitle"
                 name="jobTitle"
@@ -115,21 +117,23 @@ export function ContactForm({
               />
             </div>
             <div className="flex flex-col gap-2">
-              <Label htmlFor="preferredLanguage">Preferred language</Label>
+              <Label htmlFor="preferredLanguage">
+                {t("contact.preferredLanguage")}
+              </Label>
               <Select
                 name="preferredLanguage"
                 defaultValue={defaultValues?.preferredLanguage ?? "en"}
                 items={[
-                  { value: "en", label: "English" },
-                  { value: "zh", label: "Chinese" },
+                  { value: "en", label: t("language.en") },
+                  { value: "zh", label: t("language.zh") },
                 ]}
               >
                 <SelectTrigger id="preferredLanguage">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="en">English</SelectItem>
-                  <SelectItem value="zh">Chinese</SelectItem>
+                  <SelectItem value="en">{t("language.en")}</SelectItem>
+                  <SelectItem value="zh">{t("language.zh")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -137,7 +141,7 @@ export function ContactForm({
 
           <div className="grid grid-cols-2 gap-4">
             <div className="flex flex-col gap-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">{t("contact.email")}</Label>
               <Input
                 id="email"
                 name="email"
@@ -146,7 +150,7 @@ export function ContactForm({
               />
             </div>
             <div className="flex flex-col gap-2">
-              <Label htmlFor="phone">Phone</Label>
+              <Label htmlFor="phone">{t("contact.phone")}</Label>
               <Input
                 id="phone"
                 name="phone"
@@ -156,7 +160,7 @@ export function ContactForm({
           </div>
 
           <div className="flex flex-col gap-2">
-            <Label htmlFor="wechatId">WeChat ID</Label>
+            <Label htmlFor="wechatId">{t("contact.wechatId")}</Label>
             <Input
               id="wechatId"
               name="wechatId"
@@ -165,7 +169,7 @@ export function ContactForm({
           </div>
 
           <div className="flex flex-col gap-2">
-            <Label htmlFor="notes">Notes</Label>
+            <Label htmlFor="notes">{t("contact.notes")}</Label>
             <Textarea
               id="notes"
               name="notes"
@@ -180,7 +184,7 @@ export function ContactForm({
                 value="true"
                 defaultChecked={defaultValues?.isPrimary}
               />
-              Primary contact
+              {t("contact.primaryContact")}
             </label>
             {mode === "edit" ? (
               <label className="flex items-center gap-2 text-sm">
@@ -189,7 +193,7 @@ export function ContactForm({
                   value="true"
                   defaultChecked={defaultValues?.isActive}
                 />
-                Active
+                {t("common.active")}
               </label>
             ) : (
               <input type="hidden" name="isActive" value="true" />
@@ -197,7 +201,7 @@ export function ContactForm({
           </div>
 
           <Button type="submit" disabled={pending} className="w-fit">
-            {pending ? "Saving…" : submitLabel}
+            {pending ? t("common.saving") : t(submitLabel)}
           </Button>
         </form>
       </CardContent>

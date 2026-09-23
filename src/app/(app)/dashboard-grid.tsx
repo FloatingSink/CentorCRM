@@ -48,6 +48,7 @@ import {
   type DashboardWidgetSize,
   type DashboardWidgetType,
 } from "@/lib/dashboard";
+import { useT } from "@/lib/i18n/client";
 import type {
   getExpiringQuotations,
   getMyOpenOpportunities,
@@ -213,6 +214,7 @@ export function DashboardGrid({
   widgets: DashboardWidgetItem[];
   data: DashboardWidgetData;
 }) {
+  const { t } = useT();
   const router = useRouter();
   const [widgets, setWidgets] = useState(initialWidgets);
   // Defaults to "view" (locked) on every load — the dashboard shouldn't be
@@ -379,7 +381,7 @@ export function DashboardGrid({
         {editable && (
           <>
             <Button variant="ghost" onClick={handleReset}>
-              Reset to default
+              {t("dashboard.resetToDefault")}
             </Button>
             <AddWidgetDialog presentTypes={presentTypes} onAdd={handleAdd} />
           </>
@@ -392,19 +394,17 @@ export function DashboardGrid({
             >
               {editable ? (
                 <>
-                  <Check /> Done editing
+                  <Check /> {t("dashboard.doneEditing")}
                 </>
               ) : (
                 <>
-                  <Pencil /> Edit dashboard
+                  <Pencil /> {t("dashboard.editDashboard")}
                 </>
               )}
             </Button>
           </TooltipTrigger>
           <TooltipContent>
-            {editable
-              ? "Locks the dashboard again so it can't be rearranged by accident."
-              : "Dashboard starts locked so it can't be rearranged by accident — unlock to drag, resize, or add/remove widgets."}
+            {editable ? t("dashboard.lockHelp") : t("dashboard.unlockHelp")}
           </TooltipContent>
         </Tooltip>
       </div>

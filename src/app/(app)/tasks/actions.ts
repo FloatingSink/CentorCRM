@@ -28,7 +28,7 @@ export async function createTaskAction(
 ): Promise<{ error?: string }> {
   const parsed = parseTaskForm(formData);
   if (!parsed.success) {
-    return { error: parsed.error.issues[0]?.message ?? "Invalid input" };
+    return { error: parsed.error.issues[0]?.message ?? "error.invalidInput" };
   }
 
   const session = await auth();

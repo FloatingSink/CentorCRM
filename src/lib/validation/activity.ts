@@ -1,3 +1,5 @@
+// Validation messages are i18n dictionary keys, resolved by the form
+// through t() — see src/lib/i18n/dictionary.ts.
 import { createSchemaFactory } from "drizzle-zod";
 import { z } from "zod";
 
@@ -9,7 +11,7 @@ const { createInsertSchema } = createSchemaFactory({ coerce: { date: true } });
 // as every other create action in this app (see e.g.
 // src/lib/validation/purchase-order.ts).
 export const activityCreateSchema = createInsertSchema(activity, {
-  subject: (schema) => schema.min(1, "Subject is required"),
+  subject: (schema) => schema.min(1, "error.subjectRequired"),
 }).omit({
   id: true,
   userId: true,

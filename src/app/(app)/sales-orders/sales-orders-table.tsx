@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/table";
 import { formatMoney } from "@/lib/money";
 import { matchesQuery } from "@/lib/search-filter";
+import { useT } from "@/lib/i18n/client";
 
 type SalesOrder = {
   id: string;
@@ -45,6 +46,7 @@ const FILTERS = [
 type Filter = (typeof FILTERS)[number]["value"];
 
 export function SalesOrdersTable({ orders }: { orders: SalesOrder[] }) {
+  const { t } = useT();
   const [filter, setFilter] = useState<Filter>("all");
   const [query, setQuery] = useState("");
 
@@ -76,7 +78,7 @@ export function SalesOrdersTable({ orders }: { orders: SalesOrder[] }) {
         >
           {FILTERS.map((f) => (
             <SegmentedItem key={f.value} value={f.value}>
-              {f.label}
+              {t(f.label)}
             </SegmentedItem>
           ))}
         </Segmented>
@@ -84,7 +86,7 @@ export function SalesOrdersTable({ orders }: { orders: SalesOrder[] }) {
         <div className="relative min-w-[220px]">
           <Search className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input
-            placeholder="Search sales orders…"
+            placeholder={t("salesOrder.searchPlaceholder")}
             className="pl-9"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
@@ -97,13 +99,15 @@ export function SalesOrdersTable({ orders }: { orders: SalesOrder[] }) {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="pl-4">Order No</TableHead>
-                <TableHead>Customer</TableHead>
-                <TableHead>Project</TableHead>
-                <TableHead>Quote</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Value</TableHead>
-                <TableHead className="pr-4">Signed date</TableHead>
+                <TableHead className="pl-4">
+                  {t("salesOrder.colOrderNo")}
+                </TableHead>
+                <TableHead>{t("doc.customer")}</TableHead>
+                <TableHead>{t("doc.project")}</TableHead>
+                <TableHead>{t("salesOrder.colQuote")}</TableHead>
+                <TableHead>{t("doc.status")}</TableHead>
+                <TableHead>{t("doc.value")}</TableHead>
+                <TableHead className="pr-4">{t("doc.signedDate")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>

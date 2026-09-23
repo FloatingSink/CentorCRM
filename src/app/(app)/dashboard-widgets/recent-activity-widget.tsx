@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import type { activityRelatedTypeEnum } from "@/db/schema/activity";
 import { activityRelatedHref } from "@/lib/dashboard";
 import { formatDateTime } from "@/lib/date";
+import { useT } from "@/lib/i18n/client";
 
 type Row = {
   id: string;
@@ -16,9 +17,10 @@ type Row = {
 };
 
 export function RecentActivityWidget({ rows }: { rows: Row[] }) {
+  const { locale, t } = useT();
   if (rows.length === 0) {
     return (
-      <p className="text-sm text-muted-foreground">No activity logged yet.</p>
+      <p className="text-sm text-muted-foreground">{t("activity.empty")}</p>
     );
   }
 
@@ -27,9 +29,7 @@ export function RecentActivityWidget({ rows }: { rows: Row[] }) {
       {rows.map((row) => (
         <li key={row.id} className="flex flex-col gap-0.5">
           <div className="flex items-center gap-2">
-            <Badge variant="secondary" className="capitalize">
-              {row.type}
-            </Badge>
+            <Badge variant="secondary">{t(`activityType.${row.type}`)}</Badge>
             <Link
               href={activityRelatedHref(row.relatedType, row.relatedId)}
               className="truncate hover:underline"
@@ -38,7 +38,8 @@ export function RecentActivityWidget({ rows }: { rows: Row[] }) {
             </Link>
           </div>
           <p className="text-xs text-muted-foreground">
-            {row.userName ?? "Someone"} · {formatDateTime(row.occurredAt)}
+            {row.userName ?? t("widget.someone")} ·{" "}
+            {formatDateTime(row.occurredAt, locale)}
           </p>
         </li>
       ))}

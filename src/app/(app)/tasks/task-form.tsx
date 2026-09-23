@@ -15,12 +15,14 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { useT } from "@/lib/i18n/client";
 
 export function TaskForm({
   users,
 }: {
   users: { id: string; name: string | null }[];
 }) {
+  const { t } = useT();
   const [state, formAction, pending] = useActionState(
     createTaskAction,
     undefined,
@@ -29,29 +31,29 @@ export function TaskForm({
   return (
     <Card>
       <CardHeader>
-        <CardTitle>New task</CardTitle>
+        <CardTitle>{t("task.new")}</CardTitle>
       </CardHeader>
       <CardContent>
         {state?.error ? (
-          <p className="mb-4 text-sm text-destructive">{state.error}</p>
+          <p className="mb-4 text-sm text-destructive">{t(state.error)}</p>
         ) : null}
         <form action={formAction} className="flex flex-col gap-4">
           <div className="flex flex-col gap-2">
             <Label htmlFor="title" required>
-              Title
+              {t("task.title")}
             </Label>
             <Input id="title" name="title" required />
           </div>
 
           <div className="flex flex-col gap-2">
-            <Label htmlFor="description">Description</Label>
+            <Label htmlFor="description">{t("task.description")}</Label>
             <Textarea id="description" name="description" />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div className="flex flex-col gap-2">
               <Label htmlFor="assigneeUserId" required>
-                Assign to
+                {t("task.assignTo")}
               </Label>
               <Select
                 name="assigneeUserId"
@@ -61,7 +63,7 @@ export function TaskForm({
                 }))}
               >
                 <SelectTrigger id="assigneeUserId">
-                  <SelectValue placeholder="Select a person" />
+                  <SelectValue placeholder={t("common.selectPerson")} />
                 </SelectTrigger>
                 <SelectContent>
                   {users.map((u) => (
@@ -73,13 +75,13 @@ export function TaskForm({
               </Select>
             </div>
             <div className="flex flex-col gap-2">
-              <Label htmlFor="dueDate">Due date</Label>
+              <Label htmlFor="dueDate">{t("task.dueDate")}</Label>
               <Input id="dueDate" name="dueDate" type="date" />
             </div>
           </div>
 
           <Button type="submit" disabled={pending} className="w-fit">
-            {pending ? "Saving…" : "Create task"}
+            {pending ? t("common.saving") : t("task.create")}
           </Button>
         </form>
       </CardContent>

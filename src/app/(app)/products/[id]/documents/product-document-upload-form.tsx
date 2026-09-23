@@ -23,19 +23,20 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { useT } from "@/lib/i18n/client";
 
 const DOC_TYPES = [
-  { value: "TDS", label: "TDS" },
-  { value: "SDS", label: "SDS" },
-  { value: "COC", label: "COC" },
-  { value: "test_report", label: "Test report" },
-  { value: "other", label: "Other" },
+  { value: "TDS", label: "productDocType.TDS" },
+  { value: "SDS", label: "productDocType.SDS" },
+  { value: "COC", label: "productDocType.COC" },
+  { value: "test_report", label: "productDocType.test_report" },
+  { value: "other", label: "productDocType.other" },
 ] as const;
 
 const LANGUAGES = [
-  { value: "en", label: "English" },
-  { value: "zh", label: "Chinese" },
-  { value: "bilingual", label: "Bilingual" },
+  { value: "en", label: "language.en" },
+  { value: "zh", label: "language.zh" },
+  { value: "bilingual", label: "language.bilingual" },
 ] as const;
 
 export function ProductDocumentUploadForm({
@@ -43,6 +44,7 @@ export function ProductDocumentUploadForm({
 }: {
   productId: string;
 }) {
+  const { t } = useT();
   const router = useRouter();
   const [docType, setDocType] =
     useState<(typeof DOC_TYPES)[number]["value"]>("TDS");
@@ -90,12 +92,12 @@ export function ProductDocumentUploadForm({
         headers: { "Content-Type": file.type || "application/octet-stream" },
       });
     } catch {
-      setError("Upload to storage failed");
+      setError("error.uploadFailed");
       setPending(false);
       return;
     }
     if (!putResponse.ok) {
-      setError("Upload to storage failed");
+      setError("error.uploadFailed");
       setPending(false);
       return;
     }
@@ -128,7 +130,7 @@ export function ProductDocumentUploadForm({
     <Card>
       <CardContent>
         {error ? (
-          <p className="mb-4 text-sm text-destructive">{error}</p>
+          <p className="mb-4 text-sm text-destructive">{t(error)}</p>
         ) : null}
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <div className="grid grid-cols-2 gap-4">
@@ -140,7 +142,7 @@ export function ProductDocumentUploadForm({
                     required
                     className="cursor-help underline decoration-dotted underline-offset-2"
                   >
-                    Type
+                    {t("product.colDocType")}
                   </Label>
                 </TooltipTrigger>
                 <TooltipContent side="right">
@@ -152,15 +154,18 @@ export function ProductDocumentUploadForm({
               <Select
                 value={docType}
                 onValueChange={(v) => setDocType(v as typeof docType)}
-                items={DOC_TYPES}
+                items={DOC_TYPES.map((d) => ({
+                  value: d.value,
+                  label: t(d.label),
+                }))}
               >
                 <SelectTrigger id="docType">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {DOC_TYPES.map((t) => (
-                    <SelectItem key={t.value} value={t.value}>
-                      {t.label}
+                  {DOC_TYPES.map((item) => (
+                    <SelectItem key={item.value} value={item.value}>
+                      {t(item.label)}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -168,12 +173,15 @@ export function ProductDocumentUploadForm({
             </div>
             <div className="flex flex-col gap-2">
               <Label htmlFor="language" required>
-                Language
+                {t("product.colLanguage")}
               </Label>
               <Select
                 value={language}
                 onValueChange={(v) => setLanguage(v as typeof language)}
-                items={LANGUAGES}
+                items={LANGUAGES.map((l) => ({
+                  value: l.value,
+                  label: t(l.label),
+                }))}
               >
                 <SelectTrigger id="language">
                   <SelectValue />
@@ -181,7 +189,7 @@ export function ProductDocumentUploadForm({
                 <SelectContent>
                   {LANGUAGES.map((l) => (
                     <SelectItem key={l.value} value={l.value}>
-                      {l.label}
+                      {t(l.label)}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -191,7 +199,7 @@ export function ProductDocumentUploadForm({
 
           <div className="grid grid-cols-2 gap-4">
             <div className="flex flex-col gap-2">
-              <Label htmlFor="version">Version</Label>
+              <Label htmlFor="version">{t("product.version")}</Label>
               <Input
                 id="version"
                 value={version}
@@ -199,7 +207,7 @@ export function ProductDocumentUploadForm({
               />
             </div>
             <div className="flex flex-col gap-2">
-              <Label htmlFor="issuedDate">Issued date</Label>
+              <Label htmlFor="issuedDate">{t("product.issuedDate")}</Label>
               <Input
                 id="issuedDate"
                 type="date"
@@ -211,7 +219,7 @@ export function ProductDocumentUploadForm({
 
           <div className="flex flex-col gap-2">
             <Label htmlFor="file" required>
-              File
+              {t("document.file")}
             </Label>
             <Input
               id="file"

@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 
 import { Card, CardContent } from "@/components/ui/card";
+import { useT } from "@/lib/i18n/client";
 
 const DEBOUNCE_MS = 1000;
 
@@ -32,6 +33,7 @@ export function PdfPreviewPanel({
   payloadKey: string;
   fetchPreview: () => Promise<PreviewResult>;
 }) {
+  const { t } = useT();
   const [state, setState] = useState<PanelState>("loading");
   const [objectUrl, setObjectUrl] = useState<string | null>(null);
   const objectUrlRef = useRef<string | null>(null);
@@ -100,16 +102,16 @@ export function PdfPreviewPanel({
         {state === "ready" && objectUrl ? (
           <iframe
             src={objectUrl}
-            title="Document preview"
+            title={t("pdfPreview.heading")}
             className="h-full w-full"
           />
         ) : (
           <div className="flex h-full items-center justify-center p-6 text-center text-sm text-muted-foreground">
             {state === "loading"
-              ? "Updating preview…"
+              ? t("pdfPreview.updating")
               : state === "incomplete"
-                ? "Fill in the required fields to see a preview."
-                : "Couldn't generate a preview. Try again shortly."}
+                ? t("pdfPreview.incomplete")
+                : t("pdfPreview.error")}
           </div>
         )}
       </CardContent>

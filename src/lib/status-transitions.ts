@@ -48,14 +48,13 @@ export function canEditQuotation(status: QuotationStatus): boolean {
 
 // Hover-tooltip copy for the status buttons in quotation-builder.tsx — kept
 // alongside the rules it describes rather than duplicated per caller.
+// i18n dictionary keys, resolved by the builder through t().
 export const QUOTATION_STATUS_HELP: Record<QuotationStatus, string> = {
-  draft: "Being prepared — header and lines can still be edited.",
-  sent: "Sent to the customer. Can be accepted, rejected, or pulled back to draft.",
-  accepted:
-    'Customer accepted — locked from further edits. A "Convert to sales order" link appears below. To change prices or lines, save as a new version instead.',
-  rejected: "Customer rejected. Can be reopened as draft to revise and resend.",
-  superseded:
-    "Replaced by a newer version, kept for history — not a status you set manually.",
+  draft: "quotationStatusHelp.draft",
+  sent: "quotationStatusHelp.sent",
+  accepted: "quotationStatusHelp.accepted",
+  rejected: "quotationStatusHelp.rejected",
+  superseded: "quotationStatusHelp.superseded",
 };
 
 export type OrderStatus =
@@ -102,11 +101,10 @@ export function canEditOrder(status: OrderStatus): boolean {
 // purchase-order-builder.tsx — one definition, shared by both (identical
 // transition rules, confirmed with Jia Long — see the comment above).
 export const ORDER_STATUS_HELP: Record<OrderStatus, string> = {
-  draft: "Being prepared — header and lines can still be edited.",
-  confirmed: "Confirmed with the counterparty. Locked from further edits.",
-  in_production: "Goods are being manufactured/prepared.",
-  shipped: "Goods have left for delivery.",
-  completed:
-    "Delivered and closed out — a terminal status, no further changes.",
-  cancelled: "Cancelled — a terminal status, no further changes.",
+  draft: "orderStatusHelp.draft",
+  confirmed: "orderStatusHelp.confirmed",
+  in_production: "orderStatusHelp.in_production",
+  shipped: "orderStatusHelp.shipped",
+  completed: "orderStatusHelp.completed",
+  cancelled: "orderStatusHelp.cancelled",
 };

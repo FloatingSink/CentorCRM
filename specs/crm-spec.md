@@ -241,7 +241,10 @@ opportunities, sales orders, purchase orders — not quotations, matching `activ
 - **FX**: snapshot the rate on the document at issue date in `fx_rate_to_sgd`;
   do not recompute historical documents from live rates.
 - **Bilingual**: any user-visible name has `_en` and `_zh` variants. UI language is
-  a user preference; document language is a per-document choice.
+  a user preference; document language is a per-document choice. The UI preference
+  is a per-browser cookie today, not a column on `user` — so it does not follow a
+  user between machines (docs/decisions.md, 2026-09-23). Where a record is rendered
+  in the Chinese UI, its `_zh` name is shown when set and its `_en` name otherwise.
 - **Dates**: store UTC timestamps; render in Asia/Singapore.
 - **Soft delete**: `is_active` / `archived_at`. Nothing commercial is ever hard-deleted.
 - **Numbering**: quote/order references are generated per legal entity, e.g.

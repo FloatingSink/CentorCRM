@@ -24,11 +24,13 @@ import {
   type DashboardWidgetSize,
   type DashboardWidgetType,
 } from "@/lib/dashboard";
+import { useT } from "@/lib/i18n/client";
 
+// `label` is a dictionary key.
 const SIZE_OPTIONS: { value: DashboardWidgetSize; label: string }[] = [
-  { value: "small", label: "S" },
-  { value: "medium", label: "M" },
-  { value: "large", label: "L" },
+  { value: "small", label: "widgetSize.small" },
+  { value: "medium", label: "widgetSize.medium" },
+  { value: "large", label: "widgetSize.large" },
 ];
 
 // Shared chrome for every widget: title from the catalog (single source of
@@ -61,6 +63,8 @@ export function WidgetCard({
   dragHandleListeners?: DraggableSyntheticListeners;
   children: React.ReactNode;
 }) {
+  const { t } = useT();
+
   return (
     <Card className="h-full">
       <CardHeader>
@@ -71,19 +75,19 @@ export function WidgetCard({
                 <button
                   type="button"
                   className="cursor-grab touch-none text-muted-foreground active:cursor-grabbing"
-                  aria-label={`Reorder ${WIDGET_CATALOG[widgetType].label}`}
+                  aria-label={t("dashboard.reorderWidget", {
+                    name: t(WIDGET_CATALOG[widgetType].label),
+                  })}
                   {...dragHandleAttributes}
                   {...dragHandleListeners}
                 >
                   <GripVertical className="size-4" />
                 </button>
               </TooltipTrigger>
-              <TooltipContent>
-                Drag to move — drop on another widget to swap places.
-              </TooltipContent>
+              <TooltipContent>{t("dashboard.dragHelp")}</TooltipContent>
             </Tooltip>
           )}
-          <CardTitle>{WIDGET_CATALOG[widgetType].label}</CardTitle>
+          <CardTitle>{t(WIDGET_CATALOG[widgetType].label)}</CardTitle>
         </div>
         {editable && (
           <CardAction className="flex items-center gap-2">
@@ -95,7 +99,7 @@ export function WidgetCard({
             >
               {SIZE_OPTIONS.map((option) => (
                 <SegmentedItem key={option.value} value={option.value}>
-                  {option.label}
+                  {t(option.label)}
                 </SegmentedItem>
               ))}
             </Segmented>
@@ -104,15 +108,15 @@ export function WidgetCard({
                 <button
                   type="button"
                   onClick={onRemove}
-                  aria-label={`Remove ${WIDGET_CATALOG[widgetType].label}`}
+                  aria-label={t("dashboard.removeWidget", {
+                    name: t(WIDGET_CATALOG[widgetType].label),
+                  })}
                   className="text-muted-foreground hover:text-foreground"
                 >
                   <X className="size-4" />
                 </button>
               </TooltipTrigger>
-              <TooltipContent>
-                Removes it from your dashboard — you can add it back later.
-              </TooltipContent>
+              <TooltipContent>{t("dashboard.removeHelp")}</TooltipContent>
             </Tooltip>
           </CardAction>
         )}

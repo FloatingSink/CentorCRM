@@ -41,12 +41,13 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { useT } from "@/lib/i18n/client";
 
 const INCOTERMS = ["EXW", "FOB", "CFR", "CIF", "DAP"] as const;
 const LANGUAGES = [
-  { value: "en", label: "English" },
-  { value: "zh", label: "Chinese" },
-  { value: "bilingual", label: "Bilingual" },
+  { value: "en", label: "language.en" },
+  { value: "zh", label: "language.zh" },
+  { value: "bilingual", label: "language.bilingual" },
 ] as const;
 const STATUSES = ["draft", "sent", "accepted", "rejected"] as const;
 
@@ -112,6 +113,7 @@ export function QuotationBuilder({
     discountPct: string | null;
   }[];
 }) {
+  const { t } = useT();
   const router = useRouter();
   const [opportunityId, setOpportunityId] = useState(
     defaultHeader?.opportunityId ?? "",
@@ -278,7 +280,7 @@ export function QuotationBuilder({
   return (
     <div className="grid grid-cols-1 gap-6 2xl:grid-cols-[1fr_480px]">
       <div className="flex min-w-0 flex-col gap-6">
-        {error ? <p className="text-sm text-destructive">{error}</p> : null}
+        {error ? <p className="text-sm text-destructive">{t(error)}</p> : null}
 
         {mode === "edit" ? (
           <div className="flex flex-wrap items-center gap-3">
@@ -298,16 +300,15 @@ export function QuotationBuilder({
                       )
                     }
                     onClick={() => handleStatusChange(s)}
-                    className="capitalize"
                   >
-                    {s}
+                    {t(`quotationStatus.${s}`)}
                   </Button>
                 </TooltipTrigger>
-                <TooltipContent>{QUOTATION_STATUS_HELP[s]}</TooltipContent>
+                <TooltipContent>{t(QUOTATION_STATUS_HELP[s])}</TooltipContent>
               </Tooltip>
             ))}
             {status === "superseded" ? (
-              <Badge variant="secondary">Superseded</Badge>
+              <Badge variant="secondary">{t("quotation.superseded")}</Badge>
             ) : null}
           </div>
         ) : null}
@@ -317,7 +318,7 @@ export function QuotationBuilder({
             {mode === "create" ? (
               <div className="flex flex-col gap-2">
                 <Label htmlFor="opportunityId" required>
-                  Opportunity
+                  {t("doc.opportunity")}
                 </Label>
                 <Select
                   value={opportunityId}
@@ -328,7 +329,7 @@ export function QuotationBuilder({
                   }))}
                 >
                   <SelectTrigger id="opportunityId">
-                    <SelectValue placeholder="Select an opportunity" />
+                    <SelectValue placeholder={t("doc.selectOpportunity")} />
                   </SelectTrigger>
                   <SelectContent>
                     {opportunities.map((o) => (
@@ -344,7 +345,7 @@ export function QuotationBuilder({
             <div className="grid grid-cols-3 gap-4">
               <div className="flex flex-col gap-2">
                 <Label htmlFor="legalEntityId" required>
-                  Legal entity
+                  {t("doc.legalEntity")}
                 </Label>
                 <Select
                   value={legalEntityId}
@@ -355,7 +356,7 @@ export function QuotationBuilder({
                   }))}
                 >
                   <SelectTrigger id="legalEntityId">
-                    <SelectValue placeholder="Select an entity" />
+                    <SelectValue placeholder={t("doc.selectEntity")} />
                   </SelectTrigger>
                   <SelectContent>
                     {legalEntities.map((le) => (
@@ -368,7 +369,7 @@ export function QuotationBuilder({
               </div>
               <div className="flex flex-col gap-2">
                 <Label htmlFor="customerCompanyId" required>
-                  Customer
+                  {t("doc.customer")}
                 </Label>
                 <Select
                   value={customerCompanyId}
@@ -379,7 +380,7 @@ export function QuotationBuilder({
                   }))}
                 >
                   <SelectTrigger id="customerCompanyId">
-                    <SelectValue placeholder="Select a company" />
+                    <SelectValue placeholder={t("doc.selectCompany")} />
                   </SelectTrigger>
                   <SelectContent>
                     {companies.map((c) => (
@@ -391,14 +392,14 @@ export function QuotationBuilder({
                 </Select>
               </div>
               <div className="flex flex-col gap-2">
-                <Label htmlFor="contactId">Contact</Label>
+                <Label htmlFor="contactId">{t("doc.contact")}</Label>
                 <Select
                   value={contactId || "none"}
                   onValueChange={(v) =>
                     setContactId(v === "none" || !v ? "" : v)
                   }
                   items={[
-                    { value: "none", label: "None" },
+                    { value: "none", label: t("contact.none") },
                     ...contactsForCompany.map((c) => ({
                       value: c.id,
                       label: c.nameEn,
@@ -409,7 +410,7 @@ export function QuotationBuilder({
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="none">None</SelectItem>
+                    <SelectItem value="none">{t("contact.none")}</SelectItem>
                     {contactsForCompany.map((c) => (
                       <SelectItem key={c.id} value={c.id}>
                         {c.nameEn}
@@ -423,7 +424,7 @@ export function QuotationBuilder({
             <div className="grid grid-cols-4 gap-4">
               <div className="flex flex-col gap-2">
                 <Label htmlFor="issueDate" required>
-                  Issue date
+                  {t("doc.issueDate")}
                 </Label>
                 <Input
                   id="issueDate"
@@ -433,7 +434,7 @@ export function QuotationBuilder({
                 />
               </div>
               <div className="flex flex-col gap-2">
-                <Label htmlFor="validUntil">Valid until</Label>
+                <Label htmlFor="validUntil">{t("doc.validUntil")}</Label>
                 <Input
                   id="validUntil"
                   type="date"
@@ -443,7 +444,7 @@ export function QuotationBuilder({
               </div>
               <div className="flex flex-col gap-2">
                 <Label htmlFor="currency" required>
-                  Currency
+                  {t("doc.currency")}
                 </Label>
                 <Input
                   id="currency"
@@ -454,11 +455,14 @@ export function QuotationBuilder({
                 />
               </div>
               <div className="flex flex-col gap-2">
-                <Label htmlFor="language">Language</Label>
+                <Label htmlFor="language">{t("doc.language")}</Label>
                 <Select
                   value={language}
                   onValueChange={(v) => setLanguage(v ?? "en")}
-                  items={LANGUAGES}
+                  items={LANGUAGES.map((l) => ({
+                    value: l.value,
+                    label: t(l.label),
+                  }))}
                 >
                   <SelectTrigger id="language">
                     <SelectValue />
@@ -466,7 +470,7 @@ export function QuotationBuilder({
                   <SelectContent>
                     {LANGUAGES.map((l) => (
                       <SelectItem key={l.value} value={l.value}>
-                        {l.label}
+                        {t(l.label)}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -476,14 +480,14 @@ export function QuotationBuilder({
 
             <div className="grid grid-cols-4 gap-4">
               <div className="flex flex-col gap-2">
-                <Label htmlFor="incoterm">Incoterm</Label>
+                <Label htmlFor="incoterm">{t("doc.incoterm")}</Label>
                 <Select
                   value={incoterm || "none"}
                   onValueChange={(v) =>
                     setIncoterm(v === "none" || !v ? "" : v)
                   }
                   items={[
-                    { value: "none", label: "Unspecified" },
+                    { value: "none", label: t("doc.unspecified") },
                     ...INCOTERMS.map((i) => ({ value: i, label: i })),
                   ]}
                 >
@@ -491,7 +495,7 @@ export function QuotationBuilder({
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="none">Unspecified</SelectItem>
+                    <SelectItem value="none">{t("doc.unspecified")}</SelectItem>
                     {INCOTERMS.map((i) => (
                       <SelectItem key={i} value={i}>
                         {i}
@@ -501,7 +505,7 @@ export function QuotationBuilder({
                 </Select>
               </div>
               <div className="flex flex-col gap-2">
-                <Label htmlFor="namedPlace">Named place</Label>
+                <Label htmlFor="namedPlace">{t("doc.namedPlace")}</Label>
                 <Input
                   id="namedPlace"
                   value={namedPlace}
@@ -510,7 +514,7 @@ export function QuotationBuilder({
                 />
               </div>
               <div className="flex flex-col gap-2">
-                <Label htmlFor="paymentTerms">Payment terms</Label>
+                <Label htmlFor="paymentTerms">{t("doc.paymentTerms")}</Label>
                 <Input
                   id="paymentTerms"
                   value={paymentTerms}
@@ -518,7 +522,7 @@ export function QuotationBuilder({
                 />
               </div>
               <div className="flex flex-col gap-2">
-                <Label htmlFor="leadTimeDays">Lead time (days)</Label>
+                <Label htmlFor="leadTimeDays">{t("doc.leadTimeDays")}</Label>
                 <Input
                   id="leadTimeDays"
                   type="number"
@@ -530,7 +534,7 @@ export function QuotationBuilder({
             </div>
 
             <div className="flex flex-col gap-2">
-              <Label htmlFor="notes">Notes</Label>
+              <Label htmlFor="notes">{t("doc.notes")}</Label>
               <Textarea
                 id="notes"
                 value={notes}
@@ -553,8 +557,7 @@ export function QuotationBuilder({
 
         {mode === "edit" && !editable ? (
           <p className="text-sm text-muted-foreground">
-            Only draft quotations can be edited — use &ldquo;Save as new
-            version&rdquo; to revise this one.
+            {t("quotation.draftOnly")}
           </p>
         ) : null}
 
@@ -595,7 +598,7 @@ export function QuotationBuilder({
               href={`/sales-orders/new?quotationId=${quotationId}`}
               className={buttonVariants({ variant: "ghost" })}
             >
-              Convert to sales order
+              {t("quotation.convertToSalesOrder")}
             </a>
           ) : null}
         </div>

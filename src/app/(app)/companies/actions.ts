@@ -26,7 +26,7 @@ export async function createCompanyAction(
 ): Promise<{ error?: string }> {
   const parsed = parseCompanyForm(formData);
   if (!parsed.success) {
-    return { error: parsed.error.issues[0]?.message ?? "Invalid input" };
+    return { error: parsed.error.issues[0]?.message ?? "error.invalidInput" };
   }
 
   const session = await auth();
@@ -45,7 +45,7 @@ export async function updateCompanyAction(
 ): Promise<{ error?: string }> {
   const parsed = parseCompanyForm(formData);
   if (!parsed.success) {
-    return { error: parsed.error.issues[0]?.message ?? "Invalid input" };
+    return { error: parsed.error.issues[0]?.message ?? "error.invalidInput" };
   }
 
   const session = await auth();

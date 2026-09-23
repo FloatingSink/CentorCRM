@@ -29,7 +29,7 @@ export async function createContactAction(
 ): Promise<{ error?: string }> {
   const parsed = parseContactForm(formData);
   if (!parsed.success) {
-    return { error: parsed.error.issues[0]?.message ?? "Invalid input" };
+    return { error: parsed.error.issues[0]?.message ?? "error.invalidInput" };
   }
 
   const session = await auth();
@@ -48,7 +48,7 @@ export async function updateContactAction(
 ): Promise<{ error?: string }> {
   const parsed = parseContactForm(formData);
   if (!parsed.success) {
-    return { error: parsed.error.issues[0]?.message ?? "Invalid input" };
+    return { error: parsed.error.issues[0]?.message ?? "error.invalidInput" };
   }
 
   const session = await auth();

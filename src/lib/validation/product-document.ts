@@ -1,3 +1,5 @@
+// Validation messages are i18n dictionary keys, resolved by the form
+// through t() — see src/lib/i18n/dictionary.ts.
 import { createSchemaFactory } from "drizzle-zod";
 import { z } from "zod";
 
@@ -13,7 +15,7 @@ export const productDocumentUploadRequestSchema = z.object({
   productId: z.uuid(),
   docType: z.enum(productDocTypeEnum.enumValues),
   language: z.enum(productDocLanguageEnum.enumValues),
-  filename: z.string().min(1, "Choose a file"),
+  filename: z.string().min(1, "error.chooseFile"),
   contentType: z.string().min(1),
 });
 

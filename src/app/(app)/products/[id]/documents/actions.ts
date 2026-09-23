@@ -19,12 +19,12 @@ export async function requestProductDocumentUploadUrl(
 ): Promise<{ uploadUrl: string; fileKey: string } | { error: string }> {
   const parsed = productDocumentUploadRequestSchema.safeParse(input);
   if (!parsed.success) {
-    return { error: parsed.error.issues[0]?.message ?? "Invalid input" };
+    return { error: parsed.error.issues[0]?.message ?? "error.invalidInput" };
   }
 
   const session = await auth();
   if (!session?.user) {
-    return { error: "Not signed in" };
+    return { error: "error.notSignedIn" };
   }
 
   const { productId, docType, language, filename, contentType } = parsed.data;
@@ -44,12 +44,12 @@ export async function createProductDocumentAction(
 ): Promise<{ id: string } | { error: string }> {
   const parsed = productDocumentCreateSchema.safeParse(input);
   if (!parsed.success) {
-    return { error: parsed.error.issues[0]?.message ?? "Invalid input" };
+    return { error: parsed.error.issues[0]?.message ?? "error.invalidInput" };
   }
 
   const session = await auth();
   if (!session?.user) {
-    return { error: "Not signed in" };
+    return { error: "error.notSignedIn" };
   }
 
   const created = await createProductDocument(parsed.data, session.user.id);

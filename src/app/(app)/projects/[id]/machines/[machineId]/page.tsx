@@ -37,7 +37,7 @@ export default async function MachineDetailPage({
           isActive: machine.isActive,
         }}
         mode="edit"
-        submitLabel="Save changes"
+        submitLabel="common.saveChanges"
       />
     </div>
   );

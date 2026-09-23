@@ -40,12 +40,13 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { useT } from "@/lib/i18n/client";
 
 const INCOTERMS = ["EXW", "FOB", "CFR", "CIF", "DAP"] as const;
 const LANGUAGES = [
-  { value: "en", label: "English" },
-  { value: "zh", label: "Chinese" },
-  { value: "bilingual", label: "Bilingual" },
+  { value: "en", label: "language.en" },
+  { value: "zh", label: "language.zh" },
+  { value: "bilingual", label: "language.bilingual" },
 ] as const;
 const STATUSES = [
   "draft",
@@ -118,6 +119,7 @@ export function PurchaseOrderBuilder({
     netWeightKg: string | null;
   }[];
 }) {
+  const { t } = useT();
   const router = useRouter();
   const [legalEntityId, setLegalEntityId] = useState(
     defaultHeader.legalEntityId,
@@ -298,7 +300,7 @@ export function PurchaseOrderBuilder({
   return (
     <div className="grid grid-cols-1 gap-6 2xl:grid-cols-[1fr_480px]">
       <div className="flex min-w-0 flex-col gap-6">
-        {error ? <p className="text-sm text-destructive">{error}</p> : null}
+        {error ? <p className="text-sm text-destructive">{t(error)}</p> : null}
 
         {mode === "edit" ? (
           <div className="flex flex-wrap items-center gap-3">
@@ -318,12 +320,11 @@ export function PurchaseOrderBuilder({
                       )
                     }
                     onClick={() => handleStatusChange(s)}
-                    className="capitalize"
                   >
-                    {s.replace("_", " ")}
+                    {t(`orderStatus.${s}`)}
                   </Button>
                 </TooltipTrigger>
-                <TooltipContent>{ORDER_STATUS_HELP[s]}</TooltipContent>
+                <TooltipContent>{t(ORDER_STATUS_HELP[s])}</TooltipContent>
               </Tooltip>
             ))}
           </div>
@@ -334,7 +335,7 @@ export function PurchaseOrderBuilder({
             <div className="grid grid-cols-3 gap-4">
               <div className="flex flex-col gap-2">
                 <Label htmlFor="legalEntityId" required>
-                  Legal entity (buyer)
+                  {t("purchaseOrder.legalEntityBuyer")}
                 </Label>
                 <Select
                   value={legalEntityId}
@@ -345,7 +346,7 @@ export function PurchaseOrderBuilder({
                   }))}
                 >
                   <SelectTrigger id="legalEntityId">
-                    <SelectValue placeholder="Select an entity" />
+                    <SelectValue placeholder={t("doc.selectEntity")} />
                   </SelectTrigger>
                   <SelectContent>
                     {legalEntities.map((le) => (
@@ -358,7 +359,7 @@ export function PurchaseOrderBuilder({
               </div>
               <div className="flex flex-col gap-2">
                 <Label htmlFor="projectId" required>
-                  Project
+                  {t("doc.project")}
                 </Label>
                 <Select
                   value={projectId}
@@ -369,7 +370,7 @@ export function PurchaseOrderBuilder({
                   }))}
                 >
                   <SelectTrigger id="projectId">
-                    <SelectValue placeholder="Select a project" />
+                    <SelectValue placeholder={t("doc.selectProject")} />
                   </SelectTrigger>
                   <SelectContent>
                     {projects.map((p) => (
@@ -381,7 +382,7 @@ export function PurchaseOrderBuilder({
                 </Select>
               </div>
               <div className="flex flex-col gap-2">
-                <Label htmlFor="contractNo">Contract no.</Label>
+                <Label htmlFor="contractNo">{t("doc.contractNo")}</Label>
                 <Input
                   id="contractNo"
                   value={contractNo}
@@ -392,14 +393,16 @@ export function PurchaseOrderBuilder({
 
             {mode === "edit" ? (
               <div className="flex flex-col gap-2">
-                <Label htmlFor="executedDocumentId">Executed document</Label>
+                <Label htmlFor="executedDocumentId">
+                  {t("doc.executedDocument")}
+                </Label>
                 <Select
                   value={executedDocumentId || "none"}
                   onValueChange={(v) =>
                     setExecutedDocumentId(v === "none" || !v ? "" : v)
                   }
                   items={[
-                    { value: "none", label: "None" },
+                    { value: "none", label: t("contact.none") },
                     ...documents.map((d) => ({ value: d.id, label: d.title })),
                   ]}
                 >
@@ -407,7 +410,7 @@ export function PurchaseOrderBuilder({
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="none">None</SelectItem>
+                    <SelectItem value="none">{t("contact.none")}</SelectItem>
                     {documents.map((d) => (
                       <SelectItem key={d.id} value={d.id}>
                         {d.title}
@@ -419,16 +422,18 @@ export function PurchaseOrderBuilder({
             ) : null}
 
             <div className="flex flex-col gap-2">
-              <Label required>Supplier</Label>
+              <Label required>{t("doc.supplier")}</Label>
               <Segmented
                 value={supplierType}
                 onValueChange={(v) =>
                   setSupplierType((v as "company" | "legalEntity") ?? "company")
                 }
               >
-                <SegmentedItem value="company">External company</SegmentedItem>
+                <SegmentedItem value="company">
+                  {t("doc.externalCompany")}
+                </SegmentedItem>
                 <SegmentedItem value="legalEntity">
-                  Our own legal entity
+                  {t("doc.ourLegalEntity")}
                 </SegmentedItem>
               </Segmented>
               {supplierType === "company" ? (
@@ -441,7 +446,7 @@ export function PurchaseOrderBuilder({
                   }))}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select a company" />
+                    <SelectValue placeholder={t("doc.selectCompany")} />
                   </SelectTrigger>
                   <SelectContent>
                     {companies.map((c) => (
@@ -461,7 +466,7 @@ export function PurchaseOrderBuilder({
                   }))}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select an entity" />
+                    <SelectValue placeholder={t("doc.selectEntity")} />
                   </SelectTrigger>
                   <SelectContent>
                     {legalEntities.map((le) => (
@@ -476,7 +481,7 @@ export function PurchaseOrderBuilder({
 
             <div className="flex flex-col gap-2">
               <Label htmlFor="linkedSalesOrderId">
-                Linked sales order (back-to-back)
+                {t("purchaseOrder.linkedSalesOrder")}
               </Label>
               <Select
                 value={linkedSalesOrderId || "none"}
@@ -484,7 +489,7 @@ export function PurchaseOrderBuilder({
                   setLinkedSalesOrderId(v === "none" || !v ? "" : v)
                 }
                 items={[
-                  { value: "none", label: "None" },
+                  { value: "none", label: t("contact.none") },
                   ...salesOrders.map((so) => ({
                     value: so.id,
                     label: so.orderNo,
@@ -495,7 +500,7 @@ export function PurchaseOrderBuilder({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="none">None</SelectItem>
+                  <SelectItem value="none">{t("contact.none")}</SelectItem>
                   {salesOrders.map((so) => (
                     <SelectItem key={so.id} value={so.id}>
                       {so.orderNo}
@@ -507,7 +512,9 @@ export function PurchaseOrderBuilder({
 
             <div className="grid grid-cols-2 gap-4">
               <div className="flex flex-col gap-2">
-                <Label htmlFor="deliveryLocation">Delivery location</Label>
+                <Label htmlFor="deliveryLocation">
+                  {t("doc.deliveryLocation")}
+                </Label>
                 <Input
                   id="deliveryLocation"
                   value={deliveryLocation}
@@ -516,7 +523,7 @@ export function PurchaseOrderBuilder({
               </div>
               <div className="flex flex-col gap-2">
                 <Label htmlFor="requiredDeliveryDate">
-                  Required delivery date
+                  {t("doc.requiredDeliveryDate")}
                 </Label>
                 <Input
                   id="requiredDeliveryDate"
@@ -529,7 +536,7 @@ export function PurchaseOrderBuilder({
 
             <div className="grid grid-cols-4 gap-4">
               <div className="flex flex-col gap-2">
-                <Label htmlFor="signedDate">Signed date</Label>
+                <Label htmlFor="signedDate">{t("doc.signedDate")}</Label>
                 <Input
                   id="signedDate"
                   type="date"
@@ -539,7 +546,7 @@ export function PurchaseOrderBuilder({
               </div>
               <div className="flex flex-col gap-2">
                 <Label htmlFor="currency" required>
-                  Currency
+                  {t("doc.currency")}
                 </Label>
                 <Input
                   id="currency"
@@ -551,7 +558,7 @@ export function PurchaseOrderBuilder({
               </div>
               <div className="flex flex-col gap-2">
                 <Label htmlFor="fxRateToSgd" required>
-                  FX rate to SGD
+                  {t("doc.fxRateToSgd")}
                 </Label>
                 <Input
                   id="fxRateToSgd"
@@ -562,14 +569,14 @@ export function PurchaseOrderBuilder({
                 />
               </div>
               <div className="flex flex-col gap-2">
-                <Label htmlFor="incoterm">Incoterm</Label>
+                <Label htmlFor="incoterm">{t("doc.incoterm")}</Label>
                 <Select
                   value={incoterm || "none"}
                   onValueChange={(v) =>
                     setIncoterm(v === "none" || !v ? "" : v)
                   }
                   items={[
-                    { value: "none", label: "Unspecified" },
+                    { value: "none", label: t("doc.unspecified") },
                     ...INCOTERMS.map((i) => ({ value: i, label: i })),
                   ]}
                 >
@@ -577,7 +584,7 @@ export function PurchaseOrderBuilder({
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="none">Unspecified</SelectItem>
+                    <SelectItem value="none">{t("doc.unspecified")}</SelectItem>
                     {INCOTERMS.map((i) => (
                       <SelectItem key={i} value={i}>
                         {i}
@@ -590,7 +597,7 @@ export function PurchaseOrderBuilder({
 
             <div className="grid grid-cols-3 gap-4">
               <div className="flex flex-col gap-2">
-                <Label htmlFor="namedPlace">Named place</Label>
+                <Label htmlFor="namedPlace">{t("doc.namedPlace")}</Label>
                 <Input
                   id="namedPlace"
                   value={namedPlace}
@@ -599,7 +606,7 @@ export function PurchaseOrderBuilder({
                 />
               </div>
               <div className="flex flex-col gap-2">
-                <Label htmlFor="governingLaw">Governing law</Label>
+                <Label htmlFor="governingLaw">{t("doc.governingLaw")}</Label>
                 <Input
                   id="governingLaw"
                   value={governingLaw}
@@ -607,7 +614,9 @@ export function PurchaseOrderBuilder({
                 />
               </div>
               <div className="flex flex-col gap-2">
-                <Label htmlFor="arbitrationRules">Arbitration rules</Label>
+                <Label htmlFor="arbitrationRules">
+                  {t("doc.arbitrationRules")}
+                </Label>
                 <Input
                   id="arbitrationRules"
                   placeholder="e.g. SIAC, HKIAC"
@@ -619,7 +628,9 @@ export function PurchaseOrderBuilder({
 
             <div className="grid grid-cols-4 gap-4">
               <div className="flex flex-col gap-2">
-                <Label htmlFor="deliveryMethod">Delivery method</Label>
+                <Label htmlFor="deliveryMethod">
+                  {t("doc.deliveryMethod")}
+                </Label>
                 <Input
                   id="deliveryMethod"
                   value={deliveryMethod}
@@ -627,7 +638,7 @@ export function PurchaseOrderBuilder({
                 />
               </div>
               <div className="flex flex-col gap-2">
-                <Label htmlFor="paymentMethod">Payment method</Label>
+                <Label htmlFor="paymentMethod">{t("doc.paymentMethod")}</Label>
                 <Input
                   id="paymentMethod"
                   value={paymentMethod}
@@ -636,7 +647,7 @@ export function PurchaseOrderBuilder({
               </div>
               <div className="flex flex-col gap-2">
                 <Label htmlFor="inspectionDays">
-                  Inspection window (working days)
+                  {t("doc.inspectionDays")}
                 </Label>
                 <Input
                   id="inspectionDays"
@@ -647,11 +658,14 @@ export function PurchaseOrderBuilder({
                 />
               </div>
               <div className="flex flex-col gap-2">
-                <Label htmlFor="language">Language</Label>
+                <Label htmlFor="language">{t("doc.language")}</Label>
                 <Select
                   value={language}
                   onValueChange={(v) => setLanguage(v ?? "en")}
-                  items={LANGUAGES}
+                  items={LANGUAGES.map((l) => ({
+                    value: l.value,
+                    label: t(l.label),
+                  }))}
                 >
                   <SelectTrigger id="language">
                     <SelectValue />
@@ -659,7 +673,7 @@ export function PurchaseOrderBuilder({
                   <SelectContent>
                     {LANGUAGES.map((l) => (
                       <SelectItem key={l.value} value={l.value}>
-                        {l.label}
+                        {t(l.label)}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -668,7 +682,7 @@ export function PurchaseOrderBuilder({
             </div>
 
             <div className="flex flex-col gap-2">
-              <Label htmlFor="notes">Notes</Label>
+              <Label htmlFor="notes">{t("doc.notes")}</Label>
               <Textarea
                 id="notes"
                 value={notes}
@@ -688,7 +702,7 @@ export function PurchaseOrderBuilder({
             />
 
             <div className="flex flex-col gap-2">
-              <Label>Net weight per line (kg) — optional</Label>
+              <Label>{t("doc.netWeightPerLine")}</Label>
               {lines.map((line) => {
                 const product = products.find((p) => p.id === line.productId);
                 return (
@@ -719,7 +733,7 @@ export function PurchaseOrderBuilder({
 
         {mode === "edit" && !editable ? (
           <p className="text-sm text-muted-foreground">
-            Only draft purchase orders can be edited.
+            {t("purchaseOrder.draftOnly")}
           </p>
         ) : null}
 

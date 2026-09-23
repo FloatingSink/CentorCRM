@@ -41,7 +41,7 @@ function checkNamedPlace(
   namedPlace: string | null | undefined,
 ): string | undefined {
   if (incoterm && incoterm !== "EXW" && !namedPlace) {
-    return "Named place is required for this incoterm";
+    return "error.namedPlaceRequired";
   }
   return undefined;
 }
@@ -55,7 +55,7 @@ function checkCustomerXor(
   const hasCompany = !!customerCompanyId;
   const hasLegalEntity = !!customerLegalEntityId;
   if (hasCompany === hasLegalEntity) {
-    return "Select exactly one customer: either a company or one of our own legal entities";
+    return "error.selectOneCustomer";
   }
   return undefined;
 }
@@ -65,7 +65,7 @@ export async function createSalesOrderAction(
 ): Promise<{ id: string } | { error: string }> {
   const parsed = salesOrderCreateSchema.safeParse(input);
   if (!parsed.success) {
-    return { error: parsed.error.issues[0]?.message ?? "Invalid input" };
+    return { error: parsed.error.issues[0]?.message ?? "error.invalidInput" };
   }
 
   const namedPlaceError = checkNamedPlace(
@@ -86,7 +86,7 @@ export async function createSalesOrderAction(
 
   const session = await auth();
   if (!session?.user) {
-    return { error: "Not signed in" };
+    return { error: "error.notSignedIn" };
   }
 
   const linesResult = convertLines(
@@ -111,7 +111,7 @@ export async function updateSalesOrderAction(
 ): Promise<{ id: string } | { error: string }> {
   const parsed = salesOrderCreateSchema.safeParse(input);
   if (!parsed.success) {
-    return { error: parsed.error.issues[0]?.message ?? "Invalid input" };
+    return { error: parsed.error.issues[0]?.message ?? "error.invalidInput" };
   }
 
   const namedPlaceError = checkNamedPlace(
@@ -132,7 +132,7 @@ export async function updateSalesOrderAction(
 
   const session = await auth();
   if (!session?.user) {
-    return { error: "Not signed in" };
+    return { error: "error.notSignedIn" };
   }
 
   const linesResult = convertLines(
@@ -164,7 +164,7 @@ export async function updateSalesOrderStatusAction(
 ): Promise<{ error?: string }> {
   const session = await auth();
   if (!session?.user) {
-    return { error: "Not signed in" };
+    return { error: "error.notSignedIn" };
   }
 
   await updateSalesOrderStatus(id, status);

@@ -21,14 +21,15 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { minorUnitDigits } from "@/lib/money";
+import { useT } from "@/lib/i18n/client";
 
 const STAGES = [
-  { value: "enquiry", label: "Enquiry" },
-  { value: "technical_review", label: "Technical review" },
-  { value: "quoted", label: "Quoted" },
-  { value: "negotiation", label: "Negotiation" },
-  { value: "won", label: "Won" },
-  { value: "lost", label: "Lost" },
+  { value: "enquiry", label: "opportunityStage.enquiry" },
+  { value: "technical_review", label: "opportunityStage.technical_review" },
+  { value: "quoted", label: "opportunityStage.quoted" },
+  { value: "negotiation", label: "opportunityStage.negotiation" },
+  { value: "won", label: "opportunityStage.won" },
+  { value: "lost", label: "opportunityStage.lost" },
 ] as const;
 
 // Free-form, not enforced anywhere — crm-spec.md §6.4's pipeline order,
@@ -36,8 +37,7 @@ const STAGES = [
 // stages or moving backward. Static overview for the editable form label;
 // per-stage copy (below) is for the read-only badges elsewhere that know
 // the actual current value.
-const OPPORTUNITY_PIPELINE_OVERVIEW =
-  "Pipeline order: Enquiry → Technical review → Quoted → Negotiation → Won/Lost. Free-form — changing this doesn't trigger anything automatically.";
+const OPPORTUNITY_PIPELINE_OVERVIEW = "opportunity.pipelineOverview";
 
 // Exported so opportunities-table.tsx and [id]/page.tsx can show the same
 // copy on their read-only stage badges instead of redefining it.
@@ -45,13 +45,12 @@ export const OPPORTUNITY_STAGE_HELP: Record<
   (typeof STAGES)[number]["value"],
   string
 > = {
-  enquiry: "Initial contact — not yet technically reviewed or quoted.",
-  technical_review:
-    "Being evaluated for technical fit before a quote is issued.",
-  quoted: "A quotation has been issued for this opportunity.",
-  negotiation: "In discussion with the customer on terms or price.",
-  won: "Won — a terminal stage.",
-  lost: 'Lost — a terminal stage. See "Lost reason" below.',
+  enquiry: "opportunityStageHelp.enquiry",
+  technical_review: "opportunityStageHelp.technical_review",
+  quoted: "opportunityStageHelp.quoted",
+  negotiation: "opportunityStageHelp.negotiation",
+  won: "opportunityStageHelp.won",
+  lost: "opportunityStageHelp.lost",
 };
 
 type OpportunityFormAction = (
@@ -112,19 +111,20 @@ export function OpportunityForm({
   mode: "create" | "edit";
   submitLabel: string;
 }) {
+  const { t } = useT();
   const [state, formAction, pending] = useActionState(action, undefined);
 
   return (
     <Card>
       <CardContent>
         {state?.error ? (
-          <p className="mb-4 text-sm text-destructive">{state.error}</p>
+          <p className="mb-4 text-sm text-destructive">{t(state.error)}</p>
         ) : null}
         <form action={formAction} className="flex flex-col gap-4">
           <div className="grid grid-cols-2 gap-4">
             <div className="flex flex-col gap-2">
               <Label htmlFor="reference" required>
-                Reference
+                {t("opportunity.reference")}
               </Label>
               <Input
                 id="reference"
@@ -135,7 +135,7 @@ export function OpportunityForm({
             </div>
             <div className="flex flex-col gap-2">
               <Label htmlFor="title" required>
-                Title
+                {t("opportunity.formTitle")}
               </Label>
               <Input
                 id="title"
@@ -149,7 +149,7 @@ export function OpportunityForm({
           <div className="grid grid-cols-3 gap-4">
             <div className="flex flex-col gap-2">
               <Label htmlFor="projectId" required>
-                Project
+                {t("opportunity.project")}
               </Label>
               <Select
                 name="projectId"
@@ -157,7 +157,7 @@ export function OpportunityForm({
                 items={projects.map((p) => ({ value: p.id, label: p.nameEn }))}
               >
                 <SelectTrigger id="projectId">
-                  <SelectValue placeholder="Select a project" />
+                  <SelectValue placeholder={t("opportunity.selectProject")} />
                 </SelectTrigger>
                 <SelectContent>
                   {projects.map((p) => (
@@ -170,7 +170,7 @@ export function OpportunityForm({
             </div>
             <div className="flex flex-col gap-2">
               <Label htmlFor="customerCompanyId" required>
-                Customer
+                {t("opportunity.customer")}
               </Label>
               <Select
                 name="customerCompanyId"
@@ -178,7 +178,7 @@ export function OpportunityForm({
                 items={companies.map((c) => ({ value: c.id, label: c.nameEn }))}
               >
                 <SelectTrigger id="customerCompanyId">
-                  <SelectValue placeholder="Select a company" />
+                  <SelectValue placeholder={t("opportunity.selectCompany")} />
                 </SelectTrigger>
                 <SelectContent>
                   {companies.map((c) => (
@@ -191,7 +191,7 @@ export function OpportunityForm({
             </div>
             <div className="flex flex-col gap-2">
               <Label htmlFor="legalEntityId" required>
-                Legal entity
+                {t("opportunity.legalEntity")}
               </Label>
               <Select
                 name="legalEntityId"
@@ -202,7 +202,7 @@ export function OpportunityForm({
                 }))}
               >
                 <SelectTrigger id="legalEntityId">
-                  <SelectValue placeholder="Select an entity" />
+                  <SelectValue placeholder={t("opportunity.selectEntity")} />
                 </SelectTrigger>
                 <SelectContent>
                   {legalEntities.map((le) => (
@@ -223,7 +223,7 @@ export function OpportunityForm({
                     htmlFor="stage"
                     className="cursor-help underline decoration-dotted underline-offset-2"
                   >
-                    Stage
+                    {t("opportunity.stage")}
                   </Label>
                 </TooltipTrigger>
                 <TooltipContent side="right">
@@ -233,7 +233,10 @@ export function OpportunityForm({
               <Select
                 name="stage"
                 defaultValue={defaultValues?.stage ?? "enquiry"}
-                items={STAGES}
+                items={STAGES.map((s) => ({
+                  value: s.value,
+                  label: t(s.label),
+                }))}
               >
                 <SelectTrigger id="stage">
                   <SelectValue />
@@ -241,19 +244,19 @@ export function OpportunityForm({
                 <SelectContent>
                   {STAGES.map((s) => (
                     <SelectItem key={s.value} value={s.value}>
-                      {s.label}
+                      {t(s.label)}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
             <div className="flex flex-col gap-2">
-              <Label htmlFor="ownerUserId">Owner</Label>
+              <Label htmlFor="ownerUserId">{t("opportunity.owner")}</Label>
               <Select
                 name="ownerUserId"
                 defaultValue={defaultValues?.ownerUserId ?? "unassigned"}
                 items={[
-                  { value: "unassigned", label: "No owner" },
+                  { value: "unassigned", label: t("project.noOwner") },
                   ...users.map((u) => ({ value: u.id, label: u.name ?? u.id })),
                 ]}
               >
@@ -261,7 +264,9 @@ export function OpportunityForm({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="unassigned">No owner</SelectItem>
+                  <SelectItem value="unassigned">
+                    {t("project.noOwner")}
+                  </SelectItem>
                   {users.map((u) => (
                     <SelectItem key={u.id} value={u.id}>
                       {u.name ?? u.id}
@@ -274,7 +279,9 @@ export function OpportunityForm({
 
           <div className="grid grid-cols-3 gap-4">
             <div className="flex flex-col gap-2">
-              <Label htmlFor="estimatedValue">Estimated value</Label>
+              <Label htmlFor="estimatedValue">
+                {t("opportunity.estimatedValue")}
+              </Label>
               <Input
                 id="estimatedValue"
                 name="estimatedValue"
@@ -287,7 +294,7 @@ export function OpportunityForm({
               />
             </div>
             <div className="flex flex-col gap-2">
-              <Label htmlFor="currency">Currency</Label>
+              <Label htmlFor="currency">{t("opportunity.currency")}</Label>
               <Input
                 id="currency"
                 name="currency"
@@ -298,7 +305,9 @@ export function OpportunityForm({
               />
             </div>
             <div className="flex flex-col gap-2">
-              <Label htmlFor="probability">Probability (%)</Label>
+              <Label htmlFor="probability">
+                {t("opportunity.probability")}
+              </Label>
               <Input
                 id="probability"
                 name="probability"
@@ -311,7 +320,9 @@ export function OpportunityForm({
           </div>
 
           <div className="flex flex-col gap-2">
-            <Label htmlFor="expectedCloseDate">Expected close date</Label>
+            <Label htmlFor="expectedCloseDate">
+              {t("opportunity.expectedCloseDate")}
+            </Label>
             <Input
               id="expectedCloseDate"
               name="expectedCloseDate"
@@ -329,7 +340,7 @@ export function OpportunityForm({
                   htmlFor="lostReason"
                   className="cursor-help underline decoration-dotted underline-offset-2"
                 >
-                  Lost reason
+                  {t("opportunity.lostReason")}
                 </Label>
               </TooltipTrigger>
               <TooltipContent side="right">
@@ -344,7 +355,7 @@ export function OpportunityForm({
           </div>
 
           <div className="flex flex-col gap-2">
-            <Label htmlFor="notes">Notes</Label>
+            <Label htmlFor="notes">{t("opportunity.notes")}</Label>
             <Textarea
               id="notes"
               name="notes"
@@ -359,14 +370,14 @@ export function OpportunityForm({
                 value="true"
                 defaultChecked={defaultValues?.isActive}
               />
-              Active
+              {t("common.active")}
             </label>
           ) : (
             <input type="hidden" name="isActive" value="true" />
           )}
 
           <Button type="submit" disabled={pending} className="w-fit">
-            {pending ? "Saving…" : submitLabel}
+            {pending ? t("common.saving") : t(submitLabel)}
           </Button>
         </form>
       </CardContent>

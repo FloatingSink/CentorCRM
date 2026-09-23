@@ -18,12 +18,14 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { formatDateTime } from "@/lib/date";
+import { useT } from "@/lib/i18n/client";
 
+// `label` is a dictionary key; the enum values are what the DB stores.
 const TYPES = [
-  { value: "note", label: "Note" },
-  { value: "call", label: "Call" },
-  { value: "meeting", label: "Meeting" },
-  { value: "email", label: "Email" },
+  { value: "note", label: "activityType.note" },
+  { value: "call", label: "activityType.call" },
+  { value: "meeting", label: "activityType.meeting" },
+  { value: "email", label: "activityType.email" },
 ] as const;
 
 export type ActivityRelatedType =
@@ -58,6 +60,7 @@ export function ActivityTimeline({
   relatedId: string;
   activities: Activity[];
 }) {
+  const { locale, t } = useT();
   const router = useRouter();
   const [type, setType] = useState<(typeof TYPES)[number]["value"]>("note");
   const [subject, setSubject] = useState("");
@@ -107,16 +110,18 @@ export function ActivityTimeline({
 
   return (
     <div className="flex flex-col gap-4">
-      <h3 className="text-lg">Activity</h3>
+      <h3 className="text-lg">{t("activity.heading")}</h3>
 
       <Card>
         <CardContent>
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-            {error ? <p className="text-sm text-destructive">{error}</p> : null}
+            {error ? (
+              <p className="text-sm text-destructive">{t(error)}</p>
+            ) : null}
             <div className="grid grid-cols-2 gap-4">
               <div className="flex flex-col gap-2">
                 <Label htmlFor="activityType" required>
-                  Type
+                  {t("activity.type")}
                 </Label>
                 <Select
                   value={type}
@@ -127,9 +132,9 @@ export function ActivityTimeline({
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {TYPES.map((t) => (
-                      <SelectItem key={t.value} value={t.value}>
-                        {t.label}
+                    {TYPES.map((item) => (
+                      <SelectItem key={item.value} value={item.value}>
+                        {t(item.label)}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -137,7 +142,7 @@ export function ActivityTimeline({
               </div>
               <div className="flex flex-col gap-2">
                 <Label htmlFor="occurredAt" required>
-                  When
+                  {t("activity.when")}
                 </Label>
                 <Input
                   id="occurredAt"
@@ -150,7 +155,7 @@ export function ActivityTimeline({
             </div>
             <div className="flex flex-col gap-2">
               <Label htmlFor="subject" required>
-                Subject
+                {t("activity.subject")}
               </Label>
               <Input
                 id="subject"
@@ -160,7 +165,7 @@ export function ActivityTimeline({
               />
             </div>
             <div className="flex flex-col gap-2">
-              <Label htmlFor="body">Notes</Label>
+              <Label htmlFor="body">{t("activity.notes")}</Label>
               <Textarea
                 id="body"
                 value={body}
@@ -168,22 +173,22 @@ export function ActivityTimeline({
               />
             </div>
             <Button type="submit" disabled={pending} className="w-fit">
-              {pending ? "Logging…" : "Log activity"}
+              {pending ? t("activity.logging") : t("activity.log")}
             </Button>
           </form>
         </CardContent>
       </Card>
 
       {activities.length === 0 ? (
-        <p className="text-sm text-muted-foreground">No activity logged yet.</p>
+        <p className="text-sm text-muted-foreground">{t("activity.empty")}</p>
       ) : (
         <div className="flex flex-col gap-3">
           {activities.map((a) => (
             <Card key={a.id} className="py-4">
               <CardContent className="flex flex-col gap-1">
                 <div className="flex items-center gap-2">
-                  <Badge variant="secondary" className="capitalize">
-                    {a.type}
+                  <Badge variant="secondary">
+                    {t(`activityType.${a.type}`)}
                   </Badge>
                   <span className="font-medium">{a.subject}</span>
                 </div>
@@ -191,7 +196,8 @@ export function ActivityTimeline({
                   <p className="text-sm text-muted-foreground">{a.body}</p>
                 ) : null}
                 <p className="text-xs text-muted-foreground">
-                  {formatDateTime(a.occurredAt)} · {a.userName ?? a.userEmail}
+                  {formatDateTime(a.occurredAt, locale)} ·{" "}
+                  {a.userName ?? a.userEmail}
                 </p>
               </CardContent>
             </Card>

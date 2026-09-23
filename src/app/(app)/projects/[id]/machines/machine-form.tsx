@@ -15,6 +15,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { useT } from "@/lib/i18n/client";
 
 type MachineFormAction = (
   prevState: { error?: string } | undefined,
@@ -41,21 +42,22 @@ export function MachineForm({
   mode: "create" | "edit";
   submitLabel: string;
 }) {
+  const { t } = useT();
   const [state, formAction, pending] = useActionState(action, undefined);
 
   return (
     <Card>
       <CardContent>
         {state?.error ? (
-          <p className="mb-4 text-sm text-destructive">{state.error}</p>
+          <p className="mb-4 text-sm text-destructive">{t(state.error)}</p>
         ) : null}
         <form action={formAction} className="flex flex-col gap-4">
           <div className="flex flex-col gap-2">
-            <Label htmlFor="designation">Designation</Label>
+            <Label htmlFor="designation">{t("machine.designation")}</Label>
             <Input
               id="designation"
               name="designation"
-              placeholder="e.g. TBM-1"
+              placeholder={t("machine.designationPlaceholder")}
               defaultValue={defaultValues?.designation}
               required
             />
@@ -63,30 +65,39 @@ export function MachineForm({
 
           <div className="grid grid-cols-2 gap-4">
             <div className="flex flex-col gap-2">
-              <Label htmlFor="machineType">Type</Label>
+              <Label htmlFor="machineType">{t("machine.type")}</Label>
               <Select
                 name="machineType"
                 defaultValue={defaultValues?.machineType}
                 items={[
-                  { value: "EPB", label: "EPB" },
-                  { value: "slurry", label: "Slurry" },
-                  { value: "TBM_hard_rock", label: "TBM hard rock" },
-                  { value: "other", label: "Other" },
+                  { value: "EPB", label: t("machineType.EPB") },
+                  { value: "slurry", label: t("machineType.slurry") },
+                  {
+                    value: "TBM_hard_rock",
+                    label: t("machineType.TBM_hard_rock"),
+                  },
+                  { value: "other", label: t("machineType.other") },
                 ]}
               >
                 <SelectTrigger id="machineType">
-                  <SelectValue placeholder="Select a type" />
+                  <SelectValue placeholder={t("machine.selectType")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="EPB">EPB</SelectItem>
-                  <SelectItem value="slurry">Slurry</SelectItem>
-                  <SelectItem value="TBM_hard_rock">TBM hard rock</SelectItem>
-                  <SelectItem value="other">Other</SelectItem>
+                  <SelectItem value="EPB">{t("machineType.EPB")}</SelectItem>
+                  <SelectItem value="slurry">
+                    {t("machineType.slurry")}
+                  </SelectItem>
+                  <SelectItem value="TBM_hard_rock">
+                    {t("machineType.TBM_hard_rock")}
+                  </SelectItem>
+                  <SelectItem value="other">
+                    {t("productCategory.other")}
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div className="flex flex-col gap-2">
-              <Label htmlFor="diameterMm">Diameter (mm)</Label>
+              <Label htmlFor="diameterMm">{t("machine.diameterMm")}</Label>
               <Input
                 id="diameterMm"
                 name="diameterMm"
@@ -98,7 +109,7 @@ export function MachineForm({
           </div>
 
           <div className="flex flex-col gap-2">
-            <Label htmlFor="manufacturer">Manufacturer</Label>
+            <Label htmlFor="manufacturer">{t("machine.manufacturer")}</Label>
             <Input
               id="manufacturer"
               name="manufacturer"
@@ -107,7 +118,7 @@ export function MachineForm({
           </div>
 
           <div className="flex flex-col gap-2">
-            <Label htmlFor="notes">Notes</Label>
+            <Label htmlFor="notes">{t("machine.notes")}</Label>
             <Textarea
               id="notes"
               name="notes"
@@ -122,14 +133,14 @@ export function MachineForm({
                 value="true"
                 defaultChecked={defaultValues?.isActive}
               />
-              Active
+              {t("common.active")}
             </label>
           ) : (
             <input type="hidden" name="isActive" value="true" />
           )}
 
           <Button type="submit" disabled={pending} className="w-fit">
-            {pending ? "Saving…" : submitLabel}
+            {pending ? t("common.saving") : t(submitLabel)}
           </Button>
         </form>
       </CardContent>
