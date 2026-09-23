@@ -19,11 +19,11 @@ function parseOpportunityForm(formData: FormData) {
 
   if (estimatedValueRaw) {
     if (!currencyRaw) {
-      moneyError = "Currency is required when estimated value is set";
+      moneyError = "error.currencyRequiredWithValue";
     } else {
       const minorUnits = parseMoneyToMinorUnits(estimatedValueRaw, currencyRaw);
       if (minorUnits === null) {
-        moneyError = "Invalid estimated value";
+        moneyError = "error.invalidEstimatedValue";
       } else {
         estimatedValue = minorUnits;
         currency = currencyRaw;

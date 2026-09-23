@@ -1,15 +1,9 @@
 // Shared by every document in this directory — moved here (rather than kept
 // as private per-file copies) once document-header.tsx needed pickName too,
-// which would've made a third copy.
-export function pickName(
-  nameEn: string,
-  nameZh: string | null,
-  language: string,
-) {
-  if (language === "en") return nameEn;
-  if (language === "zh") return nameZh || nameEn;
-  return nameZh ? `${nameEn} / ${nameZh}` : nameEn;
-}
+// which would've made a third copy. Since moved again, out to
+// src/lib/display-name.ts, once the web UI needed it as well; re-exported
+// here so this directory's imports stay as they were.
+export { pickName } from "@/lib/display-name";
 
 export function formatDate(date: Date | null): string {
   if (!date) return "—";

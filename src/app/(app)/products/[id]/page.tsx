@@ -23,6 +23,8 @@ import {
 import { getCompanies } from "@/server/companies";
 import { getProductDocuments } from "@/server/product-documents";
 import { getProductById } from "@/server/products";
+import { t } from "@/lib/i18n/dictionary";
+import { getLocale } from "@/lib/i18n/server";
 
 export default async function ProductDetailPage({
   params,
@@ -30,10 +32,11 @@ export default async function ProductDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const [product, companies, documents] = await Promise.all([
+  const [product, companies, documents, locale] = await Promise.all([
     getProductById(id),
     getCompanies(),
     getProductDocuments(id),
+    getLocale(),
   ]);
   if (!product) {
     notFound();
@@ -49,13 +52,15 @@ export default async function ProductDetailPage({
           <div className="flex items-center gap-2.5">
             <h2 className="text-2xl">{product.centorCode}</h2>
             <Badge variant={product.isActive ? "outline" : "secondary"}>
-              {product.isActive ? "Active" : "Inactive"}
+              {product.isActive
+                ? t(locale, "common.active")
+                : t(locale, "common.inactive")}
             </Badge>
           </div>
           <p className="text-sm text-muted-foreground">
             {product.nameEn}
             {product.category
-              ? ` · ${product.category.replace(/_/g, " ")}`
+              ? ` · ${t(locale, `productCategory.${product.category}`)}`
               : ""}
           </p>
         </div>
@@ -79,12 +84,12 @@ export default async function ProductDetailPage({
           isActive: product.isActive,
         }}
         mode="edit"
-        submitLabel="Save changes"
+        submitLabel="common.saveChanges"
       />
 
       <div>
         <div className="mb-4 flex items-center justify-between">
-          <h3 className="text-lg">Documents</h3>
+          <h3 className="text-lg">{t(locale, "product.documents")}</h3>
           <Link
             href={`/products/${id}/documents/new`}
             className={buttonVariants()}
@@ -97,10 +102,12 @@ export default async function ProductDetailPage({
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="pl-4">Type</TableHead>
-                  <TableHead>Language</TableHead>
-                  <TableHead>Version</TableHead>
-                  <TableHead>Issued date</TableHead>
+                  <TableHead className="pl-4">
+                    {t(locale, "product.colDocType")}
+                  </TableHead>
+                  <TableHead>{t(locale, "product.colLanguage")}</TableHead>
+                  <TableHead>{t(locale, "product.colVersion")}</TableHead>
+                  <TableHead>{t(locale, "product.colIssuedDate")}</TableHead>
                   <TableHead>
                     <Tooltip>
                       <TooltipTrigger
@@ -108,12 +115,10 @@ export default async function ProductDetailPage({
                           <span className="cursor-help underline decoration-dotted underline-offset-2" />
                         }
                       >
-                        Current
+                        {t(locale, "product.current")}
                       </TooltipTrigger>
                       <TooltipContent>
-                        Only one document per type + language can be current at
-                        a time. Uploading a new one of the same type + language
-                        supersedes the old one — kept for history, not deleted.
+                        {t(locale, "product.currentHelp")}
                       </TooltipContent>
                     </Tooltip>
                   </TableHead>
@@ -124,9 +129,11 @@ export default async function ProductDetailPage({
                 {documents.map((doc) => (
                   <TableRow key={doc.id}>
                     <TableCell className="pl-4 font-medium">
-                      {doc.docType}
+                      {t(locale, `productDocType.${doc.docType}`)}
                     </TableCell>
-                    <TableCell>{doc.language}</TableCell>
+                    <TableCell>
+                      {t(locale, `language.${doc.language}`)}
+                    </TableCell>
                     <TableCell>{doc.version ?? "—"}</TableCell>
                     <TableCell>
                       {doc.issuedDate
@@ -135,7 +142,9 @@ export default async function ProductDetailPage({
                     </TableCell>
                     <TableCell>
                       {doc.isCurrent ? (
-                        <Badge variant="outline">Current</Badge>
+                        <Badge variant="outline">
+                          {t(locale, "product.current")}
+                        </Badge>
                       ) : (
                         <span className="text-muted-foreground">—</span>
                       )}

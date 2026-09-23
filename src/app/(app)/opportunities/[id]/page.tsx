@@ -21,6 +21,8 @@ import { getOpportunityById } from "@/server/opportunities";
 import { getProjects } from "@/server/projects";
 import { getTasksForRelated } from "@/server/tasks";
 import { getUsers } from "@/server/users";
+import { t } from "@/lib/i18n/dictionary";
+import { getLocale } from "@/lib/i18n/server";
 
 export default async function OpportunityDetailPage({
   params,
@@ -38,6 +40,7 @@ export default async function OpportunityDetailPage({
     activities,
     documents,
     tasks,
+    locale,
   ] = await Promise.all([
     auth(),
     getOpportunityById(id),
@@ -48,6 +51,7 @@ export default async function OpportunityDetailPage({
     getActivitiesForRelated("opportunity", id),
     getDocumentsForRelated("opportunity", id),
     getTasksForRelated("opportunity", id),
+    getLocale(),
   ]);
   if (!opportunity) {
     notFound();
@@ -65,7 +69,7 @@ export default async function OpportunityDetailPage({
             <Tooltip>
               <TooltipTrigger render={<span className="inline-block" />}>
                 <Badge variant="secondary" className="capitalize">
-                  {opportunity.stage.replace(/_/g, " ")}
+                  {t(locale, `opportunityStage.${opportunity.stage}`)}
                 </Badge>
               </TooltipTrigger>
               <TooltipContent>
@@ -100,7 +104,7 @@ export default async function OpportunityDetailPage({
           isActive: opportunity.isActive,
         }}
         mode="edit"
-        submitLabel="Save changes"
+        submitLabel="common.saveChanges"
       />
 
       <DocumentLibrary

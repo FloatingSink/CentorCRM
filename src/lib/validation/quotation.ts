@@ -1,3 +1,5 @@
+// Validation messages are i18n dictionary keys, resolved by the form
+// through t() — see src/lib/i18n/dictionary.ts.
 import { createSchemaFactory } from "drizzle-zod";
 import { z } from "zod";
 
@@ -8,7 +10,7 @@ const { createInsertSchema } = createSchemaFactory({ coerce: { date: true } });
 // quoteNo/version/status are assigned by the server (numbering, versioning,
 // status-transition actions), never user input here.
 export const quotationHeaderSchema = createInsertSchema(quotation, {
-  currency: (schema) => schema.length(3, "Currency must be a 3-letter code"),
+  currency: (schema) => schema.length(3, "error.currency3Letter"),
 }).omit({
   id: true,
   quoteNo: true,
@@ -34,9 +36,9 @@ const DISCOUNT_PATTERN = /^\d{1,3}(\.\d{1,2})?$/;
 export const quotationLineInputSchema = z.object({
   productId: z.uuid(),
   descriptionOverride: z.string().nullable(),
-  quantity: z.number().int("Quantity must be a whole number").positive(),
+  quantity: z.number().int("error.quantityWholeNumber").positive(),
   uom: z.string().nullable(),
-  unitPrice: z.string().min(1, "Unit price is required"),
+  unitPrice: z.string().min(1, "error.unitPriceRequired"),
   // Bare z.string() here previously let "abc"/"1.2.3"/"-5" all reach
   // quotation-math.ts's BigInt() parsing unvalidated (remediation slice 4,
   // docs/decisions.md) — validated at the boundary now, not just parsed
@@ -46,7 +48,7 @@ export const quotationLineInputSchema = z.object({
     .nullable()
     .refine(
       (v) => v === null || (DISCOUNT_PATTERN.test(v) && Number(v) <= 100),
-      "Discount must be a percentage between 0 and 100, up to 2 decimal places",
+      "error.discountFormat",
     ),
 });
 
@@ -54,9 +56,7 @@ export type QuotationLineInput = z.infer<typeof quotationLineInputSchema>;
 
 export const quotationCreateSchema = z.object({
   header: quotationHeaderSchema,
-  lines: z
-    .array(quotationLineInputSchema)
-    .min(1, "At least one line item is required"),
+  lines: z.array(quotationLineInputSchema).min(1, "error.atLeastOneLine"),
 });
 
 // For the live PDF preview (unsaved draft) — quoteNo/version are real

@@ -18,6 +18,9 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { auth } from "@/lib/auth";
+import { pickName } from "@/lib/display-name";
+import { t } from "@/lib/i18n/dictionary";
+import { getLocale } from "@/lib/i18n/server";
 import { getInitials } from "@/lib/initials";
 import { getActivitiesForRelated } from "@/server/activities";
 import { getCompanyById } from "@/server/companies";
@@ -31,7 +34,7 @@ export default async function CompanyDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const [session, result, activities, documents, tasks, users] =
+  const [session, result, activities, documents, tasks, users, locale] =
     await Promise.all([
       auth(),
       getCompanyById(id),
@@ -39,6 +42,7 @@ export default async function CompanyDetailPage({
       getDocumentsForRelated("company", id),
       getTasksForRelated("company", id),
       getUsers(),
+      getLocale(),
     ]);
   if (!result) {
     notFound();
@@ -54,14 +58,20 @@ export default async function CompanyDetailPage({
         </span>
         <div>
           <div className="flex items-center gap-2.5">
-            <h2 className="text-2xl">{company.nameEn}</h2>
+            <h2 className="text-2xl">
+              {pickName(company.nameEn, company.nameZh, locale)}
+            </h2>
             <Badge variant={company.isActive ? "outline" : "secondary"}>
-              {company.isActive ? "Active" : "Inactive"}
+              {company.isActive
+                ? t(locale, "common.active")
+                : t(locale, "common.inactive")}
             </Badge>
           </div>
-          <p className="text-sm text-muted-foreground capitalize">
+          <p className="text-sm text-muted-foreground">
             {company.country}
-            {roles.length > 0 ? ` · ${roles.join(", ")}` : ""}
+            {roles.length > 0
+              ? ` · ${roles.map((r) => t(locale, `companyRole.${r}`)).join("、")}`
+              : ""}
           </p>
         </div>
       </div>
@@ -80,17 +90,17 @@ export default async function CompanyDetailPage({
           roles,
         }}
         mode="edit"
-        submitLabel="Save changes"
+        submitLabel="common.saveChanges"
       />
 
       <div>
         <div className="mb-4 flex items-center justify-between">
-          <h3 className="text-lg">Contacts</h3>
+          <h3 className="text-lg">{t(locale, "company.contacts")}</h3>
           <Link
             href={`/contacts/new?companyId=${id}`}
             className={buttonVariants()}
           >
-            Add contact
+            {t(locale, "company.addContact")}
           </Link>
         </div>
         <Card className="py-4">
@@ -98,12 +108,16 @@ export default async function CompanyDetailPage({
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="pl-4">Name</TableHead>
-                  <TableHead>Job title</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Phone</TableHead>
-                  <TableHead>Primary</TableHead>
-                  <TableHead className="pr-4">Active</TableHead>
+                  <TableHead className="pl-4">
+                    {t(locale, "company.contactName")}
+                  </TableHead>
+                  <TableHead>{t(locale, "company.contactJobTitle")}</TableHead>
+                  <TableHead>{t(locale, "company.contactEmail")}</TableHead>
+                  <TableHead>{t(locale, "company.contactPhone")}</TableHead>
+                  <TableHead>{t(locale, "company.contactPrimary")}</TableHead>
+                  <TableHead className="pr-4">
+                    {t(locale, "company.colActive")}
+                  </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -114,7 +128,7 @@ export default async function CompanyDetailPage({
                         href={`/contacts/${contact.id}`}
                         className="hover:underline"
                       >
-                        {contact.nameEn}
+                        {pickName(contact.nameEn, contact.nameZh, locale)}
                       </Link>
                     </TableCell>
                     <TableCell>{contact.jobTitle}</TableCell>
@@ -122,13 +136,17 @@ export default async function CompanyDetailPage({
                     <TableCell>{contact.phone}</TableCell>
                     <TableCell>
                       {contact.isPrimary ? (
-                        <Badge variant="outline">Primary</Badge>
+                        <Badge variant="outline">
+                          {t(locale, "company.contactPrimary")}
+                        </Badge>
                       ) : (
                         <span className="text-muted-foreground">—</span>
                       )}
                     </TableCell>
                     <TableCell className="pr-4">
-                      {contact.isActive ? "Yes" : "No"}
+                      {contact.isActive
+                        ? t(locale, "common.yes")
+                        : t(locale, "common.no")}
                     </TableCell>
                   </TableRow>
                 ))}

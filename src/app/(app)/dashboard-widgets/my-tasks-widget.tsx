@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { formatDate } from "@/lib/date";
+import { useT } from "@/lib/i18n/client";
 
 type Row = {
   id: string;
@@ -9,11 +10,10 @@ type Row = {
 };
 
 export function MyTasksWidget({ rows }: { rows: Row[] }) {
+  const { locale, t } = useT();
   if (rows.length === 0) {
     return (
-      <p className="text-sm text-muted-foreground">
-        No open tasks assigned to you.
-      </p>
+      <p className="text-sm text-muted-foreground">{t("task.mineEmpty")}</p>
     );
   }
 
@@ -26,7 +26,7 @@ export function MyTasksWidget({ rows }: { rows: Row[] }) {
           </Link>
           {row.dueDate ? (
             <span className="flex-none text-xs text-muted-foreground">
-              Due {formatDate(row.dueDate)}
+              {t("task.due", { date: formatDate(row.dueDate, locale) })}
             </span>
           ) : null}
         </li>

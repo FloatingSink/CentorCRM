@@ -15,14 +15,15 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { useT } from "@/lib/i18n/client";
 
 const PRODUCT_CATEGORIES = [
-  { value: "tail_seal_grease", label: "Tail seal grease" },
-  { value: "soil_conditioner", label: "Soil conditioner" },
-  { value: "ep_grease", label: "EP grease" },
-  { value: "polymer", label: "Polymer" },
-  { value: "anti_wear", label: "Anti-wear" },
-  { value: "other", label: "Other" },
+  { value: "tail_seal_grease", label: "productCategory.tail_seal_grease" },
+  { value: "soil_conditioner", label: "productCategory.soil_conditioner" },
+  { value: "ep_grease", label: "productCategory.ep_grease" },
+  { value: "polymer", label: "productCategory.polymer" },
+  { value: "anti_wear", label: "productCategory.anti_wear" },
+  { value: "other", label: "productCategory.other" },
 ] as const;
 
 type ProductFormAction = (
@@ -65,19 +66,20 @@ export function ProductForm({
   mode: "create" | "edit";
   submitLabel: string;
 }) {
+  const { t } = useT();
   const [state, formAction, pending] = useActionState(action, undefined);
 
   return (
     <Card>
       <CardContent>
         {state?.error ? (
-          <p className="mb-4 text-sm text-destructive">{state.error}</p>
+          <p className="mb-4 text-sm text-destructive">{t(state.error)}</p>
         ) : null}
         <form action={formAction} className="flex flex-col gap-4">
           <div className="grid grid-cols-2 gap-4">
             <div className="flex flex-col gap-2">
               <Label htmlFor="centorCode" required>
-                CENTOR code
+                {t("product.centorCode")}
               </Label>
               <Input
                 id="centorCode"
@@ -87,12 +89,12 @@ export function ProductForm({
               />
             </div>
             <div className="flex flex-col gap-2">
-              <Label htmlFor="category">Category</Label>
+              <Label htmlFor="category">{t("product.category")}</Label>
               <Select
                 name="category"
                 defaultValue={defaultValues?.category ?? "unspecified"}
                 items={[
-                  { value: "unspecified", label: "Unspecified" },
+                  { value: "unspecified", label: t("doc.unspecified") },
                   ...PRODUCT_CATEGORIES,
                 ]}
               >
@@ -100,10 +102,12 @@ export function ProductForm({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="unspecified">Unspecified</SelectItem>
+                  <SelectItem value="unspecified">
+                    {t("doc.unspecified")}
+                  </SelectItem>
                   {PRODUCT_CATEGORIES.map((c) => (
                     <SelectItem key={c.value} value={c.value}>
-                      {c.label}
+                      {t(c.label)}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -114,7 +118,7 @@ export function ProductForm({
           <div className="grid grid-cols-2 gap-4">
             <div className="flex flex-col gap-2">
               <Label htmlFor="nameEn" required>
-                Name (English)
+                {t("product.nameEn")}
               </Label>
               <Input
                 id="nameEn"
@@ -124,7 +128,7 @@ export function ProductForm({
               />
             </div>
             <div className="flex flex-col gap-2">
-              <Label htmlFor="nameZh">Name (Chinese)</Label>
+              <Label htmlFor="nameZh">{t("product.nameZh")}</Label>
               <Input
                 id="nameZh"
                 name="nameZh"
@@ -135,7 +139,7 @@ export function ProductForm({
 
           <div className="grid grid-cols-2 gap-4">
             <div className="flex flex-col gap-2">
-              <Label htmlFor="uom">Unit of measure</Label>
+              <Label htmlFor="uom">{t("product.uom")}</Label>
               <Input
                 id="uom"
                 name="uom"
@@ -143,7 +147,7 @@ export function ProductForm({
               />
             </div>
             <div className="flex flex-col gap-2">
-              <Label htmlFor="packSize">Pack size</Label>
+              <Label htmlFor="packSize">{t("product.packSize")}</Label>
               <Input
                 id="packSize"
                 name="packSize"
@@ -153,7 +157,9 @@ export function ProductForm({
           </div>
 
           <div className="flex flex-col gap-2">
-            <Label htmlFor="packDescription">Pack description</Label>
+            <Label htmlFor="packDescription">
+              {t("product.packDescription")}
+            </Label>
             <Input
               id="packDescription"
               name="packDescription"
@@ -163,12 +169,14 @@ export function ProductForm({
 
           <div className="grid grid-cols-2 gap-4">
             <div className="flex flex-col gap-2">
-              <Label htmlFor="manufacturerCompanyId">Manufacturer</Label>
+              <Label htmlFor="manufacturerCompanyId">
+                {t("product.manufacturer")}
+              </Label>
               <Select
                 name="manufacturerCompanyId"
                 defaultValue={defaultValues?.manufacturerCompanyId ?? "none"}
                 items={[
-                  { value: "none", label: "None" },
+                  { value: "none", label: t("contact.none") },
                   ...companies.map((c) => ({ value: c.id, label: c.nameEn })),
                 ]}
               >
@@ -176,7 +184,7 @@ export function ProductForm({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="none">None</SelectItem>
+                  <SelectItem value="none">{t("contact.none")}</SelectItem>
                   {companies.map((c) => (
                     <SelectItem key={c.id} value={c.id}>
                       {c.nameEn}
@@ -186,7 +194,9 @@ export function ProductForm({
               </Select>
             </div>
             <div className="flex flex-col gap-2">
-              <Label htmlFor="manufacturerPartNo">Manufacturer part no.</Label>
+              <Label htmlFor="manufacturerPartNo">
+                {t("product.manufacturerPartNo")}
+              </Label>
               <Input
                 id="manufacturerPartNo"
                 name="manufacturerPartNo"
@@ -196,7 +206,7 @@ export function ProductForm({
           </div>
 
           <div className="flex flex-col gap-2">
-            <Label htmlFor="hsCode">HS code</Label>
+            <Label htmlFor="hsCode">{t("product.hsCode")}</Label>
             <Input
               id="hsCode"
               name="hsCode"
@@ -205,7 +215,7 @@ export function ProductForm({
           </div>
 
           <div className="flex flex-col gap-2">
-            <Label htmlFor="notes">Notes</Label>
+            <Label htmlFor="notes">{t("product.notes")}</Label>
             <Textarea
               id="notes"
               name="notes"
@@ -220,14 +230,14 @@ export function ProductForm({
                 value="true"
                 defaultChecked={defaultValues?.isActive}
               />
-              Active
+              {t("common.active")}
             </label>
           ) : (
             <input type="hidden" name="isActive" value="true" />
           )}
 
           <Button type="submit" disabled={pending} className="w-fit">
-            {pending ? "Saving…" : submitLabel}
+            {pending ? t("common.saving") : t(submitLabel)}
           </Button>
         </form>
       </CardContent>

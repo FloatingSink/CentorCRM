@@ -15,6 +15,8 @@ import { getContactById } from "@/server/contacts";
 import { getDocumentsForRelated } from "@/server/documents";
 import { getTasksForRelated } from "@/server/tasks";
 import { getUsers } from "@/server/users";
+import { t } from "@/lib/i18n/dictionary";
+import { getLocale } from "@/lib/i18n/server";
 
 export default async function ContactDetailPage({
   params,
@@ -22,16 +24,25 @@ export default async function ContactDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const [session, result, companies, activities, documents, tasks, users] =
-    await Promise.all([
-      auth(),
-      getContactById(id),
-      getCompanies(),
-      getActivitiesForRelated("contact", id),
-      getDocumentsForRelated("contact", id),
-      getTasksForRelated("contact", id),
-      getUsers(),
-    ]);
+  const [
+    session,
+    result,
+    companies,
+    activities,
+    documents,
+    tasks,
+    users,
+    locale,
+  ] = await Promise.all([
+    auth(),
+    getContactById(id),
+    getCompanies(),
+    getActivitiesForRelated("contact", id),
+    getDocumentsForRelated("contact", id),
+    getTasksForRelated("contact", id),
+    getUsers(),
+    getLocale(),
+  ]);
   if (!result) {
     notFound();
   }
@@ -48,7 +59,9 @@ export default async function ContactDetailPage({
           <div className="flex items-center gap-2.5">
             <h2 className="text-2xl">{contact.nameEn}</h2>
             <Badge variant={contact.isActive ? "outline" : "secondary"}>
-              {contact.isActive ? "Active" : "Inactive"}
+              {contact.isActive
+                ? t(locale, "common.active")
+                : t(locale, "common.inactive")}
             </Badge>
           </div>
           <p className="text-sm text-muted-foreground">
@@ -84,7 +97,7 @@ export default async function ContactDetailPage({
           notes: contact.notes,
         }}
         mode="edit"
-        submitLabel="Save changes"
+        submitLabel="common.saveChanges"
       />
 
       <DocumentLibrary

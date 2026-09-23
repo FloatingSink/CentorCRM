@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/table";
 import { formatMoney } from "@/lib/money";
 import { matchesQuery } from "@/lib/search-filter";
+import { useT } from "@/lib/i18n/client";
 
 type Opportunity = {
   id: string;
@@ -39,10 +40,11 @@ type Opportunity = {
   isActive: boolean;
 };
 
+// `label` is a dictionary key.
 const FILTERS = [
-  { value: "all", label: "All" },
-  { value: "active", label: "Active" },
-  { value: "inactive", label: "Inactive" },
+  { value: "all", label: "common.all" },
+  { value: "active", label: "common.active" },
+  { value: "inactive", label: "common.inactive" },
 ] as const;
 type Filter = (typeof FILTERS)[number]["value"];
 
@@ -51,6 +53,7 @@ export function OpportunitiesTable({
 }: {
   opportunities: Opportunity[];
 }) {
+  const { t } = useT();
   const [filter, setFilter] = useState<Filter>("all");
   const [query, setQuery] = useState("");
 
@@ -77,7 +80,7 @@ export function OpportunitiesTable({
         >
           {FILTERS.map((f) => (
             <SegmentedItem key={f.value} value={f.value}>
-              {f.label}
+              {t(f.label)}
             </SegmentedItem>
           ))}
         </Segmented>
@@ -85,7 +88,7 @@ export function OpportunitiesTable({
         <div className="relative min-w-[220px]">
           <Search className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input
-            placeholder="Search opportunities…"
+            placeholder={t("opportunity.searchPlaceholder")}
             className="pl-9"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
@@ -98,13 +101,15 @@ export function OpportunitiesTable({
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="pl-4">Reference</TableHead>
-                <TableHead>Title</TableHead>
-                <TableHead>Project</TableHead>
-                <TableHead>Customer</TableHead>
-                <TableHead>Stage</TableHead>
-                <TableHead>Value</TableHead>
-                <TableHead className="pr-4">Active</TableHead>
+                <TableHead className="pl-4">
+                  {t("opportunity.reference")}
+                </TableHead>
+                <TableHead>{t("opportunity.formTitle")}</TableHead>
+                <TableHead>{t("opportunity.project")}</TableHead>
+                <TableHead>{t("opportunity.customer")}</TableHead>
+                <TableHead>{t("opportunity.stage")}</TableHead>
+                <TableHead>{t("opportunity.colValue")}</TableHead>
+                <TableHead className="pr-4">{t("company.colActive")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -140,8 +145,8 @@ export function OpportunitiesTable({
                       <TooltipTrigger
                         render={<span className="inline-block" />}
                       >
-                        <Badge variant="secondary" className="capitalize">
-                          {o.stage.replace(/_/g, " ")}
+                        <Badge variant="secondary">
+                          {t(`opportunityStage.${o.stage}`)}
                         </Badge>
                       </TooltipTrigger>
                       <TooltipContent>
@@ -157,7 +162,7 @@ export function OpportunitiesTable({
                       : "—"}
                   </TableCell>
                   <TableCell className="pr-4">
-                    {o.isActive ? "Yes" : "No"}
+                    {o.isActive ? t("common.yes") : t("common.no")}
                   </TableCell>
                 </TableRow>
               ))}

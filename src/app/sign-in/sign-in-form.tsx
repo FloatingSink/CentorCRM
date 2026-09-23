@@ -11,46 +11,45 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { t, type Locale } from "@/lib/i18n/dictionary";
 
 // Auth.js redirects here with ?error=<code> for failures it handles
 // internally (the signIn callback rejecting a deactivated or not-yet-
 // provisioned account) — those never throw back to the server action, see
 // actions.ts.
-const AUTH_ERROR_MESSAGES: Record<string, string> = {
-  Configuration:
-    "We couldn't reach Microsoft sign-in right now. Try again shortly.",
-  AccessDenied:
-    "This account isn't set up for CENTOR CRM, or has been deactivated. Contact an admin for access.",
+const AUTH_ERROR_KEYS: Record<string, string> = {
+  Configuration: "signIn.errorConfiguration",
+  AccessDenied: "signIn.errorAccessDenied",
 };
 
-function authErrorMessage(code: string | null): string | undefined {
+function authErrorKey(code: string | null): string | undefined {
   if (!code) return undefined;
-  return (
-    AUTH_ERROR_MESSAGES[code] ??
-    "Something went wrong signing you in. Please try again."
-  );
+  return AUTH_ERROR_KEYS[code] ?? "signIn.errorGeneric";
 }
 
-export function SignInForm() {
+// Locale arrives as a prop, not from useT(): /sign-in is outside the (app)
+// route group, so there is no LocaleProvider above it — and it is the one
+// screen a user sees before any session exists.
+export function SignInForm({ locale }: { locale: Locale }) {
   const searchParams = useSearchParams();
-  const error = authErrorMessage(searchParams.get("error"));
+  const errorKey = authErrorKey(searchParams.get("error"));
 
   return (
     <div className="flex min-h-screen items-center justify-center p-4">
       <Card className="w-full max-w-sm">
         <CardHeader>
-          <CardTitle>CENTOR CRM</CardTitle>
-          <CardDescription>
-            Sign in with your CENTOR Microsoft account.
-          </CardDescription>
+          <CardTitle>{t(locale, "signIn.title")}</CardTitle>
+          <CardDescription>{t(locale, "signIn.description")}</CardDescription>
         </CardHeader>
         <CardContent>
-          {error ? (
-            <p className="mb-4 text-sm text-destructive">{error}</p>
+          {errorKey ? (
+            <p className="mb-4 text-sm text-destructive">
+              {t(locale, errorKey)}
+            </p>
           ) : null}
           <form action={signInWithMicrosoft}>
             <Button type="submit" className="w-full">
-              Sign in with Microsoft
+              {t(locale, "signIn.button")}
             </Button>
           </form>
         </CardContent>

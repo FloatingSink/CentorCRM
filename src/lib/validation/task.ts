@@ -1,3 +1,5 @@
+// Validation messages are i18n dictionary keys, resolved by the form
+// through t() — see src/lib/i18n/dictionary.ts.
 import { createSchemaFactory } from "drizzle-zod";
 import { z } from "zod";
 
@@ -13,7 +15,7 @@ const { createInsertSchema } = createSchemaFactory({ coerce: { date: true } });
 // DB's own task_related_pair CHECK at the zod boundary too (CLAUDE.md:
 // validate at the boundary, don't rely on the DB catching it first).
 export const taskFormSchema = createInsertSchema(task, {
-  title: (schema) => schema.min(1, "Title is required"),
+  title: (schema) => schema.min(1, "error.titleRequired"),
 })
   .omit({
     id: true,

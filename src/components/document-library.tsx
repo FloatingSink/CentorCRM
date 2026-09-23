@@ -22,6 +22,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { formatDateTime } from "@/lib/date";
+import { useT } from "@/lib/i18n/client";
 import { matchesQuery } from "@/lib/search-filter";
 
 export type DocumentRelatedType =
@@ -64,6 +65,7 @@ export function DocumentLibrary({
   relatedId: string;
   documents: DocumentRow[];
 }) {
+  const { locale, t } = useT();
   const router = useRouter();
   const [title, setTitle] = useState("");
   const [docType, setDocType] = useState("");
@@ -91,13 +93,15 @@ export function DocumentLibrary({
       }
     }
     return [
-      { value: FILTER_ALL, label: "All" },
+      { value: FILTER_ALL, label: t("common.all") },
       ...[...types.entries()]
         .sort((a, b) => a[1].localeCompare(b[1]))
         .map(([key, label]) => ({ value: key, label })),
-      ...(hasUntyped ? [{ value: FILTER_UNTYPED, label: "Untyped" }] : []),
+      ...(hasUntyped
+        ? [{ value: FILTER_UNTYPED, label: t("document.untyped") }]
+        : []),
     ];
-  }, [documents]);
+  }, [documents, t]);
 
   const filteredDocuments = useMemo(() => {
     return documents.filter((d) => {
@@ -113,7 +117,7 @@ export function DocumentLibrary({
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!file) {
-      setError("Choose a file");
+      setError(t("error.chooseFile"));
       return;
     }
 
@@ -145,12 +149,12 @@ export function DocumentLibrary({
         headers: { "Content-Type": file.type || "application/octet-stream" },
       });
     } catch {
-      setError("Upload to storage failed");
+      setError("error.uploadFailed");
       setPending(false);
       return;
     }
     if (!putResponse.ok) {
-      setError("Upload to storage failed");
+      setError("error.uploadFailed");
       setPending(false);
       return;
     }
@@ -183,15 +187,17 @@ export function DocumentLibrary({
 
   return (
     <div className="flex flex-col gap-4">
-      <h3 className="text-lg">Documents</h3>
+      <h3 className="text-lg">{t("document.heading")}</h3>
 
       <Card>
         <CardContent>
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-            {error ? <p className="text-sm text-destructive">{error}</p> : null}
+            {error ? (
+              <p className="text-sm text-destructive">{t(error)}</p>
+            ) : null}
             <div className="grid grid-cols-2 gap-4">
               <div className="flex flex-col gap-2">
-                <Label htmlFor="docTitle">Title</Label>
+                <Label htmlFor="docTitle">{t("document.title")}</Label>
                 <Input
                   id="docTitle"
                   value={title}
@@ -200,17 +206,17 @@ export function DocumentLibrary({
                 />
               </div>
               <div className="flex flex-col gap-2">
-                <Label htmlFor="docType">Type (optional)</Label>
+                <Label htmlFor="docType">{t("document.typeOptional")}</Label>
                 <Input
                   id="docType"
                   value={docType}
                   onChange={(e) => setDocType(e.target.value)}
-                  placeholder="e.g. Contract, Certificate"
+                  placeholder={t("document.typePlaceholder")}
                 />
               </div>
             </div>
             <div className="flex flex-col gap-2">
-              <Label htmlFor="file">File</Label>
+              <Label htmlFor="file">{t("document.file")}</Label>
               <Input
                 key={fileInputKey}
                 id="file"
@@ -220,16 +226,14 @@ export function DocumentLibrary({
               />
             </div>
             <Button type="submit" disabled={pending} className="w-fit">
-              {pending ? "Uploading…" : "Upload document"}
+              {pending ? t("document.uploading") : t("document.upload")}
             </Button>
           </form>
         </CardContent>
       </Card>
 
       {documents.length === 0 ? (
-        <p className="text-sm text-muted-foreground">
-          No documents uploaded yet.
-        </p>
+        <p className="text-sm text-muted-foreground">{t("document.empty")}</p>
       ) : (
         <div className="flex flex-col gap-4">
           <div className="flex items-center justify-between gap-4">
@@ -249,7 +253,7 @@ export function DocumentLibrary({
             <div className="relative min-w-[220px]">
               <Search className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
               <Input
-                placeholder="Search documents…"
+                placeholder={t("document.searchPlaceholder")}
                 className="pl-9"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
@@ -258,17 +262,21 @@ export function DocumentLibrary({
           </div>
 
           {filteredDocuments.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No documents match.</p>
+            <p className="text-sm text-muted-foreground">
+              {t("document.noMatch")}
+            </p>
           ) : (
             <Card className="py-4">
               <CardContent className="px-0">
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead className="pl-4">Title</TableHead>
-                      <TableHead>Type</TableHead>
-                      <TableHead>Size</TableHead>
-                      <TableHead>Uploaded</TableHead>
+                      <TableHead className="pl-4">
+                        {t("document.title")}
+                      </TableHead>
+                      <TableHead>{t("document.colType")}</TableHead>
+                      <TableHead>{t("document.colSize")}</TableHead>
+                      <TableHead>{t("document.colUploaded")}</TableHead>
                       <TableHead className="pr-4"></TableHead>
                     </TableRow>
                   </TableHeader>
@@ -280,7 +288,9 @@ export function DocumentLibrary({
                         </TableCell>
                         <TableCell>{d.docType ?? "—"}</TableCell>
                         <TableCell>{formatFileSize(d.sizeBytes)}</TableCell>
-                        <TableCell>{formatDateTime(d.createdAt)}</TableCell>
+                        <TableCell>
+                          {formatDateTime(d.createdAt, locale)}
+                        </TableCell>
                         <TableCell className="pr-4">
                           <a
                             href={`/documents/${d.id}/download`}
@@ -288,7 +298,7 @@ export function DocumentLibrary({
                             rel="noopener noreferrer"
                             className="hover:underline"
                           >
-                            Download
+                            {t("common.download")}
                           </a>
                         </TableCell>
                       </TableRow>

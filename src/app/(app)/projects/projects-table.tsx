@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/tooltip";
 import { matchesQuery } from "@/lib/search-filter";
 import { PROJECT_STATUS_HELP } from "./project-form";
+import { useT } from "@/lib/i18n/client";
 
 type Project = {
   id: string;
@@ -34,14 +35,16 @@ type Project = {
   isActive: boolean;
 };
 
+// `label` is a dictionary key.
 const FILTERS = [
-  { value: "all", label: "All" },
-  { value: "active", label: "Active" },
-  { value: "inactive", label: "Inactive" },
+  { value: "all", label: "common.all" },
+  { value: "active", label: "common.active" },
+  { value: "inactive", label: "common.inactive" },
 ] as const;
 type Filter = (typeof FILTERS)[number]["value"];
 
 export function ProjectsTable({ projects }: { projects: Project[] }) {
+  const { t } = useT();
   const [filter, setFilter] = useState<Filter>("all");
   const [query, setQuery] = useState("");
 
@@ -65,7 +68,7 @@ export function ProjectsTable({ projects }: { projects: Project[] }) {
         >
           {FILTERS.map((f) => (
             <SegmentedItem key={f.value} value={f.value}>
-              {f.label}
+              {t(f.label)}
             </SegmentedItem>
           ))}
         </Segmented>
@@ -73,7 +76,7 @@ export function ProjectsTable({ projects }: { projects: Project[] }) {
         <div className="relative min-w-[220px]">
           <Search className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input
-            placeholder="Search projects…"
+            placeholder={t("project.searchPlaceholder")}
             className="pl-9"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
@@ -86,11 +89,11 @@ export function ProjectsTable({ projects }: { projects: Project[] }) {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="pl-4">Name</TableHead>
-                <TableHead>Client</TableHead>
-                <TableHead>Country</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="pr-4">Active</TableHead>
+                <TableHead className="pl-4">{t("project.colName")}</TableHead>
+                <TableHead>{t("project.colClient")}</TableHead>
+                <TableHead>{t("project.country")}</TableHead>
+                <TableHead>{t("project.status")}</TableHead>
+                <TableHead className="pr-4">{t("company.colActive")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -118,8 +121,8 @@ export function ProjectsTable({ projects }: { projects: Project[] }) {
                       <TooltipTrigger
                         render={<span className="inline-block" />}
                       >
-                        <Badge variant="secondary" className="capitalize">
-                          {p.status.replace("_", " ")}
+                        <Badge variant="secondary">
+                          {t(`projectStatus.${p.status}`)}
                         </Badge>
                       </TooltipTrigger>
                       <TooltipContent>
@@ -130,7 +133,7 @@ export function ProjectsTable({ projects }: { projects: Project[] }) {
                     </Tooltip>
                   </TableCell>
                   <TableCell className="pr-4">
-                    {p.isActive ? "Yes" : "No"}
+                    {p.isActive ? t("common.yes") : t("common.no")}
                   </TableCell>
                 </TableRow>
               ))}

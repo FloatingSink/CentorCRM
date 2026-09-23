@@ -27,7 +27,7 @@ export async function createMachineAction(
 ): Promise<{ error?: string }> {
   const parsed = parseMachineForm(formData, projectId);
   if (!parsed.success) {
-    return { error: parsed.error.issues[0]?.message ?? "Invalid input" };
+    return { error: parsed.error.issues[0]?.message ?? "error.invalidInput" };
   }
 
   const session = await auth();
@@ -47,7 +47,7 @@ export async function updateMachineAction(
 ): Promise<{ error?: string }> {
   const parsed = parseMachineForm(formData, projectId);
   if (!parsed.success) {
-    return { error: parsed.error.issues[0]?.message ?? "Invalid input" };
+    return { error: parsed.error.issues[0]?.message ?? "error.invalidInput" };
   }
 
   const session = await auth();

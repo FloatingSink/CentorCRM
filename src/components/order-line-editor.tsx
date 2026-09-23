@@ -3,6 +3,7 @@
 import { useMemo } from "react";
 
 import { Button } from "@/components/ui/button";
+import { useT } from "@/lib/i18n/client";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -82,6 +83,8 @@ export function OrderLineEditor({
   currency: string;
   products: { id: string; centorCode: string; nameEn: string }[];
 }) {
+  const { t } = useT();
+
   function updateLine(key: string, patch: Partial<LineRow>) {
     onLinesChange(lines.map((l) => (l.key === key ? { ...l, ...patch } : l)));
   }
@@ -102,14 +105,14 @@ export function OrderLineEditor({
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between">
-        <h3 className="text-lg">Line items</h3>
+        <h3 className="text-lg">{t("orderLine.heading")}</h3>
         <Button
           type="button"
           variant="outline"
           size="sm"
           onClick={() => onLinesChange([...lines, emptyLine()])}
         >
-          Add line
+          {t("orderLine.addLine")}
         </Button>
       </div>
 
@@ -117,18 +120,20 @@ export function OrderLineEditor({
         <TableHeader>
           <TableRow>
             <TableHead>
-              Product <span className="text-destructive">*</span>
+              {t("orderLine.product")}{" "}
+              <span className="text-destructive">*</span>
             </TableHead>
-            <TableHead>Description</TableHead>
+            <TableHead>{t("orderLine.description")}</TableHead>
             <TableHead>
-              Qty <span className="text-destructive">*</span>
+              {t("orderLine.qty")} <span className="text-destructive">*</span>
             </TableHead>
-            <TableHead>UOM</TableHead>
+            <TableHead>{t("orderLine.uom")}</TableHead>
             <TableHead>
-              Unit price <span className="text-destructive">*</span>
+              {t("orderLine.unitPrice")}{" "}
+              <span className="text-destructive">*</span>
             </TableHead>
-            <TableHead>Discount %</TableHead>
-            <TableHead>Line total</TableHead>
+            <TableHead>{t("orderLine.discountPct")}</TableHead>
+            <TableHead>{t("orderLine.lineTotal")}</TableHead>
             <TableHead></TableHead>
           </TableRow>
         </TableHeader>
@@ -158,7 +163,7 @@ export function OrderLineEditor({
                     }))}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Select a product" />
+                      <SelectValue placeholder={t("orderLine.selectProduct")} />
                     </SelectTrigger>
                     <SelectContent>
                       {products.map((p) => (
@@ -228,7 +233,7 @@ export function OrderLineEditor({
                     onClick={() => removeLine(line.key)}
                     disabled={lines.length === 1}
                   >
-                    Remove
+                    {t("common.remove")}
                   </Button>
                 </TableCell>
               </TableRow>
@@ -238,7 +243,7 @@ export function OrderLineEditor({
       </Table>
 
       <div className="flex justify-end font-heading text-lg">
-        Total: {formatMoney(grandTotalMinor, currency)}
+        {t("common.total")}: {formatMoney(grandTotalMinor, currency)}
       </div>
     </div>
   );

@@ -7,7 +7,18 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-sans);
+  /* Inter (--font-inter, set by next/font in src/app/layout.tsx) is loaded
+     with subsets: ["latin"] and carries no CJK glyphs at all, so before this
+     the Chinese UI fell through to whatever the browser picked by itself.
+     These are system faces — PingFang on macOS/iOS, Microsoft YaHei on
+     Windows, Noto on Linux/Android — not a webfont: a CJK webfont is
+     megabytes, and the one CJK file in the repo
+     (public/fonts/NotoSansSC-Regular.ttf) is a server-side PDF asset that
+     stays that way. Latin text is unaffected, since Inter still wins for
+     every glyph it has. */
+  --font-sans:
+    var(--font-inter), "PingFang SC", "Microsoft YaHei", "Noto Sans SC",
+    "Noto Sans CJK SC", sans-serif;
   --font-mono: var(--font-geist-mono);
   --font-heading: var(--font-sans);
   --color-sidebar-ring: var(--sidebar-ring);

@@ -20,18 +20,20 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { useT } from "@/lib/i18n/client";
 
 // Exported so projects-table.tsx and [id]/page.tsx can show the same copy
 // on their read-only status badges instead of redefining it. Free-form,
 // not enforced anywhere — no gating logic exists for project status.
+// i18n dictionary keys, resolved by each consumer through t().
 export const PROJECT_STATUS_HELP: Record<
   "prospect" | "active" | "on_hold" | "completed",
   string
 > = {
-  prospect: "Not yet won any business here.",
-  active: "Has live opportunities or orders.",
-  on_hold: "Paused — work isn't currently progressing.",
-  completed: "Closed out — a terminal status.",
+  prospect: "projectStatusHelp.prospect",
+  active: "projectStatusHelp.active",
+  on_hold: "projectStatusHelp.on_hold",
+  completed: "projectStatusHelp.completed",
 };
 
 type ProjectFormAction = (
@@ -73,18 +75,19 @@ export function ProjectForm({
   mode: "create" | "edit";
   submitLabel: string;
 }) {
+  const { t } = useT();
   const [state, formAction, pending] = useActionState(action, undefined);
 
   return (
     <Card>
       <CardContent>
         {state?.error ? (
-          <p className="mb-4 text-sm text-destructive">{state.error}</p>
+          <p className="mb-4 text-sm text-destructive">{t(state.error)}</p>
         ) : null}
         <form action={formAction} className="flex flex-col gap-4">
           <div className="grid grid-cols-2 gap-4">
             <div className="flex flex-col gap-2">
-              <Label htmlFor="nameEn">Name (English)</Label>
+              <Label htmlFor="nameEn">{t("project.nameEn")}</Label>
               <Input
                 id="nameEn"
                 name="nameEn"
@@ -93,7 +96,7 @@ export function ProjectForm({
               />
             </div>
             <div className="flex flex-col gap-2">
-              <Label htmlFor="nameZh">Name (Chinese)</Label>
+              <Label htmlFor="nameZh">{t("project.nameZh")}</Label>
               <Input
                 id="nameZh"
                 name="nameZh"
@@ -103,14 +106,16 @@ export function ProjectForm({
           </div>
 
           <div className="flex flex-col gap-2">
-            <Label htmlFor="clientCompanyId">Client company</Label>
+            <Label htmlFor="clientCompanyId">
+              {t("project.clientCompany")}
+            </Label>
             <Select
               name="clientCompanyId"
               defaultValue={defaultValues?.clientCompanyId}
               items={companies.map((c) => ({ value: c.id, label: c.nameEn }))}
             >
               <SelectTrigger id="clientCompanyId">
-                <SelectValue placeholder="Select a company" />
+                <SelectValue placeholder={t("project.selectCompany")} />
               </SelectTrigger>
               <SelectContent>
                 {companies.map((c) => (
@@ -124,7 +129,7 @@ export function ProjectForm({
 
           <div className="grid grid-cols-2 gap-4">
             <div className="flex flex-col gap-2">
-              <Label htmlFor="country">Country</Label>
+              <Label htmlFor="country">{t("project.country")}</Label>
               <Input
                 id="country"
                 name="country"
@@ -133,7 +138,7 @@ export function ProjectForm({
               />
             </div>
             <div className="flex flex-col gap-2">
-              <Label htmlFor="city">City</Label>
+              <Label htmlFor="city">{t("project.city")}</Label>
               <Input
                 id="city"
                 name="city"
@@ -150,7 +155,7 @@ export function ProjectForm({
                     htmlFor="status"
                     className="cursor-help underline decoration-dotted underline-offset-2"
                   >
-                    Status
+                    {t("project.status")}
                   </Label>
                 </TooltipTrigger>
                 <TooltipContent side="right">
@@ -162,30 +167,36 @@ export function ProjectForm({
                 name="status"
                 defaultValue={defaultValues?.status ?? "prospect"}
                 items={[
-                  { value: "prospect", label: "Prospect" },
-                  { value: "active", label: "Active" },
-                  { value: "on_hold", label: "On hold" },
-                  { value: "completed", label: "Completed" },
+                  { value: "prospect", label: t("projectStatus.prospect") },
+                  { value: "active", label: t("projectStatus.active") },
+                  { value: "on_hold", label: t("projectStatus.on_hold") },
+                  { value: "completed", label: t("projectStatus.completed") },
                 ]}
               >
                 <SelectTrigger id="status">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="prospect">Prospect</SelectItem>
-                  <SelectItem value="active">Active</SelectItem>
-                  <SelectItem value="on_hold">On hold</SelectItem>
-                  <SelectItem value="completed">Completed</SelectItem>
+                  <SelectItem value="prospect">
+                    {t("projectStatus.prospect")}
+                  </SelectItem>
+                  <SelectItem value="active">{t("common.active")}</SelectItem>
+                  <SelectItem value="on_hold">
+                    {t("projectStatus.on_hold")}
+                  </SelectItem>
+                  <SelectItem value="completed">
+                    {t("projectStatus.completed")}
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div className="flex flex-col gap-2">
-              <Label htmlFor="ownerUserId">Owner</Label>
+              <Label htmlFor="ownerUserId">{t("project.owner")}</Label>
               <Select
                 name="ownerUserId"
                 defaultValue={defaultValues?.ownerUserId ?? "unassigned"}
                 items={[
-                  { value: "unassigned", label: "No owner" },
+                  { value: "unassigned", label: t("project.noOwner") },
                   ...users.map((u) => ({ value: u.id, label: u.name ?? u.id })),
                 ]}
               >
@@ -193,7 +204,9 @@ export function ProjectForm({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="unassigned">No owner</SelectItem>
+                  <SelectItem value="unassigned">
+                    {t("project.noOwner")}
+                  </SelectItem>
                   {users.map((u) => (
                     <SelectItem key={u.id} value={u.id}>
                       {u.name ?? u.id}
@@ -206,7 +219,7 @@ export function ProjectForm({
 
           <div className="grid grid-cols-2 gap-4">
             <div className="flex flex-col gap-2">
-              <Label htmlFor="startDate">Start date</Label>
+              <Label htmlFor="startDate">{t("project.startDate")}</Label>
               <Input
                 id="startDate"
                 name="startDate"
@@ -217,7 +230,9 @@ export function ProjectForm({
               />
             </div>
             <div className="flex flex-col gap-2">
-              <Label htmlFor="expectedEndDate">Expected end date</Label>
+              <Label htmlFor="expectedEndDate">
+                {t("project.expectedEndDate")}
+              </Label>
               <Input
                 id="expectedEndDate"
                 name="expectedEndDate"
@@ -230,7 +245,7 @@ export function ProjectForm({
           </div>
 
           <div className="flex flex-col gap-2">
-            <Label htmlFor="notes">Notes</Label>
+            <Label htmlFor="notes">{t("project.notes")}</Label>
             <Textarea
               id="notes"
               name="notes"
@@ -245,14 +260,14 @@ export function ProjectForm({
                 value="true"
                 defaultChecked={defaultValues?.isActive}
               />
-              Active
+              {t("common.active")}
             </label>
           ) : (
             <input type="hidden" name="isActive" value="true" />
           )}
 
           <Button type="submit" disabled={pending} className="w-fit">
-            {pending ? "Saving…" : submitLabel}
+            {pending ? t("common.saving") : t(submitLabel)}
           </Button>
         </form>
       </CardContent>

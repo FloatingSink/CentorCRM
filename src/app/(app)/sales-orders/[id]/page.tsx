@@ -29,6 +29,8 @@ import { getQuotationById } from "@/server/quotations";
 import { getSalesOrderById } from "@/server/sales-orders";
 import { getTasksForRelated } from "@/server/tasks";
 import { getUsers } from "@/server/users";
+import { t } from "@/lib/i18n/dictionary";
+import { getLocale } from "@/lib/i18n/server";
 
 export default async function SalesOrderDetailPage({
   params,
@@ -54,6 +56,7 @@ export default async function SalesOrderDetailPage({
     documents,
     tasks,
     users,
+    locale,
   ] = await Promise.all([
     auth(),
     getLegalEntities(),
@@ -65,6 +68,7 @@ export default async function SalesOrderDetailPage({
     getDocumentsForRelated("sales_order", order.id),
     getTasksForRelated("sales_order", order.id),
     getUsers(),
+    getLocale(),
   ]);
 
   // Back-to-back margin roll-up (crm-spec.md §1, purpose #3) — both sides
@@ -123,17 +127,19 @@ export default async function SalesOrderDetailPage({
 
       <div>
         <div className="mb-4 flex items-center justify-between">
-          <h3 className="text-lg">Linked purchase orders &amp; margin</h3>
+          <h3 className="text-lg">
+            {t(locale, "salesOrder.linkedPurchaseOrders")}
+          </h3>
           <Link
             href={`/purchase-orders/new?linkedSalesOrderId=${order.id}`}
             className={buttonVariants()}
           >
-            Create linked purchase order
+            {t(locale, "salesOrder.createLinkedPurchaseOrder")}
           </Link>
         </div>
         {linkedPurchaseOrders.length === 0 ? (
           <p className="text-sm text-muted-foreground">
-            No linked purchase orders yet.
+            {t(locale, "salesOrder.noLinkedPurchaseOrders")}
           </p>
         ) : (
           <Card className="py-4">
@@ -141,10 +147,14 @@ export default async function SalesOrderDetailPage({
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="pl-4">Order No</TableHead>
-                    <TableHead>Supplier</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="pr-4">Value</TableHead>
+                    <TableHead className="pl-4">
+                      {t(locale, "purchaseOrder.colOrderNo")}
+                    </TableHead>
+                    <TableHead>{t(locale, "doc.supplier")}</TableHead>
+                    <TableHead>{t(locale, "doc.status")}</TableHead>
+                    <TableHead className="pr-4">
+                      {t(locale, "doc.value")}
+                    </TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -190,7 +200,7 @@ export default async function SalesOrderDetailPage({
                   <span>−{formatMoney(purchaseValueSgd, "SGD")}</span>
                 </div>
                 <div className="flex justify-between font-heading text-base">
-                  <span>Margin</span>
+                  <span>{t(locale, "salesOrder.margin")}</span>
                   <span>
                     {formatMoney(marginSgd, "SGD")}
                     {marginPct !== null ? ` (${marginPct.toFixed(1)}%)` : ""}

@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { formatMoney } from "@/lib/money";
+import { useT } from "@/lib/i18n/client";
 
 type Row = {
   id: string;
@@ -14,10 +15,11 @@ export function PurchaseOrdersAwaitingConfirmationWidget({
 }: {
   rows: Row[];
 }) {
+  const { t } = useT();
   if (rows.length === 0) {
     return (
       <p className="text-sm text-muted-foreground">
-        No purchase orders awaiting confirmation.
+        {t("widget.emptyPurchaseOrders")}
       </p>
     );
   }

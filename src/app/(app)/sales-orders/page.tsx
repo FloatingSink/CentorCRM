@@ -3,21 +3,23 @@ import Link from "next/link";
 import { SalesOrdersTable } from "./sales-orders-table";
 import { buttonVariants } from "@/components/ui/button";
 import { getSalesOrders } from "@/server/sales-orders";
+import { t, tCount } from "@/lib/i18n/dictionary";
+import { getLocale } from "@/lib/i18n/server";
 
 export default async function SalesOrdersPage() {
-  const orders = await getSalesOrders();
+  const [orders, locale] = await Promise.all([getSalesOrders(), getLocale()]);
 
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl">Sales Orders</h2>
+          <h2 className="text-2xl">{t(locale, "salesOrder.title")}</h2>
           <p className="text-sm text-muted-foreground">
-            {orders.length} {orders.length === 1 ? "order" : "orders"}
+            {tCount(locale, "salesOrder.count", orders.length)}
           </p>
         </div>
         <Link href="/sales-orders/new" className={buttonVariants()}>
-          New sales order
+          {t(locale, "salesOrder.new")}
         </Link>
       </div>
 

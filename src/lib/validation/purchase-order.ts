@@ -1,3 +1,5 @@
+// Validation messages are i18n dictionary keys, resolved by the form
+// through t() — see src/lib/i18n/dictionary.ts.
 import { createSchemaFactory } from "drizzle-zod";
 import { z } from "zod";
 
@@ -10,16 +12,13 @@ const { createInsertSchema } = createSchemaFactory({ coerce: { date: true } });
 // from lines, status-transition action), never user input here — mirrors
 // salesOrderHeaderSchema in ./sales-order.ts.
 export const purchaseOrderHeaderSchema = createInsertSchema(purchaseOrder, {
-  currency: (schema) => schema.length(3, "Currency must be a 3-letter code"),
+  currency: (schema) => schema.length(3, "error.currency3Letter"),
   fxRateToSgd: (schema) =>
-    schema.refine(
-      (v) => Number(v) > 0,
-      "FX rate to SGD must be a positive number",
-    ),
+    schema.refine((v) => Number(v) > 0, "error.fxRatePositive"),
   inspectionDays: (schema) =>
     schema.refine(
       (v) => Number.isInteger(v) && v > 0,
-      "Inspection days must be a positive integer",
+      "error.inspectionDaysPositive",
     ),
 }).omit({
   id: true,
@@ -51,7 +50,7 @@ export const purchaseOrderLineInputSchema = quotationLineInputSchema.extend({
     .nullable()
     .refine(
       (v) => v === null || NET_WEIGHT_PATTERN.test(v),
-      "Net weight must be a non-negative number, up to 3 decimal places",
+      "error.netWeightFormat",
     ),
 });
 export type PurchaseOrderLineInput = z.infer<
@@ -60,9 +59,7 @@ export type PurchaseOrderLineInput = z.infer<
 
 export const purchaseOrderCreateSchema = z.object({
   header: purchaseOrderHeaderSchema,
-  lines: z
-    .array(purchaseOrderLineInputSchema)
-    .min(1, "At least one line item is required"),
+  lines: z.array(purchaseOrderLineInputSchema).min(1, "error.atLeastOneLine"),
 });
 
 // For the live PDF preview (unsaved draft) — same reasoning as

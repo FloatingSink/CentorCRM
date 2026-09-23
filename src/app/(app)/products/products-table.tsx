@@ -17,6 +17,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { matchesQuery } from "@/lib/search-filter";
+import { useT } from "@/lib/i18n/client";
 
 type Product = {
   id: string;
@@ -30,14 +31,16 @@ type Product = {
   isActive: boolean;
 };
 
+// `label` is a dictionary key.
 const FILTERS = [
-  { value: "all", label: "All" },
-  { value: "active", label: "Active" },
-  { value: "inactive", label: "Inactive" },
+  { value: "all", label: "common.all" },
+  { value: "active", label: "common.active" },
+  { value: "inactive", label: "common.inactive" },
 ] as const;
 type Filter = (typeof FILTERS)[number]["value"];
 
 export function ProductsTable({ products }: { products: Product[] }) {
+  const { t } = useT();
   const [filter, setFilter] = useState<Filter>("all");
   const [query, setQuery] = useState("");
 
@@ -61,7 +64,7 @@ export function ProductsTable({ products }: { products: Product[] }) {
         >
           {FILTERS.map((f) => (
             <SegmentedItem key={f.value} value={f.value}>
-              {f.label}
+              {t(f.label)}
             </SegmentedItem>
           ))}
         </Segmented>
@@ -69,7 +72,7 @@ export function ProductsTable({ products }: { products: Product[] }) {
         <div className="relative min-w-[220px]">
           <Search className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input
-            placeholder="Search products…"
+            placeholder={t("product.searchPlaceholder")}
             className="pl-9"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
@@ -82,13 +85,13 @@ export function ProductsTable({ products }: { products: Product[] }) {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="pl-4">Code</TableHead>
-                <TableHead>Name</TableHead>
-                <TableHead>Category</TableHead>
-                <TableHead>UOM</TableHead>
-                <TableHead>Pack size</TableHead>
-                <TableHead>Manufacturer</TableHead>
-                <TableHead className="pr-4">Active</TableHead>
+                <TableHead className="pl-4">{t("product.colCode")}</TableHead>
+                <TableHead>{t("product.colName")}</TableHead>
+                <TableHead>{t("product.category")}</TableHead>
+                <TableHead>{t("product.colUom")}</TableHead>
+                <TableHead>{t("product.packSize")}</TableHead>
+                <TableHead>{t("product.manufacturer")}</TableHead>
+                <TableHead className="pr-4">{t("company.colActive")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -105,8 +108,8 @@ export function ProductsTable({ products }: { products: Product[] }) {
                   <TableCell>{p.nameEn}</TableCell>
                   <TableCell>
                     {p.category ? (
-                      <Badge variant="secondary" className="capitalize">
-                        {p.category.replace(/_/g, " ")}
+                      <Badge variant="secondary">
+                        {t(`productCategory.${p.category}`)}
                       </Badge>
                     ) : (
                       <span className="text-muted-foreground">—</span>
@@ -127,7 +130,7 @@ export function ProductsTable({ products }: { products: Product[] }) {
                     )}
                   </TableCell>
                   <TableCell className="pr-4">
-                    {p.isActive ? "Yes" : "No"}
+                    {p.isActive ? t("common.yes") : t("common.no")}
                   </TableCell>
                 </TableRow>
               ))}

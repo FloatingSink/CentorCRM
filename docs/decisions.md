@@ -1132,3 +1132,124 @@ mechanism as `e2e/global-setup.ts`), read the rendered PDF output directly, and 
 header layout — logo, doc no/entity/registration, centered title — renders correctly with nothing
 overlapping or clipped, for both an English quotation and a purchase order carrying the
 Chinese-contract-clause boilerplate. Test PO and its lines/audit-log row deleted afterward.
+
+## 2026-09-23 — Chinese UI, Slice 1: cookie-based locale, shell + Companies
+
+The spec has always said (crm-spec.md §7) that "UI language is a user preference", but nothing was
+ever built for it. The only bilingual machinery in the repo was `src/lib/pdf/labels.ts`, which is
+PDF-scoped and driven by each document's own `language` column. Jia Long asked for a Chinese UI
+plus a language switcher in the nav.
+
+An inventory found roughly 550–650 distinct translatable strings across 88 `.tsx` files, ~120 of
+them in reusable enum/status label maps. Far too much for one reviewable diff, so this is slice 1:
+the mechanism, the app shell, and Companies end to end. The remaining screens repeat the pattern.
+
+**Cookie, not sub-path routing.** Next's own i18n guide
+(`node_modules/next/dist/docs/01-app/02-guides/internationalization.md`) recommends `app/[lang]/`
+routing. That is aimed at public, crawlable sites. This is an internal CRM behind Entra SSO with no
+SEO concern, and `[lang]` would mean moving every route in `src/app/(app)/` a directory deeper for
+no benefit. A `locale` cookie read by `getLocale()` (`src/lib/i18n/server.ts`) instead — the first
+use of `next/headers` in this codebase.
+
+**Cookie, not a `user.ui_language` column.** Confirmed with Jia Long. A column would follow a user
+across devices and match the spec's wording more literally, but it costs a schema change, a
+migration, an addition to the explicit `session()` callback literal in `src/lib/auth.ts` (which
+builds `session.user` field by field, so a new column is invisible until listed there),
+`src/types/next-auth.d.ts`, and a new write path on `user` (none exists today — `touchLastActive`
+is raw SQL and `src/server/users.ts` is read-only). The cookie also works on `/sign-in`, before
+there is a session to read a preference from. Tradeoff accepted: the preference is per-browser, so
+switching machines gives you English again. Marked `ponytail:` in `src/lib/i18n/server.ts`.
+crm-spec.md §7 amended to say so, rather than leaving spec and code disagreeing.
+
+**Record names follow the UI language, with English fallback.** `name_zh || name_en`, which is
+exactly what `pickName()` already did for PDFs. Moved it out of `src/lib/pdf/format.ts` into
+`src/lib/display-name.ts` and re-exported it from its old home, so the three PDF call sites are
+untouched and a list page no longer has to import from `pdf/`.
+
+**Unknown keys pass through `t()` unchanged.** This is what makes a screen-at-a-time rollout
+possible: zod messages in `src/lib/validation/*` become dictionary keys, and every message not yet
+converted still renders its own English text verbatim instead of vanishing or throwing. The `zh`
+dictionary is typed `Record<MessageKey, string>`, so a missing translation is a typecheck failure,
+not a string that silently renders in the wrong language.
+
+**No new dependency.** No `next-intl`, no `formatjs`. English is the only locale with a plural and
+only ever two forms, so `tCount()` is a two-branch suffix pick rather than `Intl.PluralRules`.
+
+**CJK font fallback.** Inter is loaded with `subsets: ["latin"]` and has no CJK glyphs at all, and
+globals.css declared no fallback stack — Chinese was falling through to whatever the browser chose.
+Appended a system CJK stack (PingFang SC / Microsoft YaHei / Noto Sans SC) to `--font-sans`. System
+faces, not a webfont: a CJK webfont is megabytes, and `public/fonts/NotoSansSC-Regular.ttf` stays a
+server-side PDF asset. This required renaming Inter's next/font variable from `--font-sans` to
+`--font-inter`, because `--font-sans: var(--font-sans), …` is a self-reference that resolves to
+guaranteed-invalid; `--font-geist-mono` → `--font-mono` already worked this way.
+
+**Deliberately out of scope**, recorded so they are not mistaken for oversights:
+- Audit log messages. `src/server/*.ts` writes English prose into `audit_log.message` (e.g.
+  `` `created company ${nameEn}` ``), rendered verbatim on the Admin screen. Translating them means
+  moving the write side to structured `action` + `entity_type` (both columns already exist), a
+  separate slice — and existing rows stay English either way.
+- Money formatting stays `Intl.NumberFormat("en-US")`. Amounts should read identically in both
+  languages; that is intentional, not a gap. `src/lib/date.ts` did become locale-aware (`zh-SG`),
+  since a rendered timestamp's month name is language, not money.
+- Incoterms, TDS/SDS/COC, document numbers and DB enum values are standard codes and are never
+  translated — only their display labels are.
+- Company/contact initials tiles still derive from the English name: `getInitials()` is
+  Latin-oriented, and an avatar that changes with the UI language stops working as a recognition
+  cue.
+
+**Note for whoever runs `pnpm lint` next:** `prettier --check .` currently fails repo-wide on this
+Windows checkout, including files untouched by this work (`README.md`, `package.json`,
+`.github/workflows/ci.yml`). The repo has `core.autocrlf=true` and no `.gitattributes`, so the
+working tree is CRLF while prettier expects LF. Pre-existing and unrelated; not fixed here, since a
+repo-wide reformat is its own decision. `eslint`, `tsc --noEmit` and `vitest` are all clean.
+
+## 2026-09-23 — Chinese UI, Slice 2: the remaining screens
+
+Slice 1 (above) built the mechanism and proved it on Companies. This finishes the rollout across
+every other screen, using the same pattern with no changes to it — which is the main thing worth
+recording: the dictionary + `t()` + unknown-key-passthrough design held for all ~650 strings
+without needing an escape hatch.
+
+Now translated: the dashboard and all nine widgets, Contacts, Projects (and machines), Products
+(and product documents), Opportunities, Quotations, Sales Orders, Purchase Orders, Shipments,
+Tasks, Admin, plus the five shared components (activity timeline, document library, order line
+editor, PDF preview panel, task panel). The dictionary is ~420 keys per locale.
+
+**Enum label maps became dictionary keys rather than gaining an i18n import.** `WIDGET_CATALOG`
+(`src/lib/dashboard.ts`), `QUOTATION_STATUS_HELP` / `ORDER_STATUS_HELP`
+(`src/lib/status-transitions.ts`), `PROJECT_STATUS_HELP`, `OPPORTUNITY_STAGE_HELP` and the various
+`STAGES` / `FILTERS` / `DOC_TYPES` / `LANGUAGES` arrays now hold keys, and each render site resolves
+them through `t()`. This keeps those modules pure and unit-testable — `src/lib/` still imports
+nothing from the i18n layer except the `Locale` type in `date.ts`.
+
+**Validation messages are keys too**, across all twelve schemas in `src/lib/validation/`. Slice 1's
+unknown-key passthrough is what made this safe to do incrementally; now that it is complete, every
+message resolves.
+
+**Two traps worth knowing about if a new Select is added.** Base UI's `Select` takes both an
+`items` prop (which renders the *trigger's* current value) and `<SelectItem>` children (the
+dropdown list). Both carry the label, so translating only one leaves the other rendering a raw
+key — this shipped briefly and was caught by the sweep below, not by typecheck, because a raw key
+is a perfectly valid string. Similarly, a `.map((t) => …)` callback shadows the `t()` function;
+three files needed their map parameter renamed.
+
+**`src/lib/date.ts` is now actually wired up.** Slice 1 gave it an optional locale parameter but
+left every call site passing nothing, so dates silently stayed English — the default parameter hid
+it from the typechecker. All nine call sites now pass the locale.
+
+**Verified by a temporary Playwright sweep** (written, run, deleted) that walked all twelve routes
+plus seven create forms in Chinese and asserted: `lang="zh-Hans"`, a Chinese nav, no occurrence of
+any of the 37 dictionary key prefixes anywhere in the rendered body, and no literal "undefined". It
+then opened a company detail page to check the shared Activity/Documents/Tasks panels, and cleared
+the cookie to confirm English still renders. `tsc`, `eslint`, 117 unit tests and all 12 e2e tests
+pass; the e2e suite asserts on English labels throughout and was deliberately left untouched.
+
+**Still deliberately English**, unchanged from slice 1: audit-log prose in `audit_log.message`,
+money formatting, Incoterms/TDS/SDS/COC, document numbers, DB enum values, and everything under
+`src/lib/pdf/`.
+
+**Open for Jia Long:** `productCategory.*` and `machineType.*` in `src/lib/i18n/dictionary.ts` are
+industry-standard Chinese drafted here, not supplied — flagged with a REVIEW comment above the `zh`
+dictionary. Confirm or correct: 盾尾密封油脂 (tail seal grease), 土体改良剂 (soil conditioner),
+极压油脂 (EP grease), 聚合物 (polymer), 抗磨剂 (anti-wear), 土压平衡（EPB）, 泥水平衡 (slurry),
+硬岩掘进机（TBM） (TBM hard rock).

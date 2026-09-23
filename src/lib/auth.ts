@@ -101,7 +101,10 @@ function withForwardedHost(req: NextRequest): NextRequest {
   if (!forwardedHost) return req;
   const proto = req.headers.get("x-forwarded-proto") ?? "https";
   const realOrigin = `${proto}://${forwardedHost}`;
-  return new NextRequest(req.nextUrl.href.replace(req.nextUrl.origin, realOrigin), req);
+  return new NextRequest(
+    req.nextUrl.href.replace(req.nextUrl.origin, realOrigin),
+    req,
+  );
 }
 
 export const handlers = {

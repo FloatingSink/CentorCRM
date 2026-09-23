@@ -6,6 +6,7 @@ import { completeTaskAction } from "./actions";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatDate } from "@/lib/date";
+import { useT } from "@/lib/i18n/client";
 
 type Task = {
   id: string;
@@ -15,6 +16,7 @@ type Task = {
 };
 
 export function TaskList({ tasks }: { tasks: Task[] }) {
+  const { locale, t } = useT();
   const router = useRouter();
 
   function handleComplete(id: string) {
@@ -24,38 +26,36 @@ export function TaskList({ tasks }: { tasks: Task[] }) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>My tasks</CardTitle>
+        <CardTitle>{t("task.mine")}</CardTitle>
       </CardHeader>
       <CardContent className="flex flex-col gap-3">
         {tasks.length === 0 ? (
-          <p className="text-sm text-muted-foreground">
-            No open tasks assigned to you.
-          </p>
+          <p className="text-sm text-muted-foreground">{t("task.mineEmpty")}</p>
         ) : (
-          tasks.map((t) => (
+          tasks.map((row) => (
             <div
-              key={t.id}
+              key={row.id}
               className="flex items-start justify-between gap-4 rounded-md border p-3"
             >
               <div className="min-w-0">
-                <p className="text-sm font-medium">{t.title}</p>
-                {t.description ? (
+                <p className="text-sm font-medium">{row.title}</p>
+                {row.description ? (
                   <p className="text-sm text-muted-foreground">
-                    {t.description}
+                    {row.description}
                   </p>
                 ) : null}
-                {t.dueDate ? (
+                {row.dueDate ? (
                   <p className="text-xs text-muted-foreground">
-                    Due {formatDate(t.dueDate)}
+                    {t("task.due", { date: formatDate(row.dueDate, locale) })}
                   </p>
                 ) : null}
               </div>
               <Button
                 variant="secondary"
                 size="sm"
-                onClick={() => handleComplete(t.id)}
+                onClick={() => handleComplete(row.id)}
               >
-                Mark done
+                {t("task.markDone")}
               </Button>
             </div>
           ))

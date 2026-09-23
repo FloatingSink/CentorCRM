@@ -13,6 +13,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { WIDGET_CATALOG, type DashboardWidgetType } from "@/lib/dashboard";
+import { useT } from "@/lib/i18n/client";
 
 // Only offers widget types not already on the dashboard — the
 // (userId, widgetType) unique index backs this up server-side, but the
@@ -24,6 +25,7 @@ export function AddWidgetDialog({
   presentTypes: Set<DashboardWidgetType>;
   onAdd: (widgetType: DashboardWidgetType) => void;
 }) {
+  const { t } = useT();
   const available = (
     Object.keys(WIDGET_CATALOG) as DashboardWidgetType[]
   ).filter((type) => !presentTypes.has(type));
@@ -34,20 +36,18 @@ export function AddWidgetDialog({
         render={
           <Button variant="outline">
             <PlusIcon />
-            Add widget
+            {t("dashboard.addWidget")}
           </Button>
         }
       />
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Add a widget</DialogTitle>
-          <DialogDescription>
-            Choose a widget to add to your dashboard.
-          </DialogDescription>
+          <DialogTitle>{t("dashboard.addAWidget")}</DialogTitle>
+          <DialogDescription>{t("dashboard.chooseWidget")}</DialogDescription>
         </DialogHeader>
         {available.length === 0 ? (
           <p className="text-sm text-muted-foreground">
-            Every available widget is already on your dashboard.
+            {t("dashboard.allWidgetsAdded")}
           </p>
         ) : (
           <ul className="flex flex-col gap-1">
@@ -61,10 +61,10 @@ export function AddWidgetDialog({
                       className="flex w-full flex-col items-start gap-0.5 rounded-md px-2 py-1.5 text-left hover:bg-muted"
                     >
                       <span className="text-sm font-medium">
-                        {WIDGET_CATALOG[type].label}
+                        {t(WIDGET_CATALOG[type].label)}
                       </span>
                       <span className="text-xs text-muted-foreground">
-                        {WIDGET_CATALOG[type].description}
+                        {t(WIDGET_CATALOG[type].description)}
                       </span>
                     </button>
                   }

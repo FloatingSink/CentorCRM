@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { Badge } from "@/components/ui/badge";
+import { useT } from "@/lib/i18n/client";
 
 type Row = {
   id: string;
@@ -10,10 +11,11 @@ type Row = {
 };
 
 export function MyOpenOpportunitiesWidget({ rows }: { rows: Row[] }) {
+  const { t } = useT();
   if (rows.length === 0) {
     return (
       <p className="text-sm text-muted-foreground">
-        No open opportunities assigned to you.
+        {t("widget.emptyMyOpportunities")}
       </p>
     );
   }
@@ -28,8 +30,8 @@ export function MyOpenOpportunitiesWidget({ rows }: { rows: Row[] }) {
           >
             {row.reference} — {row.title}
           </Link>
-          <Badge variant="secondary" className="flex-none capitalize">
-            {row.stage.replace("_", " ")}
+          <Badge variant="secondary" className="flex-none">
+            {t(`opportunityStage.${row.stage}`)}
           </Badge>
         </li>
       ))}

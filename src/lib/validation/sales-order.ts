@@ -1,3 +1,5 @@
+// Validation messages are i18n dictionary keys, resolved by the form
+// through t() — see src/lib/i18n/dictionary.ts.
 import { createSchemaFactory } from "drizzle-zod";
 import { z } from "zod";
 
@@ -9,12 +11,9 @@ const { createInsertSchema } = createSchemaFactory({ coerce: { date: true } });
 // orderNo/totalValue/status are assigned by the server (numbering, computed
 // from lines, status-transition action), never user input here.
 export const salesOrderHeaderSchema = createInsertSchema(salesOrder, {
-  currency: (schema) => schema.length(3, "Currency must be a 3-letter code"),
+  currency: (schema) => schema.length(3, "error.currency3Letter"),
   fxRateToSgd: (schema) =>
-    schema.refine(
-      (v) => Number(v) > 0,
-      "FX rate to SGD must be a positive number",
-    ),
+    schema.refine((v) => Number(v) > 0, "error.fxRatePositive"),
 }).omit({
   id: true,
   orderNo: true,
@@ -33,7 +32,5 @@ export type { QuotationLineInput as OrderLineInput } from "./quotation";
 
 export const salesOrderCreateSchema = z.object({
   header: salesOrderHeaderSchema,
-  lines: z
-    .array(quotationLineInputSchema)
-    .min(1, "At least one line item is required"),
+  lines: z.array(quotationLineInputSchema).min(1, "error.atLeastOneLine"),
 });

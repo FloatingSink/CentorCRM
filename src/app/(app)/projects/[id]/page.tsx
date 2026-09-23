@@ -30,6 +30,8 @@ import { getDocumentsForRelated } from "@/server/documents";
 import { getProjectById } from "@/server/projects";
 import { getTasksForRelated } from "@/server/tasks";
 import { getUsers } from "@/server/users";
+import { t } from "@/lib/i18n/dictionary";
+import { getLocale } from "@/lib/i18n/server";
 
 export default async function ProjectDetailPage({
   params,
@@ -37,16 +39,25 @@ export default async function ProjectDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const [session, result, companies, users, activities, documents, tasks] =
-    await Promise.all([
-      auth(),
-      getProjectById(id),
-      getCompanies(),
-      getUsers(),
-      getActivitiesForRelated("project", id),
-      getDocumentsForRelated("project", id),
-      getTasksForRelated("project", id),
-    ]);
+  const [
+    session,
+    result,
+    companies,
+    users,
+    activities,
+    documents,
+    tasks,
+    locale,
+  ] = await Promise.all([
+    auth(),
+    getProjectById(id),
+    getCompanies(),
+    getUsers(),
+    getActivitiesForRelated("project", id),
+    getDocumentsForRelated("project", id),
+    getTasksForRelated("project", id),
+    getLocale(),
+  ]);
   if (!result) {
     notFound();
   }
@@ -65,7 +76,7 @@ export default async function ProjectDetailPage({
             <Tooltip>
               <TooltipTrigger render={<span className="inline-block" />}>
                 <Badge variant="secondary" className="capitalize">
-                  {project.status.replace("_", " ")}
+                  {t(locale, `projectStatus.${project.status}`)}
                 </Badge>
               </TooltipTrigger>
               <TooltipContent>
@@ -95,17 +106,17 @@ export default async function ProjectDetailPage({
           isActive: project.isActive,
         }}
         mode="edit"
-        submitLabel="Save changes"
+        submitLabel="common.saveChanges"
       />
 
       <div>
         <div className="mb-4 flex items-center justify-between">
-          <h3 className="text-lg">Machines</h3>
+          <h3 className="text-lg">{t(locale, "project.machines")}</h3>
           <Link
             href={`/projects/${id}/machines/new`}
             className={buttonVariants()}
           >
-            Add machine
+            {t(locale, "project.newMachine")}
           </Link>
         </div>
         <Card className="py-4">
@@ -113,11 +124,15 @@ export default async function ProjectDetailPage({
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="pl-4">Designation</TableHead>
-                  <TableHead>Type</TableHead>
-                  <TableHead>Manufacturer</TableHead>
-                  <TableHead>Diameter (mm)</TableHead>
-                  <TableHead className="pr-4">Active</TableHead>
+                  <TableHead className="pl-4">
+                    {t(locale, "machine.designation")}
+                  </TableHead>
+                  <TableHead>{t(locale, "machine.type")}</TableHead>
+                  <TableHead>{t(locale, "machine.manufacturer")}</TableHead>
+                  <TableHead>{t(locale, "machine.diameterMm")}</TableHead>
+                  <TableHead className="pr-4">
+                    {t(locale, "company.colActive")}
+                  </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -131,11 +146,15 @@ export default async function ProjectDetailPage({
                         {m.designation}
                       </Link>
                     </TableCell>
-                    <TableCell>{m.machineType}</TableCell>
+                    <TableCell>
+                      {t(locale, `machineType.${m.machineType}`)}
+                    </TableCell>
                     <TableCell>{m.manufacturer}</TableCell>
                     <TableCell>{m.diameterMm}</TableCell>
                     <TableCell className="pr-4">
-                      {m.isActive ? "Yes" : "No"}
+                      {m.isActive
+                        ? t(locale, "common.yes")
+                        : t(locale, "common.no")}
                     </TableCell>
                   </TableRow>
                 ))}

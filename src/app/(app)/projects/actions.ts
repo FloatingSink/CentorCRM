@@ -31,7 +31,7 @@ export async function createProjectAction(
 ): Promise<{ error?: string }> {
   const parsed = parseProjectForm(formData);
   if (!parsed.success) {
-    return { error: parsed.error.issues[0]?.message ?? "Invalid input" };
+    return { error: parsed.error.issues[0]?.message ?? "error.invalidInput" };
   }
 
   const session = await auth();
@@ -50,7 +50,7 @@ export async function updateProjectAction(
 ): Promise<{ error?: string }> {
   const parsed = parseProjectForm(formData);
   if (!parsed.success) {
-    return { error: parsed.error.issues[0]?.message ?? "Invalid input" };
+    return { error: parsed.error.issues[0]?.message ?? "error.invalidInput" };
   }
 
   const session = await auth();

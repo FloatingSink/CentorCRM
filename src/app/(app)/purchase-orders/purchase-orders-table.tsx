@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/table";
 import { formatMoney } from "@/lib/money";
 import { matchesQuery } from "@/lib/search-filter";
+import { useT } from "@/lib/i18n/client";
 
 type PurchaseOrder = {
   id: string;
@@ -46,6 +47,7 @@ const FILTERS = [
 type Filter = (typeof FILTERS)[number]["value"];
 
 export function PurchaseOrdersTable({ orders }: { orders: PurchaseOrder[] }) {
+  const { t } = useT();
   const [filter, setFilter] = useState<Filter>("all");
   const [query, setQuery] = useState("");
 
@@ -77,7 +79,7 @@ export function PurchaseOrdersTable({ orders }: { orders: PurchaseOrder[] }) {
         >
           {FILTERS.map((f) => (
             <SegmentedItem key={f.value} value={f.value}>
-              {f.label}
+              {t(f.label)}
             </SegmentedItem>
           ))}
         </Segmented>
@@ -85,7 +87,7 @@ export function PurchaseOrdersTable({ orders }: { orders: PurchaseOrder[] }) {
         <div className="relative min-w-[220px]">
           <Search className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input
-            placeholder="Search purchase orders…"
+            placeholder={t("purchaseOrder.searchPlaceholder")}
             className="pl-9"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
@@ -98,13 +100,15 @@ export function PurchaseOrdersTable({ orders }: { orders: PurchaseOrder[] }) {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="pl-4">Order No</TableHead>
-                <TableHead>Supplier</TableHead>
-                <TableHead>Project</TableHead>
-                <TableHead>Linked SO</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Value</TableHead>
-                <TableHead className="pr-4">Signed date</TableHead>
+                <TableHead className="pl-4">
+                  {t("purchaseOrder.colOrderNo")}
+                </TableHead>
+                <TableHead>{t("doc.supplier")}</TableHead>
+                <TableHead>{t("doc.project")}</TableHead>
+                <TableHead>{t("purchaseOrder.colLinkedSo")}</TableHead>
+                <TableHead>{t("doc.status")}</TableHead>
+                <TableHead>{t("doc.value")}</TableHead>
+                <TableHead className="pr-4">{t("doc.signedDate")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>

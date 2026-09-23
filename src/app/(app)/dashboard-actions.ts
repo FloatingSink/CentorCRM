@@ -22,7 +22,7 @@ export async function addDashboardWidgetAction(
   widgetType: unknown,
 ): Promise<{ error?: string }> {
   const parsed = dashboardWidgetTypeSchema.safeParse(widgetType);
-  if (!parsed.success) return { error: "Invalid widget type" };
+  if (!parsed.success) return { error: "error.invalidInput" };
 
   const user = await requireUserOrError();
   if ("error" in user) return user;
@@ -35,7 +35,7 @@ export async function removeDashboardWidgetAction(
   widgetId: unknown,
 ): Promise<{ error?: string }> {
   const parsed = dashboardWidgetIdSchema.safeParse(widgetId);
-  if (!parsed.success) return { error: "Invalid widget id" };
+  if (!parsed.success) return { error: "error.invalidInput" };
 
   const user = await requireUserOrError();
   if ("error" in user) return user;
@@ -51,7 +51,7 @@ export async function resizeDashboardWidgetAction(
   const parsedId = dashboardWidgetIdSchema.safeParse(widgetId);
   const parsedSize = dashboardWidgetSizeSchema.safeParse(size);
   if (!parsedId.success || !parsedSize.success) {
-    return { error: "Invalid input" };
+    return { error: "error.invalidInput" };
   }
 
   const user = await requireUserOrError();
@@ -65,7 +65,7 @@ export async function setDashboardWidgetPositionsAction(
   updates: unknown,
 ): Promise<{ error?: string }> {
   const parsed = setDashboardWidgetPositionsSchema.safeParse(updates);
-  if (!parsed.success) return { error: "Invalid input" };
+  if (!parsed.success) return { error: "error.invalidInput" };
 
   const user = await requireUserOrError();
   if ("error" in user) return user;

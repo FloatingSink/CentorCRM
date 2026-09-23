@@ -1,5 +1,7 @@
 import { DashboardGrid, type DashboardWidgetData } from "./dashboard-grid";
 import { auth } from "@/lib/auth";
+import { t } from "@/lib/i18n/dictionary";
+import { getLocale } from "@/lib/i18n/server";
 import {
   getDashboardWidgets,
   getExpiringQuotations,
@@ -12,6 +14,7 @@ import {
 import { getMyTasks } from "@/server/tasks";
 
 export default async function HomePage() {
+  const locale = await getLocale();
   const session = await auth();
   const userId = session!.user.id;
 
@@ -58,7 +61,7 @@ export default async function HomePage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <h2 className="text-2xl">Dashboard</h2>
+      <h2 className="text-2xl">{t(locale, "dashboard.title")}</h2>
       <DashboardGrid key={widgetsKey} widgets={widgets} data={data} />
     </div>
   );

@@ -49,7 +49,7 @@ function checkNamedPlace(
   namedPlace: string | null | undefined,
 ): string | undefined {
   if (incoterm && incoterm !== "EXW" && !namedPlace) {
-    return "Named place is required for this incoterm";
+    return "error.namedPlaceRequired";
   }
   return undefined;
 }
@@ -59,7 +59,7 @@ export async function createQuotationAction(
 ): Promise<{ id: string } | { error: string }> {
   const parsed = quotationCreateSchema.safeParse(input);
   if (!parsed.success) {
-    return { error: parsed.error.issues[0]?.message ?? "Invalid input" };
+    return { error: parsed.error.issues[0]?.message ?? "error.invalidInput" };
   }
 
   const namedPlaceError = checkNamedPlace(
@@ -72,7 +72,7 @@ export async function createQuotationAction(
 
   const session = await auth();
   if (!session?.user) {
-    return { error: "Not signed in" };
+    return { error: "error.notSignedIn" };
   }
 
   const linesResult = convertLines(
@@ -97,7 +97,7 @@ export async function updateQuotationAction(
 ): Promise<{ id: string } | { error: string }> {
   const parsed = quotationCreateSchema.safeParse(input);
   if (!parsed.success) {
-    return { error: parsed.error.issues[0]?.message ?? "Invalid input" };
+    return { error: parsed.error.issues[0]?.message ?? "error.invalidInput" };
   }
 
   const namedPlaceError = checkNamedPlace(
@@ -110,7 +110,7 @@ export async function updateQuotationAction(
 
   const session = await auth();
   if (!session?.user) {
-    return { error: "Not signed in" };
+    return { error: "error.notSignedIn" };
   }
 
   const linesResult = convertLines(
@@ -136,7 +136,7 @@ export async function createQuotationVersionAction(
 ): Promise<{ id: string } | { error: string }> {
   const parsed = quotationCreateSchema.safeParse(input);
   if (!parsed.success) {
-    return { error: parsed.error.issues[0]?.message ?? "Invalid input" };
+    return { error: parsed.error.issues[0]?.message ?? "error.invalidInput" };
   }
 
   const namedPlaceError = checkNamedPlace(
@@ -149,7 +149,7 @@ export async function createQuotationVersionAction(
 
   const session = await auth();
   if (!session?.user) {
-    return { error: "Not signed in" };
+    return { error: "error.notSignedIn" };
   }
 
   const linesResult = convertLines(
@@ -175,7 +175,7 @@ export async function updateQuotationStatusAction(
 ): Promise<{ error?: string }> {
   const session = await auth();
   if (!session?.user) {
-    return { error: "Not signed in" };
+    return { error: "error.notSignedIn" };
   }
 
   await updateQuotationStatus(id, status);
@@ -196,7 +196,7 @@ export async function previewQuotationPdfAction(
 
   const session = await auth();
   if (!session?.user) {
-    return { error: "Not signed in" };
+    return { error: "error.notSignedIn" };
   }
 
   const linesResult = convertLines(

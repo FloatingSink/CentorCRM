@@ -49,7 +49,7 @@ function checkNamedPlace(
   namedPlace: string | null | undefined,
 ): string | undefined {
   if (incoterm && incoterm !== "EXW" && !namedPlace) {
-    return "Named place is required for this incoterm";
+    return "error.namedPlaceRequired";
   }
   return undefined;
 }
@@ -64,7 +64,7 @@ function checkSupplierXor(
   const hasCompany = !!supplierCompanyId;
   const hasLegalEntity = !!supplierLegalEntityId;
   if (hasCompany === hasLegalEntity) {
-    return "Select exactly one supplier: either a company or one of our own legal entities";
+    return "error.selectOneSupplier";
   }
   return undefined;
 }
@@ -74,7 +74,7 @@ export async function createPurchaseOrderAction(
 ): Promise<{ id: string } | { error: string }> {
   const parsed = purchaseOrderCreateSchema.safeParse(input);
   if (!parsed.success) {
-    return { error: parsed.error.issues[0]?.message ?? "Invalid input" };
+    return { error: parsed.error.issues[0]?.message ?? "error.invalidInput" };
   }
 
   const namedPlaceError = checkNamedPlace(
@@ -95,7 +95,7 @@ export async function createPurchaseOrderAction(
 
   const session = await auth();
   if (!session?.user) {
-    return { error: "Not signed in" };
+    return { error: "error.notSignedIn" };
   }
 
   const linesResult = convertLines(
@@ -120,7 +120,7 @@ export async function updatePurchaseOrderAction(
 ): Promise<{ id: string } | { error: string }> {
   const parsed = purchaseOrderCreateSchema.safeParse(input);
   if (!parsed.success) {
-    return { error: parsed.error.issues[0]?.message ?? "Invalid input" };
+    return { error: parsed.error.issues[0]?.message ?? "error.invalidInput" };
   }
 
   const namedPlaceError = checkNamedPlace(
@@ -141,7 +141,7 @@ export async function updatePurchaseOrderAction(
 
   const session = await auth();
   if (!session?.user) {
-    return { error: "Not signed in" };
+    return { error: "error.notSignedIn" };
   }
 
   const linesResult = convertLines(
@@ -173,7 +173,7 @@ export async function updatePurchaseOrderStatusAction(
 ): Promise<{ error?: string }> {
   const session = await auth();
   if (!session?.user) {
-    return { error: "Not signed in" };
+    return { error: "error.notSignedIn" };
   }
 
   await updatePurchaseOrderStatus(id, status);
@@ -194,7 +194,7 @@ export async function previewPurchaseOrderPdfAction(
 
   const session = await auth();
   if (!session?.user) {
-    return { error: "Not signed in" };
+    return { error: "error.notSignedIn" };
   }
 
   const linesResult = convertLines(

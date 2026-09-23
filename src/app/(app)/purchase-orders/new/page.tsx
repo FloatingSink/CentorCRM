@@ -4,6 +4,8 @@ import { getLegalEntities } from "@/server/legal-entities";
 import { getProducts } from "@/server/products";
 import { getProjects } from "@/server/projects";
 import { getSalesOrderById, getSalesOrders } from "@/server/sales-orders";
+import { t } from "@/lib/i18n/dictionary";
+import { getLocale } from "@/lib/i18n/server";
 
 export default async function NewPurchaseOrderPage({
   searchParams,
@@ -12,13 +14,14 @@ export default async function NewPurchaseOrderPage({
 }) {
   const { linkedSalesOrderId } = await searchParams;
 
-  const [legalEntities, companies, projects, products, salesOrders] =
+  const [legalEntities, companies, projects, products, salesOrders, locale] =
     await Promise.all([
       getLegalEntities(),
       getCompanies(),
       getProjects(),
       getProducts(),
       getSalesOrders(),
+      getLocale(),
     ]);
 
   let defaultProjectId = "";
@@ -61,7 +64,7 @@ export default async function NewPurchaseOrderPage({
 
   return (
     <div className="flex flex-col gap-6">
-      <h2 className="text-2xl">New purchase order</h2>
+      <h2 className="text-2xl">{t(locale, "purchaseOrder.new")}</h2>
       <PurchaseOrderBuilder
         mode="create"
         legalEntities={legalEntities}

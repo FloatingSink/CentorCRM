@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/table";
 import { getInitials } from "@/lib/initials";
 import { matchesQuery } from "@/lib/search-filter";
+import { useT } from "@/lib/i18n/client";
 
 type Contact = {
   id: string;
@@ -31,14 +32,16 @@ type Contact = {
   isActive: boolean;
 };
 
+// `label` is a dictionary key.
 const FILTERS = [
-  { value: "all", label: "All" },
-  { value: "active", label: "Active" },
-  { value: "inactive", label: "Inactive" },
+  { value: "all", label: "common.all" },
+  { value: "active", label: "common.active" },
+  { value: "inactive", label: "common.inactive" },
 ] as const;
 type Filter = (typeof FILTERS)[number]["value"];
 
 export function ContactsTable({ contacts }: { contacts: Contact[] }) {
+  const { t } = useT();
   const [filter, setFilter] = useState<Filter>("all");
   const [query, setQuery] = useState("");
 
@@ -65,7 +68,7 @@ export function ContactsTable({ contacts }: { contacts: Contact[] }) {
         >
           {FILTERS.map((f) => (
             <SegmentedItem key={f.value} value={f.value}>
-              {f.label}
+              {t(f.label)}
             </SegmentedItem>
           ))}
         </Segmented>
@@ -73,7 +76,7 @@ export function ContactsTable({ contacts }: { contacts: Contact[] }) {
         <div className="relative min-w-[220px]">
           <Search className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input
-            placeholder="Search contacts…"
+            placeholder={t("contact.searchPlaceholder")}
             className="pl-9"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
@@ -86,13 +89,13 @@ export function ContactsTable({ contacts }: { contacts: Contact[] }) {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="pl-4">Name</TableHead>
-                <TableHead>Company</TableHead>
-                <TableHead>Job title</TableHead>
-                <TableHead>Email</TableHead>
-                <TableHead>Phone</TableHead>
-                <TableHead>Primary</TableHead>
-                <TableHead className="pr-4">Active</TableHead>
+                <TableHead className="pl-4">{t("contact.colName")}</TableHead>
+                <TableHead>{t("contact.company")}</TableHead>
+                <TableHead>{t("contact.jobTitle")}</TableHead>
+                <TableHead>{t("contact.email")}</TableHead>
+                <TableHead>{t("contact.phone")}</TableHead>
+                <TableHead>{t("contact.primary")}</TableHead>
+                <TableHead className="pr-4">{t("company.colActive")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -126,13 +129,13 @@ export function ContactsTable({ contacts }: { contacts: Contact[] }) {
                   <TableCell>{contact.phone}</TableCell>
                   <TableCell>
                     {contact.isPrimary ? (
-                      <Badge variant="outline">Primary</Badge>
+                      <Badge variant="outline">{t("contact.primary")}</Badge>
                     ) : (
                       <span className="text-muted-foreground">—</span>
                     )}
                   </TableCell>
                   <TableCell className="pr-4">
-                    {contact.isActive ? "Yes" : "No"}
+                    {contact.isActive ? t("common.yes") : t("common.no")}
                   </TableCell>
                 </TableRow>
               ))}

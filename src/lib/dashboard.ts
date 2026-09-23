@@ -12,41 +12,43 @@ export type DashboardWidgetSize =
 // Drives the "add widget" picker and each widget card's header — the
 // single place widget metadata lives, so adding a new widget type never
 // means hunting through the UI for every spot its label is hardcoded.
+// Values are i18n dictionary keys, resolved by the UI through t(); the
+// catalog itself stays a plain pure-lib constant with no i18n import.
 export const WIDGET_CATALOG: Record<
   DashboardWidgetType,
   { label: string; description: string }
 > = {
   opportunities_by_stage: {
-    label: "Opportunities by stage",
-    description: "Count of open opportunities in each pipeline stage.",
+    label: "widget.opportunities_by_stage.label",
+    description: "widget.opportunities_by_stage.description",
   },
   quotes_expiring: {
-    label: "Quotes expiring",
-    description: "Sent quotations whose valid-until date is coming up.",
+    label: "widget.quotes_expiring.label",
+    description: "widget.quotes_expiring.description",
   },
   shipments_placeholder: {
-    label: "Shipments in transit",
-    description: "Coming soon — shipments (P7) is on hold.",
+    label: "widget.shipments_placeholder.label",
+    description: "widget.shipments_placeholder.description",
   },
   my_open_opportunities: {
-    label: "My open opportunities",
-    description: "Opportunities you own that aren't won or lost yet.",
+    label: "widget.my_open_opportunities.label",
+    description: "widget.my_open_opportunities.description",
   },
   purchase_orders_awaiting_confirmation: {
-    label: "Purchase orders awaiting confirmation",
-    description: "Draft purchase orders not yet confirmed with the supplier.",
+    label: "widget.purchase_orders_awaiting_confirmation.label",
+    description: "widget.purchase_orders_awaiting_confirmation.description",
   },
   pipeline_value: {
-    label: "Pipeline value",
-    description: "Open opportunity value, totalled per currency.",
+    label: "widget.pipeline_value.label",
+    description: "widget.pipeline_value.description",
   },
   recent_activity: {
-    label: "Recent activity",
-    description: "The latest notes, calls, meetings and emails logged.",
+    label: "widget.recent_activity.label",
+    description: "widget.recent_activity.description",
   },
   my_tasks: {
-    label: "My tasks",
-    description: "Open tasks assigned to you.",
+    label: "widget.my_tasks.label",
+    description: "widget.my_tasks.description",
   },
 };
 

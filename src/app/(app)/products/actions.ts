@@ -35,7 +35,7 @@ export async function createProductAction(
 ): Promise<{ error?: string }> {
   const parsed = parseProductForm(formData);
   if (!parsed.success) {
-    return { error: parsed.error.issues[0]?.message ?? "Invalid input" };
+    return { error: parsed.error.issues[0]?.message ?? "error.invalidInput" };
   }
 
   const session = await auth();
@@ -54,7 +54,7 @@ export async function updateProductAction(
 ): Promise<{ error?: string }> {
   const parsed = parseProductForm(formData);
   if (!parsed.success) {
-    return { error: parsed.error.issues[0]?.message ?? "Invalid input" };
+    return { error: parsed.error.issues[0]?.message ?? "error.invalidInput" };
   }
 
   const session = await auth();

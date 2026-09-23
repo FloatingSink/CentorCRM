@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { formatDate } from "@/lib/date";
+import { useT } from "@/lib/i18n/client";
 
 // Same 6 values as activity-timeline.tsx's ActivityRelatedType — mirrors
 // that file's own local-union convention rather than importing from the
@@ -55,6 +56,7 @@ export function TaskPanel({
   users: { id: string; name: string | null }[];
   currentUserId: string;
 }) {
+  const { locale, t } = useT();
   const router = useRouter();
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -97,15 +99,17 @@ export function TaskPanel({
 
   return (
     <div className="flex flex-col gap-4">
-      <h3 className="text-lg">Tasks</h3>
+      <h3 className="text-lg">{t("task.heading")}</h3>
 
       <Card>
         <CardContent>
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-            {error ? <p className="text-sm text-destructive">{error}</p> : null}
+            {error ? (
+              <p className="text-sm text-destructive">{t(error)}</p>
+            ) : null}
             <div className="flex flex-col gap-2">
               <Label htmlFor="taskTitle" required>
-                Task
+                {t("task.title")}
               </Label>
               <Input
                 id="taskTitle"
@@ -117,7 +121,7 @@ export function TaskPanel({
             <div className="grid grid-cols-2 gap-4">
               <div className="flex flex-col gap-2">
                 <Label htmlFor="taskAssignee" required>
-                  Assign to
+                  {t("task.assignTo")}
                 </Label>
                 <Select
                   value={assigneeUserId}
@@ -128,7 +132,7 @@ export function TaskPanel({
                   }))}
                 >
                   <SelectTrigger id="taskAssignee">
-                    <SelectValue placeholder="Select a person" />
+                    <SelectValue placeholder={t("common.selectPerson")} />
                   </SelectTrigger>
                   <SelectContent>
                     {users.map((u) => (
@@ -140,7 +144,7 @@ export function TaskPanel({
                 </Select>
               </div>
               <div className="flex flex-col gap-2">
-                <Label htmlFor="taskDueDate">Due date</Label>
+                <Label htmlFor="taskDueDate">{t("task.dueDate")}</Label>
                 <Input
                   id="taskDueDate"
                   type="date"
@@ -150,7 +154,7 @@ export function TaskPanel({
               </div>
             </div>
             <div className="flex flex-col gap-2">
-              <Label htmlFor="taskDescription">Description</Label>
+              <Label htmlFor="taskDescription">{t("task.description")}</Label>
               <Textarea
                 id="taskDescription"
                 value={description}
@@ -158,46 +162,50 @@ export function TaskPanel({
               />
             </div>
             <Button type="submit" disabled={pending} className="w-fit">
-              {pending ? "Saving…" : "Create task"}
+              {pending ? t("common.saving") : t("task.create")}
             </Button>
           </form>
         </CardContent>
       </Card>
 
       {tasks.length === 0 ? (
-        <p className="text-sm text-muted-foreground">No tasks yet.</p>
+        <p className="text-sm text-muted-foreground">{t("task.empty")}</p>
       ) : (
         <div className="flex flex-col gap-3">
-          {tasks.map((t) => (
-            <Card key={t.id} className="py-4">
+          {tasks.map((row) => (
+            <Card key={row.id} className="py-4">
               <CardContent className="flex items-start justify-between gap-4">
                 <div className="min-w-0">
                   <div className="flex items-center gap-2">
                     <Badge
-                      variant={t.status === "done" ? "secondary" : "default"}
-                      className="capitalize"
+                      variant={row.status === "done" ? "secondary" : "default"}
                     >
-                      {t.status}
+                      {t(`taskStatus.${row.status}`)}
                     </Badge>
-                    <span className="font-medium">{t.title}</span>
+                    <span className="font-medium">{row.title}</span>
                   </div>
-                  {t.description ? (
+                  {row.description ? (
                     <p className="text-sm text-muted-foreground">
-                      {t.description}
+                      {row.description}
                     </p>
                   ) : null}
                   <p className="text-xs text-muted-foreground">
-                    Assigned to {t.assigneeName ?? t.assigneeEmail}
-                    {t.dueDate ? ` · Due ${formatDate(t.dueDate)}` : ""}
+                    {t("task.assignedTo", {
+                      name: row.assigneeName ?? row.assigneeEmail,
+                    })}
+                    {row.dueDate
+                      ? ` · ${t("task.due", { date: formatDate(row.dueDate, locale) })}`
+                      : ""}
                   </p>
                 </div>
-                {t.status === "open" && t.assigneeUserId === currentUserId ? (
+                {row.status === "open" &&
+                row.assigneeUserId === currentUserId ? (
                   <Button
                     variant="secondary"
                     size="sm"
-                    onClick={() => handleComplete(t.id)}
+                    onClick={() => handleComplete(row.id)}
                   >
-                    Mark done
+                    {t("task.markDone")}
                   </Button>
                 ) : null}
               </CardContent>
